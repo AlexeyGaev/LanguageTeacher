@@ -39,9 +39,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Commands\ICommand.cs" />
-    <Compile Include="Model\Model.cs" />
-    <Compile Include="Model\Unit.cs" />
+    <Compile Include="Model\ITranscriptionUnit.cs" />
+    <Compile Include="Model\IDetailUnit.cs" />
+    <Compile Include="Model\IUnit.cs" />
+    <Compile Include="Model\IVocabularySection.cs" />
+    <Compile Include="Model\ITranslate.cs" />
+    <Compile Include="Model\IModel.cs" />
+    <Compile Include="Model\ISectionUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
