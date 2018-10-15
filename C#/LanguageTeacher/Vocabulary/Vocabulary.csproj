@@ -39,9 +39,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IWord.cs" />
+    <Compile Include="IDictionary.cs" />
+    <Compile Include="ITextSectionCollection.cs" />
+    <Compile Include="ICollection.cs" />
     <Compile Include="IUnit.cs" />
-    <Compile Include="IVocabularyUnit.cs" />
-    <Compile Include="ISectionUnit.cs" />
+    <Compile Include="IVocabulary.cs" />
+    <Compile Include="ITextSection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
