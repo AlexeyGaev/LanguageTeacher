@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LanguageTeacher", "LanguageTeacher\LanguageTeacher.csproj", "{E534D11F-E99F-4FE6-9271-95CA1256982E}"
 EndProject

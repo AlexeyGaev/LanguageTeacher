@@ -1,5 +1,7 @@
-﻿namespace Vocabulary {
+﻿using Utils.Collection;
+
+namespace Vocabulary {
     public interface ITextSection : IUnit {
-        string Translate { get; }
+        ICollection<IUnit> Translate { get; }
     }
 }

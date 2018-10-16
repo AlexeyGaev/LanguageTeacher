@@ -1,5 +1,7 @@
-﻿namespace Vocabulary {
+﻿using Utils.Collection;
+
+namespace Vocabulary {
     public interface IDictionary : IUnit {
-        IWord[] Words { get; }
+        ICollection<IWord> Words { get; }
     }
 }
