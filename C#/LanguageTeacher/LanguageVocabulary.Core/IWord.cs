@@ -1,7 +1,8 @@
 ﻿using Utils.Collection;
 
-namespace Vocabulary {
-    public interface IWord : IUnit {
+namespace LanguageVocabulary.Core {
+    public interface IWord {
+        IUnit Id { get; }
         IUnit Transcription { get; }
         ICollection<IUnit> Translate { get; }
         ICollection<IUnit> Details { get; }

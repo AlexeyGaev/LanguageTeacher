@@ -1,10 +1,10 @@
 ﻿namespace Utils.Collection {
     public class Collection<T> : ICollection<T> {
         const int DefaultCapacity = 2;
+        const int aspect = 2;
 
         int startCapacity;
         int currentCapacity;
-        int aspect;
         int count;
         T[] items;
 
@@ -22,36 +22,57 @@
             return new Enumerator<T>(this.items, this.count);
         }
         
-        public void Add(T item) {
-            if (this.currentCapacity == this.count) 
-                IncreaseCapacity();
+        public bool Add(T item) {
+            if (this.count > 0 && this.currentCapacity == this.count) {
+                if (!IncreaseCapacity())
+                    return false;
+            }
             this.items[this.count] = item;
             this.count++;
+            return true;
         }
 
         public void Clear() {
             Init();
         }
 
+        public bool Contains(T Item) {
+            throw new System.NotImplementedException();
+        }
+
+        public bool FindItemByIndex(int index, out T result) {
+            throw new System.NotImplementedException();
+        }
+
+
         void Init() {
             this.currentCapacity = this.startCapacity;
-            this.aspect = 1;
+            
             this.items = CreateItems();
             this.count = 0;
         }
 
-        void IncreaseCapacity() {
+        bool IncreaseCapacity() {
             int oldCapacity = this.currentCapacity;
-            this.aspect *= 2;
-            this.currentCapacity *= this.aspect;
+            if (int.MaxValue / aspect < this.currentCapacity)
+                return false;
+            this.currentCapacity *= aspect;
             T[] newItems = CreateItems();
-            for (int i = 0; i < oldCapacity; i++)
-                newItems[i] = this.items[i];
+            CopyItems(this.items, newItems, oldCapacity);
             this.items = newItems;
+            return true;
+        }
+
+        void CopyItems(T[] source, T[] target, int count) {
+            for (int i = 0; i < count; i++)
+                target[i] = source[i];
         }
 
         T[] CreateItems() {
             return new T[this.currentCapacity];
         }
+
+
+        
     }
 }

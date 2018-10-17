@@ -7,8 +7,8 @@
     <ProjectGuid>{026CDD91-9306-4198-8BFE-89584E6F5110}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Vocabulary</RootNamespace>
-    <AssemblyName>Vocabulary</AssemblyName>
+    <RootNamespace>LanguageVocabulary.Core</RootNamespace>
+    <AssemblyName>LanguageVocabulary.Core</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -21,6 +21,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,13 +31,16 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IWord.cs" />
-    <Compile Include="IDictionary.cs" />
-    <Compile Include="ITextSectionCollection.cs" />
+    <Compile Include="IVocabularyItems.cs" />
     <Compile Include="IUnit.cs" />
     <Compile Include="IVocabulary.cs" />
     <Compile Include="ITextSection.cs" />
