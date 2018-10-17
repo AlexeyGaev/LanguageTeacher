@@ -1,7 +1,7 @@
 ﻿using Utils.Collection;
 
 namespace LanguageVocabulary.Core {
-    public interface IVocabularyItems<T> {
+    public interface IVocabularyUnit<T> {
         IUnit Description { get; }
         ICollection<T> Items { get; }
     }

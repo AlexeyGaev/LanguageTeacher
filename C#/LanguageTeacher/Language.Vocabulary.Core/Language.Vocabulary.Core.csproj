@@ -39,7 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IWord.cs" />
-    <Compile Include="IVocabularyItems.cs" />
+    <Compile Include="IVocabularyUnit.cs" />
     <Compile Include="IUnit.cs" />
     <Compile Include="IVocabulary.cs" />
     <Compile Include="ITextSection.cs" />

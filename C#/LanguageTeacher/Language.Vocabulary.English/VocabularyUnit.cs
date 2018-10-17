@@ -2,7 +2,7 @@
 using LanguageVocabulary.Core;
 
 namespace LanguageVocabulary.English {
-    public class VocabularyItems<T> : IVocabularyItems<T> {
+    public class VocabularyUnit<T> : IVocabularyUnit<T> {
         public IUnit Description { get; set; }
         public ICollection<T> Items { get; set; }    
     }

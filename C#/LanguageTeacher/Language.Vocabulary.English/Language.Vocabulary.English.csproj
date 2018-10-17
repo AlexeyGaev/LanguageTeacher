@@ -42,7 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="VocabularyItems.cs" />
+    <Compile Include="VocabularyUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StableExpression\StableExpression.cs" />
     <Compile Include="Suggestion\Suggestion.cs" />

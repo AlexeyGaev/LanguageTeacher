@@ -1,7 +1,10 @@
-﻿namespace LanguageVocabulary.Core {
+﻿using Utils.Scanner;
+
+namespace LanguageVocabulary.Core {
     public interface IVocabulary {
         IUnit Description { get; }
-        IVocabularyItems<ITextSection> Sections { get; }
-        IVocabularyItems<IWord> Words { get; }
+        IVocabularyUnit<ITextSection> Sections { get; }
+        IVocabularyUnit<IWord> Words { get; }
+        IScanner<IWord, ITextSection> WordsScanner { get; }
     }
 }
