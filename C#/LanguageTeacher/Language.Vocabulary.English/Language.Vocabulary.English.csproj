@@ -7,8 +7,8 @@
     <ProjectGuid>{14AFD0E7-E10E-4A38-81A1-21A58AC73214}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LanguageVocabulary.English</RootNamespace>
-    <AssemblyName>LanguageVocabulary.English</AssemblyName>
+    <RootNamespace>Language.Vocabulary.English</RootNamespace>
+    <AssemblyName>Language.Vocabulary.English</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -85,9 +85,9 @@
       <Project>{81785deb-6960-409d-869c-36e4491d951e}</Project>
       <Name>Utils</Name>
     </ProjectReference>
-    <ProjectReference Include="..\LanguageVocabulary.Core\LanguageVocabulary.Core.csproj">
+    <ProjectReference Include="..\Language.Vocabulary.Core\Language.Vocabulary.Core.csproj">
       <Project>{026cdd91-9306-4198-8bfe-89584e6f5110}</Project>
-      <Name>LanguageVocabulary.Core</Name>
+      <Name>Language.Vocabulary.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

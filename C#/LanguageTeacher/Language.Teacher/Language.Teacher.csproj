@@ -7,8 +7,8 @@
     <ProjectGuid>{E534D11F-E99F-4FE6-9271-95CA1256982E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LanguageTeacher</RootNamespace>
-    <AssemblyName>LanguageTeacher</AssemblyName>
+    <RootNamespace>Language.Teacher</RootNamespace>
+    <AssemblyName>Language.Teacher</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>

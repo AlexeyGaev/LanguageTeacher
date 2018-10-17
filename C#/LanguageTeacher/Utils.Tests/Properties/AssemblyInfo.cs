@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Utils.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("StartSoft")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Utils.Tests")]
-[assembly: AssemblyCopyright("Copyright © StartSoft 2018")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
