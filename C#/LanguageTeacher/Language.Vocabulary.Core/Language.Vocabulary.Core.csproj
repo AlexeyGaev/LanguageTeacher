@@ -38,11 +38,15 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IWord.cs" />
-    <Compile Include="IVocabularyUnit.cs" />
-    <Compile Include="IUnit.cs" />
-    <Compile Include="IVocabulary.cs" />
-    <Compile Include="ITextSection.cs" />
+    <Compile Include="Services\Word\IWordVarianceService.cs" />
+    <Compile Include="Services\Text\ITextWordsService.cs" />
+    <Compile Include="Services\Text\ITextTranslationsService.cs" />
+    <Compile Include="Services\Word\IWordDescriptionService.cs" />
+    <Compile Include="Services\Word\IWordTranscriptionService.cs" />
+    <Compile Include="Services\Word\IWordSpellsService.cs" />
+    <Compile Include="Services\Word\IWordTranslationsService.cs" />
+    <Compile Include="Units\IText.cs" />
+    <Compile Include="Units\IWord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

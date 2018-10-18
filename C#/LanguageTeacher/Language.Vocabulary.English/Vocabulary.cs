@@ -1,11 +1,11 @@
-﻿using LanguageVocabulary.Core;
-using Utils.Scanner;
+﻿using Language.Vocabulary.Core;
+using Utils.Collection;
 
-namespace LanguageVocabulary.English {
-    public class Vocabulary : IVocabulary {
-        public IUnit Description { get; set; }
-        public IVocabularyUnit<ITextSection> Sections { get; set; }
-        public IVocabularyUnit<IWord> Words { get; set; }
-        public IScanner<IWord, ITextSection> WordsScanner { get; set; }
+namespace Language.Vocabulary.English {
+    public class Vocabulary  {
+        public string Name { get; set; }
+        public string Context { get; set; }
+        //public ICollection<ISectionUnit> Sections { get; set; }
+        //public ICollection<IWordUnit> Words { get; set; }
     }
 }
