@@ -2,6 +2,6 @@
 
 namespace Language.Vocabulary.Core {
     public interface IWordTranslationsService<T> {
-        ICollection<T> GetTranslations(IContextUnit word);
+        IEnumerator<T> GetTranslations(IContextUnit word);
     }
 }

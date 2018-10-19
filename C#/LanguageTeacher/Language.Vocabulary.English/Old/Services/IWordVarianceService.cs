@@ -2,6 +2,6 @@
 
 namespace Language.Vocabulary.Core {
     public interface IWordVarianceService<T> {
-        ICollection<T> GetWords(IContextUnit unit);
+        IEnumerator<T> GetWords(IContextUnit unit);
     }
 }

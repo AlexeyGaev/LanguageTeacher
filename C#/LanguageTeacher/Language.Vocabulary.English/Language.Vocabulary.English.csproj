@@ -42,6 +42,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Old\Services\ITextTranslationsService.cs" />
+    <Compile Include="Old\Services\ITextWordsService.cs" />
+    <Compile Include="Old\Services\IWordDescriptionService.cs" />
+    <Compile Include="Old\Services\IWordSpellsService.cs" />
+    <Compile Include="Old\Services\IWordTranscriptionService.cs" />
+    <Compile Include="Old\Services\IWordTranslationsService.cs" />
+    <Compile Include="Old\Services\IWordVarianceService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Old\StableExpression\StableExpression.cs" />
     <Compile Include="Old\Suggestion\Suggestion.cs" />

@@ -1,6 +1,4 @@
-﻿using Utils.Collections;
-
-namespace Language.Vocabulary.Core {
+﻿namespace Language.Vocabulary.Core {
     public interface IDescriptionService<T> {
         T GetDescription(IContextUnit unit);
     }
