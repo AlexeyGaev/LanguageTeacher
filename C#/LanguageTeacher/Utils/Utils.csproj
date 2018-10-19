@@ -35,16 +35,21 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collections\Collection\Collection.cs" />
-    <Compile Include="Collections\Map\Map.cs" />
+    <Compile Include="Collections\UniqueCollection.cs" />
+    <Compile Include="Collections\Collection.cs" />
+    <Compile Include="Collections\KeyValueCollection.cs" />
     <Compile Include="Collections\Enumerator.cs" />
     <Compile Include="Collections\IEnumerator.cs" />
-    <Compile Include="Collections\Collection\ICollection.cs" />
-    <Compile Include="Collections\Map\IMap.cs" />
-    <Compile Include="Services\MapService.cs" />
-    <Compile Include="Services\IService.cs" />
+    <Compile Include="Collections\Services\ITryGetValueByKeyService.cs" />
+    <Compile Include="Collections\Services\IAddUniqueItemService.cs" />
+    <Compile Include="Collections\Services\ICountService.cs" />
+    <Compile Include="Collections\Services\IContainsItemService.cs" />
+    <Compile Include="Collections\Services\IAddItemService.cs" />
+    <Compile Include="Collections\Services\IAddKeyValueService.cs" />
+    <Compile Include="Collections\Services\IEnumerableService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

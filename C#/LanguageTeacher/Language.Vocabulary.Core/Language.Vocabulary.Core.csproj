@@ -38,8 +38,14 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Units\IUnit.cs" />
-    <Compile Include="Units\IContextUnit.cs" />
+    <Compile Include="Services\ITextTranslationsService.cs" />
+    <Compile Include="Services\ITextWordsService.cs" />
+    <Compile Include="Services\IWordDescriptionService.cs" />
+    <Compile Include="Services\IWordSpellsService.cs" />
+    <Compile Include="Services\IWordTranscriptionService.cs" />
+    <Compile Include="Services\IWordTranslationsService.cs" />
+    <Compile Include="Services\IWordVarianceService.cs" />
+    <Compile Include="IUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

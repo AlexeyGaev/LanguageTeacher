@@ -2,6 +2,6 @@
 
 namespace Language.Vocabulary.Core {
     public interface ITextWordsService {
-        IEnumerator<IUnit> GetWords(IUnit text);
+        IEnumerator<IUnit> GetWords(string text);
     }
 }
