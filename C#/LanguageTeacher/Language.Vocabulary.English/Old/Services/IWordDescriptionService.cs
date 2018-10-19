@@ -1,4 +1,4 @@
-﻿using Utils.Collection;
+﻿using Utils.Collections;
 
 namespace Language.Vocabulary.Core {
     public interface IDescriptionService<T> {

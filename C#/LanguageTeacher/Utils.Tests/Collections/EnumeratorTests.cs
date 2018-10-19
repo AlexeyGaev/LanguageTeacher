@@ -1,7 +1,6 @@
 ﻿using NUnit.Framework;
-using Utils.Collection;
 
-namespace Utils.Collection.Tests {
+namespace Utils.Collections.Tests {
     [TestFixture]
     public class EnumeratorTests {
         [Test]

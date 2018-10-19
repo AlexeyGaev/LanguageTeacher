@@ -1,4 +1,4 @@
-﻿namespace Utils.Collection {
+﻿namespace Utils.Collections {
     public class Enumerator<T> : IEnumerator<T> {
         int count;
         int currentIndex;

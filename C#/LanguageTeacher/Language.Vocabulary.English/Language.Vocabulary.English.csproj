@@ -43,41 +43,40 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StableExpression\StableExpression.cs" />
-    <Compile Include="Suggestion\Suggestion.cs" />
-    <Compile Include="Suggestion\SuggestionType.cs" />
-    <Compile Include="Translate\Translate.cs" />
-    <Compile Include="Vocabulary.cs" />
-    <Compile Include="Word\Word.cs" />
-    <Compile Include="Word\WordDetails\Adjective\AdjectiveDetails.cs" />
-    <Compile Include="Word\WordDetails\Adjective\AdjectiveComparisonType.cs" />
-    <Compile Include="Word\WordDetails\Adjective\AdjectiveFormationType.cs" />
-    <Compile Include="Word\WordDetails\Adjective\AdjectiveValueType.cs" />
-    <Compile Include="Word\WordDetails\Adverb\AdverbDetails.cs" />
-    <Compile Include="Word\WordDetails\Adverb\AdverbType.cs" />
-    <Compile Include="Word\WordDetails\Article\ArticleDetails.cs" />
-    <Compile Include="Word\WordDetails\Article\ArticleType.cs" />
-    <Compile Include="Word\WordDetails\Conjuction\ConjuctionDetails.cs" />
-    <Compile Include="Word\WordDetails\IWordDetails.cs" />
-    <Compile Include="Word\WordDetails\Noun\NounDetails.cs" />
-    <Compile Include="Word\WordDetails\Noun\NounCountableType.cs" />
-    <Compile Include="Word\WordDetails\Noun\NounType.cs" />
-    <Compile Include="Word\WordDetails\Empty\EmptyDetails.cs" />
-    <Compile Include="Word\WordDetails\Numerals\NumeralsType.cs" />
-    <Compile Include="Word\WordDetails\Numerals\NumeralsDetails.cs" />
-    <Compile Include="Word\WordDetails\Verb\VerbPluralType.cs" />
-    <Compile Include="Word\WordDetails\Verb\VerbParticipleType.cs" />
-    <Compile Include="Word\WordDetails\Verb\VerbRoleType.cs" />
-    <Compile Include="Word\WordDetails\Verb\VerbPartyType.cs" />
-    <Compile Include="Word\WordDetails\Pronoun\PronounDetails.cs" />
-    <Compile Include="Word\WordDetails\Pronoun\PronounType.cs" />
-    <Compile Include="Word\WordDetails\Verb\VerbDetails.cs" />
-    <Compile Include="Word\WordDetails\Verb\VerbTense.cs" />
-    <Compile Include="Word\WordType.cs" />
+    <Compile Include="Old\StableExpression\StableExpression.cs" />
+    <Compile Include="Old\Suggestion\Suggestion.cs" />
+    <Compile Include="Old\Suggestion\SuggestionType.cs" />
+    <Compile Include="Old\Translate\Translate.cs" />
+    <Compile Include="Old\Word\Word.cs" />
+    <Compile Include="Old\Word\WordDetails\Adjective\AdjectiveDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Adjective\AdjectiveComparisonType.cs" />
+    <Compile Include="Old\Word\WordDetails\Adjective\AdjectiveFormationType.cs" />
+    <Compile Include="Old\Word\WordDetails\Adjective\AdjectiveValueType.cs" />
+    <Compile Include="Old\Word\WordDetails\Adverb\AdverbDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Adverb\AdverbType.cs" />
+    <Compile Include="Old\Word\WordDetails\Article\ArticleDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Article\ArticleType.cs" />
+    <Compile Include="Old\Word\WordDetails\Conjuction\ConjuctionDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\IWordDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Noun\NounDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Noun\NounCountableType.cs" />
+    <Compile Include="Old\Word\WordDetails\Noun\NounType.cs" />
+    <Compile Include="Old\Word\WordDetails\Empty\EmptyDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Numerals\NumeralsType.cs" />
+    <Compile Include="Old\Word\WordDetails\Numerals\NumeralsDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Verb\VerbPluralType.cs" />
+    <Compile Include="Old\Word\WordDetails\Verb\VerbParticipleType.cs" />
+    <Compile Include="Old\Word\WordDetails\Verb\VerbRoleType.cs" />
+    <Compile Include="Old\Word\WordDetails\Verb\VerbPartyType.cs" />
+    <Compile Include="Old\Word\WordDetails\Pronoun\PronounDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Pronoun\PronounType.cs" />
+    <Compile Include="Old\Word\WordDetails\Verb\VerbDetails.cs" />
+    <Compile Include="Old\Word\WordDetails\Verb\VerbTense.cs" />
+    <Compile Include="Old\Word\WordType.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Word\WordDetails\Interjection\" />
-    <Folder Include="Word\WordDetails\Preposition\" />
+    <Folder Include="Old\Word\WordDetails\Interjection\" />
+    <Folder Include="Old\Word\WordDetails\Preposition\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Utils\Utils.csproj">

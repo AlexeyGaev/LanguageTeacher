@@ -42,8 +42,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Collection\CollectionTests.cs" />
-    <Compile Include="Collection\EnumeratorTests.cs" />
+    <Compile Include="Collections\CollectionTests.cs" />
+    <Compile Include="Collections\EnumeratorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

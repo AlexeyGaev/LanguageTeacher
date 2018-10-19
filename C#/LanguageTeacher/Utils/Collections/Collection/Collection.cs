@@ -1,5 +1,5 @@
-﻿namespace Utils.Collection {
-    public class Collection<T> : ICollection<T> {
+﻿namespace Utils.Collections.Collection {
+    public class Collection<T> : IEnumerable<T>, IAdd<T>, ICount {
         const int DefaultCapacity = 2;
         const int aspect = 2;
 
@@ -17,11 +17,15 @@
         }
 
         public int Count { get { return this.count; } }
-               
+
+        public void Clear() {
+            Init();
+        }
+
         public IEnumerator<T> GetEnumerator() {
             return new Enumerator<T>(this.items, this.count);
         }
-        
+
         public bool Add(T item) {
             if (this.count > 0 && this.currentCapacity == this.count) {
                 if (!IncreaseCapacity())
@@ -32,22 +36,8 @@
             return true;
         }
 
-        public void Clear() {
-            Init();
-        }
-
-        public bool Contains(T Item) {
-            throw new System.NotImplementedException();
-        }
-
-        public bool FindItemByIndex(int index, out T result) {
-            throw new System.NotImplementedException();
-        }
-
-
         void Init() {
             this.currentCapacity = this.startCapacity;
-            
             this.items = CreateItems();
             this.count = 0;
         }
@@ -71,8 +61,5 @@
         T[] CreateItems() {
             return new T[this.currentCapacity];
         }
-
-
-        
     }
 }

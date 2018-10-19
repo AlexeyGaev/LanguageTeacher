@@ -38,15 +38,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Services\Word\IWordVarianceService.cs" />
-    <Compile Include="Services\Text\ITextWordsService.cs" />
-    <Compile Include="Services\Text\ITextTranslationsService.cs" />
-    <Compile Include="Services\Word\IWordDescriptionService.cs" />
-    <Compile Include="Services\Word\IWordTranscriptionService.cs" />
-    <Compile Include="Services\Word\IWordSpellsService.cs" />
-    <Compile Include="Services\Word\IWordTranslationsService.cs" />
-    <Compile Include="Units\IText.cs" />
-    <Compile Include="Units\IWord.cs" />
+    <Compile Include="Units\IUnit.cs" />
+    <Compile Include="Units\IContextUnit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -54,6 +47,9 @@
       <Project>{81785deb-6960-409d-869c-36e4491d951e}</Project>
       <Name>Utils</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Maps\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

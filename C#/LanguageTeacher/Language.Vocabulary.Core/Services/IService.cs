@@ -1,7 +1,7 @@
 ﻿using Utils.Collection;
 
 namespace Language.Vocabulary.Core {
-    public interface IText {
-        string Name { get; }
+    public interface IService<T, U> {
+        T GetInfo(U unit);
     }
 }
