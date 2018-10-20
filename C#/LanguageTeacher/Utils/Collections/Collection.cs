@@ -1,5 +1,7 @@
-﻿namespace Utils.Collections.Collection {
-    public class Collection<T> : IEnumerable<T>, IAdd<T>, ICount {
+﻿using Utils.Collections.Services;
+
+namespace Utils.Collections {
+    public class Collection<T> : IEnumerableService<T>, IAddItemService<T>, ICountService {
         const int DefaultCapacity = 2;
         const int aspect = 2;
 
@@ -17,10 +19,6 @@
         }
 
         public int Count { get { return this.count; } }
-
-        public void Clear() {
-            Init();
-        }
 
         public IEnumerator<T> GetEnumerator() {
             return new Enumerator<T>(this.items, this.count);

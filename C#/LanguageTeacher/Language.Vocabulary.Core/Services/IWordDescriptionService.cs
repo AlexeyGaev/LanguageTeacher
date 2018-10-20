@@ -1,5 +1,5 @@
 ﻿namespace Language.Vocabulary.Core {
-    public interface IDescriptionService<T> {
+    public interface IWordDescriptionService<T> {
         T GetDescription(IUnit unit);
     }
 }

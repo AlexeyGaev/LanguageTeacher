@@ -30,14 +30,14 @@ namespace Utils.Collections.Collection.Tests {
             Assert.AreEqual(0, enumerator.Current);
         }
 
-        [Test]
-        public void Clear() {
-            Collection<int> collection = new Collection<int>();
-            collection.Add(2);
-            collection.Clear();
+        //[Test]
+        //public void Clear() {
+        //    Collection<int> collection = new Collection<int>();
+        //    collection.Add(2);
+        //    collection.Clear();
 
-            Assert.AreEqual(0, collection.Count);
-        }
+        //    Assert.AreEqual(0, collection.Count);
+        //}
                 
         [Test]
         public void IncreaseCapacity() {
