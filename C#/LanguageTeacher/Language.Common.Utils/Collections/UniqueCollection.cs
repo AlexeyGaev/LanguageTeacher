@@ -21,6 +21,7 @@
         }
 
         public bool AddUnique(T item) {
+            // TODO
             if (this.count > 0 && this.currentCapacity == this.count) {
                 if (!IncreaseCapacity())
                     return false;

@@ -31,7 +31,7 @@
             this.count++;
             return true;
         }
-
+       
         void Init() {
             this.currentCapacity = this.startCapacity;
             this.items = CreateItems();
@@ -57,5 +57,7 @@
         T[] CreateItems() {
             return new T[this.currentCapacity];
         }
+
+        
     }
 }
