@@ -8,7 +8,7 @@ namespace Language.Services.EngRus.WordTranslation {
     // Test module
     public class HelloModule : NancyModule {
         public HelloModule() {
-            Get("/", _ => "Hello world!");
+            Get("/", _ => DateTime.UtcNow);
         }
     }
 }

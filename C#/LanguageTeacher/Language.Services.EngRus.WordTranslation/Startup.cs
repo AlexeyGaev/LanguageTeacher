@@ -12,8 +12,14 @@ namespace Language.Services.EngRus.WordTranslation {
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env) {
-            app.UseOwin(b => b.UseNancy());
+        public void Configure(IApplicationBuilder app, IHostingEnvironment e) {
+            app.UseOwin(buildFunc => {
+                buildFunc(next => env => {
+                    System.Console.WriteLine("Got request");
+                    return next(env);
+                });
+                buildFunc.UseNancy();
+            });
             //if (env.IsDevelopment()) {
             //    app.UseDeveloperExceptionPage();
             //}
