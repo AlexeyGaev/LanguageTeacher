@@ -9,6 +9,6 @@ namespace Translation.EngRus {
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<ILogger>();
+                .UseStartup<Startup>();
     }
 }
