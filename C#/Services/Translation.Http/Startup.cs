@@ -2,15 +2,11 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Threading.Tasks;
-using Translation.Http.Converter;
-using Translation.Http.Logger;
 
 namespace Translation.Http {
     public class Startup {
-        ILogger<string> consoleLogger = new ConsoleLogger();
-        IToStringConverter<HttpContext> converter = new HttpContextConverter();
-
         public void ConfigureServices(IServiceCollection services) {
         }
 
@@ -25,8 +21,8 @@ namespace Translation.Http {
         }
 
         Task GetTask(HttpContext context) {
-            consoleLogger.Log("Got request");
-            return context.Response.WriteAsync(converter.Convert(context));
+            Logger.ConsoleLog("Got request");
+            return context.Response.WriteAsync(Converter.Convert(String.Empty, context));
         }
     }
 }
