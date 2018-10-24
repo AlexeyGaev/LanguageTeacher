@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
-namespace Language.Services.EngRus.WordTranslation {
+namespace Translation.EngRus {
     public class Program {
         public static void Main(string[] args) {
             CreateWebHostBuilder(args).Build().Run();
@@ -9,6 +9,6 @@ namespace Language.Services.EngRus.WordTranslation {
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
+                .UseStartup<ILogger>();
     }
 }

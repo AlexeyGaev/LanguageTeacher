@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Nancy.Owin;
 
-namespace Language.Services.EngRus.WordTranslation {
+namespace Translation.EngRus {
     public class Startup {
+        readonly ConsoleLogger logger = new ConsoleLogger();
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services) {
@@ -15,7 +15,7 @@ namespace Language.Services.EngRus.WordTranslation {
         public void Configure(IApplicationBuilder app, IHostingEnvironment e) {
             app.UseOwin(buildFunc => {
                 buildFunc(next => env => {
-                    System.Console.WriteLine("Got request");
+                    logger.Log("Got request");
                     return next(env);
                 });
                 buildFunc.UseNancy();
