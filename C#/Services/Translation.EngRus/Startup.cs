@@ -5,9 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Nancy.Owin;
 using System;
 using System.Threading.Tasks;
+using Translation.EngRus.Logger;
 
 namespace Translation.EngRus {
     public class Startup {
+        ConsoleLogger consoleLogger = new ConsoleLogger();
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services) {
@@ -32,8 +34,8 @@ namespace Translation.EngRus {
         }
 
         Task GetTask(HttpContext context) {
-            Console.WriteLine("Got request:\n" + context.ToString());
-            return context.Response.WriteAsync("Hello World!");
+            consoleLogger.Log("Got request");
+            return context.Response.WriteAsync("!!!");
         }
     }
 }
