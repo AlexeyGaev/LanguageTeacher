@@ -1,5 +1,5 @@
 ﻿using System;
-using Translation.Http.Tree;
+using Translation.Http.PropertyTree;
 
 namespace Translation.Http {
     public static class PropertyDescriptionExporter {

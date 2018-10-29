@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using Translation.Http.PropertyTree;
 
 namespace Translation.Http {
     public class Startup {
@@ -23,7 +24,9 @@ namespace Translation.Http {
 
         Task GetTask(HttpContext context) {
             Logger.ConsoleLog("Got request");
-            return context.Response.WriteAsync(PropertyTreeExporter.Convert(context, "HttpContext"));
+            string propertyName = "HttpContext";
+            string input = String.Empty;
+            return context.Response.WriteAsync(context == null ? EmptyExporter.Write(input, propertyName) : PropertyTreeExporter.Write(input, PropertyTreeBuilder.Create(context, propertyName)));
             //return context.Response.WriteAsync(Converter.Convert(String.Empty, context));
         }
     }

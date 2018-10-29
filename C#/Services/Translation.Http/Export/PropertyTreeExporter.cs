@@ -1,22 +1,23 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using Translation.Http.Tree;
 
-namespace Translation.Http {
-    public static class PropertyTreeExporter {
-        public static string Convert(HttpContext context, string propertyName) {
-            int indentLevel = 0;
-            if (context == null)
-                return WriteNullValueLine(String.Empty, indentLevel, propertyName);
+namespace Translation.Http.PropertyTree {
+    public class EmptyExporter {
+        public static string Write(string input, string propertyName) {
+            return
+                input + propertyName + Localization.Indent + Localization.IsNull +
+                Localization.Dot + Localization.NewLine;
+        }
+    }
 
-            Tree<PropertyDescription> tree = PropertyDescriptionTreeBuilder.Create(context, propertyName);
-            string result = String.Empty;
+    public static class PropertyTreeExporter {
+        public static string Write(string input, Tree<PropertyDescription> tree) {
             TreeItem<PropertyDescription> rootItem = tree.RootItem;
-            result = WriteLine(result, indentLevel, rootItem.Value.PropertyName, rootItem.Value.PropertyType.Name);
-            result = Write(result, indentLevel + 1, rootItem.Children);
-            return result;
+            input = WriteLine(input, 0, rootItem.Value.PropertyName, rootItem.Value.PropertyType.Name);
+            input = Write(input, 1, rootItem.Children);
+            return input;
         }
 
         static string WriteLine(string input, int indentLevel, string propertyName, string propertyType) {
@@ -26,11 +27,7 @@ namespace Translation.Http {
                 Localization.NewLine;
         }
 
-        static string WriteNullValueLine(string input, int indentLevel, string propertyName) {
-            return
-                input + IndentBuilder.Create(indentLevel) + propertyName + Localization.Indent + Localization.IsNull +
-                Localization.Dot + Localization.NewLine;
-        }
+        
 
         static string Write(string result, int indentLevel, List<TreeItem<PropertyDescription>> items) {
             foreach (TreeItem<PropertyDescription> item in items) {

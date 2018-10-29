@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Reflection;
 
-namespace Translation.Http.Tree {
+namespace Translation.Http.PropertyTree {
     public class PropertyDescription {
         readonly object owner;
         readonly string propertyName;
         readonly Type propertyType;
-        readonly PropertyValue propertyValue;
+        readonly IPropertyValue propertyValue;
 
-        public PropertyDescription(object owner, string propertyName, Type propertyType, PropertyValue propertyValue) {
+        public PropertyDescription(object owner, string propertyName, Type propertyType, IPropertyValue propertyValue) {
             this.owner = owner;
             this.propertyName = propertyName;
             this.propertyType = propertyType;
@@ -18,6 +17,6 @@ namespace Translation.Http.Tree {
         public object Owner { get { return this.owner; } }
         public string PropertyName { get { return this.propertyName; } }
         public Type PropertyType { get { return this.propertyType; } }
-        public PropertyValue PropertyValue { get { return this.propertyValue; } }
+        public IPropertyValue PropertyValue { get { return this.propertyValue; } }
     }
 }

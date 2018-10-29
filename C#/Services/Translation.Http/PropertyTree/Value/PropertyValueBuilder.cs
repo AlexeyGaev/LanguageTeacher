@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+using Translation.Http.Tree;
 
-namespace Translation.Http.Tree {
+namespace Translation.Http.PropertyTree {
     // TODO:
     //IsPrimitive: Boolean, Byte, SByte, Int16, UInt16, Int32, UInt32, Int64, UInt64, IntPtr, UIntPtr, Char, Double, Single.
     //struct
@@ -25,27 +25,28 @@ namespace Translation.Http.Tree {
     //}
 
     public static class PropertyValueBuilder {
-        public static PropertyValue Create(Tree<PropertyDescription> tree, Type type, object value) {
-            if (type.IsPrimitive)
-                return PropertyValue.CreatePrimitive(value);
-            if (type.IsEnum)
-                return PropertyValue.CreateEnum(value, type);
+        public static IPropertyValue Create(Tree<PropertyDescription> tree, Type type, object value) {
             if (type == typeof(string))
-                return PropertyValue.CreateString((string)value);
+                return new PropertyValueString((string)value);
+            if (type.IsValueType) {
+                if (type.IsEnum) 
+                    return new PropertyValueEnum(value, type, Enum.GetUnderlyingType(type) == type);
+                if (type.IsPrimitive)
+                    return new PropertyValuePrimitive(value, Nullable.GetUnderlyingType(type) == type);
+                return new PropertyValueStruct(value, Nullable.GetUnderlyingType(type) == type); 
+            }
             if (type.IsClass)
-                return PropertyValue.CreateClass(value, tree == null ? false : ContainsByOwner(tree, value));
-            // TODO : StackOverflow
-            //if (propertyType.IsValueType)
-            //    return PropertyValue.CreateStruct(value); 
-            return PropertyValue.CreateUndefined(value);
+                return new PropertyValueClass(value, tree == null ? false : !ContainsByOwner(tree, value));
+           
+            return new PropertyValueUndefined(value);
         }
 
-        public static PropertyValue Create(Tree<PropertyDescription> tree, object owner, PropertyInfo propertyInfo) {
+        public static IPropertyValue Create(Tree<PropertyDescription> tree, object owner, PropertyInfo propertyInfo) {
             try {
                 object value = propertyInfo.GetValue(owner);
                 return Create(tree, propertyInfo.PropertyType, value);
             } catch (Exception e) {
-                return PropertyValue.CreateException(e);
+                return new PropertyValueException(e);
             }
         }
 
