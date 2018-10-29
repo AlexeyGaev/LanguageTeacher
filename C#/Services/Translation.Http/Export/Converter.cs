@@ -4,7 +4,8 @@ using System;
 using System.Collections.Generic;
 
 namespace Translation.Http {
-    public static class Converter {
+    // TODO : to test
+    public static class OldConverter {
         static string IsNull = "is Null";
         static string IsEmpty = "is Empty";
         static string Dot = ".";

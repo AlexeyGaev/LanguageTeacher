@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Translation.Http {
@@ -22,7 +23,8 @@ namespace Translation.Http {
 
         Task GetTask(HttpContext context) {
             Logger.ConsoleLog("Got request");
-            return context.Response.WriteAsync(Converter.Convert(String.Empty, context));
+            return context.Response.WriteAsync(PropertyTreeExporter.Convert(context));
+            //return context.Response.WriteAsync(Converter.Convert(String.Empty, context));
         }
     }
 }
