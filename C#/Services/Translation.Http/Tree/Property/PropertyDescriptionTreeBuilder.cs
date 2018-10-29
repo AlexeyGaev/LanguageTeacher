@@ -1,21 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Collections.Generic;
 
 namespace Translation.Http.Tree {
     public static class PropertyDescriptionTreeBuilder {
-        public static Tree<PropertyDescription> Create(object source) {
+        public static Tree<PropertyDescription> Create(object source, string name) {
             Tree<PropertyDescription> tree = new Tree<PropertyDescription>();
-            AddItems(tree, tree.RootItems, source);
+            if (source == null)
+                return tree;
+            PropertyValue propertyValue = PropertyValueBuilder.Create(null, source.GetType(), source);
+            PropertyDescription propertyDescription = new PropertyDescription(null, name, source.GetType(), propertyValue);
+            tree.RootItem = new TreeItem<PropertyDescription>(propertyDescription);
+            foreach (PropertyDescription value in CreateValueItems(tree, source)) {
+                TreeItem<PropertyDescription> item = new TreeItem<PropertyDescription>(value);
+                AddItems(tree, tree.RootItem.Children, GetChildOwner(value));
+            }
             return tree;
         }
 
-        static void AddItems(Tree<PropertyDescription> tree, List<Item<PropertyDescription>> items, object owner) {
+        static void AddItems(Tree<PropertyDescription> tree, List<TreeItem<PropertyDescription>> items, object owner) {
             if (owner == null)
                 return;
             foreach (PropertyDescription value in CreateValueItems(tree, owner)) {
-                Item<PropertyDescription> item = new Item<PropertyDescription>(value);
+                TreeItem<PropertyDescription> item = new TreeItem<PropertyDescription>(value);
                 items.Add(item);
                 if (CanAddChildren(value)) 
                     AddItems(tree, item.Children, GetChildOwner(value));
@@ -27,7 +32,7 @@ namespace Translation.Http.Tree {
         }
 
         static bool CanAddChildren(PropertyDescription value) {
-            return value.HasChildren;
+            return value.PropertyValue.HasChildren;
         }
 
         static IEnumerable<PropertyDescription> CreateValueItems(Tree<PropertyDescription> tree, object owner) {

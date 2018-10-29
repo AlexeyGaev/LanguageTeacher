@@ -23,7 +23,7 @@ namespace Translation.Http {
 
         Task GetTask(HttpContext context) {
             Logger.ConsoleLog("Got request");
-            return context.Response.WriteAsync(PropertyTreeExporter.Convert(context));
+            return context.Response.WriteAsync(PropertyTreeExporter.Convert(context, "HttpContext"));
             //return context.Response.WriteAsync(Converter.Convert(String.Empty, context));
         }
     }

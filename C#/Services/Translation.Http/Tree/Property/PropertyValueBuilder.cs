@@ -15,23 +15,35 @@ namespace Translation.Http.Tree {
     //IsArray
     //IEnumerable
 
+    //[Test]
+    //public void Test() {
+    //    var t = typeof(int?);
+    //    var t1 = typeof(int);
+
+    //    Assert.That(Nullable.GetUnderlyingType(t) == typeof(int));
+    //    Assert.That(Nullable.GetUnderlyingType(t1) == null);
+    //}
+
     public static class PropertyValueBuilder {
+        public static PropertyValue Create(Tree<PropertyDescription> tree, Type type, object value) {
+            if (type.IsPrimitive)
+                return PropertyValue.CreatePrimitive(value);
+            if (type.IsEnum)
+                return PropertyValue.CreateEnum(value, type);
+            if (type == typeof(string))
+                return PropertyValue.CreateString((string)value);
+            if (type.IsClass)
+                return PropertyValue.CreateClass(value, tree == null ? false : ContainsByOwner(tree, value));
+            // TODO : StackOverflow
+            //if (propertyType.IsValueType)
+            //    return PropertyValue.CreateStruct(value); 
+            return PropertyValue.CreateUndefined(value);
+        }
+
         public static PropertyValue Create(Tree<PropertyDescription> tree, object owner, PropertyInfo propertyInfo) {
             try {
                 object value = propertyInfo.GetValue(owner);
-                Type propertyType = propertyInfo.PropertyType;
-                if (propertyType.IsPrimitive)
-                    return PropertyValue.CreatePrimitive(value);
-                if (propertyType.IsEnum) 
-                    return PropertyValue.CreateEnum(value, propertyType);
-                if (propertyType == typeof(string))
-                    return PropertyValue.CreateString((string)value);
-                if (propertyType.IsClass) 
-                    return PropertyValue.CreateClass(value, ContainsByOwner(tree, value));
-                // TODO : StackOverflow
-                //if (propertyType.IsValueType)
-                //    return PropertyValue.CreateStruct(value); 
-                return PropertyValue.CreateUndefined(value);
+                return Create(tree, propertyInfo.PropertyType, value);
             } catch (Exception e) {
                 return PropertyValue.CreateException(e);
             }
@@ -40,13 +52,13 @@ namespace Translation.Http.Tree {
         static bool ContainsByOwner(Tree<PropertyDescription> tree, object owner) {
             if (owner.GetType().IsValueType)
                 return false;
-            return ContainsByOwnerCore(tree.RootItems, owner);
+            return ContainsByOwnerCore(tree.RootItem.Children, owner);
         }
 
-        static bool ContainsByOwnerCore(List<Item<PropertyDescription>> items, object owner) {
+        static bool ContainsByOwnerCore(List<TreeItem<PropertyDescription>> items, object owner) {
             if (owner.GetType().IsValueType)
                 return false;
-            foreach (Item<PropertyDescription> item in items) {
+            foreach (TreeItem<PropertyDescription> item in items) {
                 PropertyDescription parentProperty = item.Value;
                 object parentOwner = parentProperty.Owner;
                 Type parentType = parentOwner.GetType();

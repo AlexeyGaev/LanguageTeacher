@@ -2,7 +2,6 @@
 
 namespace Translation.Http.Tree {
     public class Tree<T> {
-        List<Item<T>> rootItems = new List<Item<T>>();
-        public List<Item<T>> RootItems { get { return this.rootItems; } }
+        public TreeItem<T> RootItem { get; set; }
     }
 }

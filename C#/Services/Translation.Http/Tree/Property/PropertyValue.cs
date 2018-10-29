@@ -1,17 +1,6 @@
 ﻿using System;
 
 namespace Translation.Http.Tree {
-    // TODO:
-    //IsPrimitive: Boolean, Byte, SByte, Int16, UInt16, Int32, UInt32, Int64, UInt64, IntPtr, UIntPtr, Char, Double, Single.
-    //struct
-    //IsEnum
-    //Nullable: struct, IsPrimitive, IsEnum
-    //IsValueType: IsPrimitive, struct, IsEnum
-    //IsGenericType
-    //string 
-    //IsArray
-    //IEnumerable
-
     public class PropertyValue {
         public static PropertyValue CreatePrimitive(object value) {
             PropertyValue result = new PropertyValue();
@@ -102,5 +91,61 @@ namespace Translation.Http.Tree {
                     !this.fromParent;
             }
         }
+    }
+
+    public class PropertyValueUndefined {
+
+    }
+
+    public class PropertyValuePrimitive<T> where T : struct {
+
+    }
+
+    public class PropertyValueStruct<T> where T : struct {
+
+    }
+
+    public class PropertyValueClass {
+
+    }
+
+    public class PropertyValueException {
+
+    }
+
+    public class PropertyValueEnum<T> where T : struct {
+
+    }
+
+    public enum PrimitiveValueType {
+        Boolean,
+        Byte,
+        SByte,
+        Int16,
+        UInt16,
+        Int32,
+        UInt32,
+        Int64,
+        UInt64,
+        IntPtr,
+        UIntPtr,
+        Char,
+        Double,
+        Single
+    }
+
+    public enum PropertyValueType {
+        Undefined,
+        Primitive,
+        NullablePrimitive,
+        Enum,
+        NullableEnum,
+        Struct,
+        NullableStruct,
+        Exception,
+        Class,
+        Interface,
+        Array,
+        Enumerable
     }
 }
