@@ -1,5 +1,5 @@
 ﻿namespace Reflection.Utils.PropertyTree {
-    public abstract class PropertyValue : IPropertyValue {
+    public abstract class PropertyValue {
         readonly object value;
 
         protected PropertyValue(object value) {

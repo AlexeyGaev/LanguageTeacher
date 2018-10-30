@@ -5,9 +5,9 @@ namespace Reflection.Utils.PropertyTree {
         readonly object owner;
         readonly string propertyName;
         readonly Type propertyType;
-        readonly IPropertyValue propertyValue;
+        readonly PropertyValue propertyValue;
 
-        public PropertyDescription(object owner, string propertyName, Type propertyType, IPropertyValue propertyValue) {
+        public PropertyDescription(object owner, string propertyName, Type propertyType, PropertyValue propertyValue) {
             this.owner = owner;
             this.propertyName = propertyName;
             this.propertyType = propertyType;
@@ -17,6 +17,6 @@ namespace Reflection.Utils.PropertyTree {
         public object Owner { get { return this.owner; } }
         public string PropertyName { get { return this.propertyName; } }
         public Type PropertyType { get { return this.propertyType; } }
-        public IPropertyValue PropertyValue { get { return this.propertyValue; } }
+        public PropertyValue PropertyValue { get { return this.propertyValue; } }
     }
 }

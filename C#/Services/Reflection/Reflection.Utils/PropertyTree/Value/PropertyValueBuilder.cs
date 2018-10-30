@@ -25,12 +25,12 @@ namespace Reflection.Utils.PropertyTree {
     //}
 
     public static class PropertyValueBuilder {
-        public static IPropertyValue Create(Tree<PropertyDescription> tree, Type type, object value) {
+        public static PropertyValue Create(Tree<PropertyDescription> tree, Type type, object value) {
             if (type == typeof(string))
                 return new PropertyValueString((string)value);
             if (type.IsValueType) {
                 if (type.IsEnum) 
-                    return new PropertyValueEnum(value, type, Enum.GetUnderlyingType(type) == type);
+                    return new PropertyValueEnum(value, Enum.GetUnderlyingType(type) == type, type);
                 if (type.IsPrimitive)
                     return new PropertyValuePrimitive(value, Nullable.GetUnderlyingType(type) == type);
                 return new PropertyValueStruct(value, Nullable.GetUnderlyingType(type) == type); 
@@ -41,7 +41,7 @@ namespace Reflection.Utils.PropertyTree {
             return new PropertyValueUndefined(value);
         }
 
-        public static IPropertyValue Create(Tree<PropertyDescription> tree, object owner, PropertyInfo propertyInfo) {
+        public static PropertyValue Create(Tree<PropertyDescription> tree, object owner, PropertyInfo propertyInfo) {
             try {
                 object value = propertyInfo.GetValue(owner);
                 return Create(tree, propertyInfo.PropertyType, value);

@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 
 namespace Reflection.Utils.Tree.Export {
-    public static class TreeExporter<W, T> {
-        public static void Export(W writer, Tree<T> tree, Action<W, T> exportRoot, Action<W, T, int> exportChild, Func<T, bool> canExportChild) {
-            TreeItem<T> rootItem = tree.RootItem;
-            exportRoot(writer, rootItem.Value);
-            ExportCore(writer, 1, rootItem.Children, (w, t, i) => exportChild(w, t, i), t => canExportChild(t));
+    public static class TreeExporter<Writer, ItemValue, Format> {
+        public static void Export(Writer writer, Tree<ItemValue> tree, Format format, Action<Writer, ItemValue, Format> exportRoot, Action<Writer, ItemValue, Format, int> exportChild, Func<ItemValue, bool> canExportChild) {
+            TreeItem<ItemValue> rootItem = tree.RootItem;
+            exportRoot(writer, rootItem.Value, format);
+            ExportCore(writer, rootItem.Children, format, 1, (w, i, f, l) => exportChild(w, i, f, l), i => canExportChild(i));
         }
 
-        static void ExportCore(W writer, int indentLevel, List<TreeItem<T>> items, Action<W, T, int> exportChild, Func<T, bool> canExportChild) {
-            foreach (TreeItem<T> item in items) {
-                exportChild(writer, item.Value, indentLevel);
+        static void ExportCore(Writer writer, List<TreeItem<ItemValue>> items, Format format, int level, Action<Writer, ItemValue, Format, int> exportChild, Func<ItemValue, bool> canExportChild) {
+            foreach (TreeItem<ItemValue> item in items) {
+                exportChild(writer, item.Value, format, level);
                 if (canExportChild(item.Value))
-                    ExportCore(writer, indentLevel + 1, item.Children, (w, t, i) => exportChild(w, t, i), t => canExportChild(t));
+                    ExportCore(writer, item.Children, format, level + 1, (w, i, f, l) => exportChild(w, i, f, l), i => canExportChild(i));
             }
         }
     }
