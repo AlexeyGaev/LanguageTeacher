@@ -10,9 +10,6 @@ namespace Reflection.Utils.Tree {
             Func<T, object> getChildOwner) {
 
             Tree<T> tree = new Tree<T>();
-            if (source == null)
-                return tree;
-
             tree.RootItem = new TreeItem<T>(createRootValue(source));
             AddItems(tree, tree.RootItem.Children, source, (t, o) => createValueItems(t, o), i => canAddChildren(i), i => getChildOwner(i));
             return tree;

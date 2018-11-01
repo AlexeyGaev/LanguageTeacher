@@ -5,18 +5,17 @@ using Reflection.Utils.Tree;
 
 namespace Reflection.Utils.PropertyTree {
     public static class PropertyTreeBuilder {
-        public static Tree<PropertyDescription> Create(object source, string name) {
+        public static Tree<PropertyDescription> Create(object source, string sourceName, Type sourceType) {
             return TreeBuilder<PropertyDescription>.Create(
                 source,
-                s => CreateRootValue(s, name),
+                s => CreateRootValue(s, sourceName, sourceType),
                 (t, o) => CreateDescriptions(t, o),
                 p => p.PropertyValue.HasChildren,
                 p => p.PropertyValue.Value);
         }
 
-        static PropertyDescription CreateRootValue(object source, string name) {
-            Type ownerType = source.GetType();
-            return new PropertyDescription(null, name, ownerType, PropertyValueBuilder.Create(null, ownerType, source));
+        static PropertyDescription CreateRootValue(object propertyValue, string propertyName, Type propertyType) {
+            return new PropertyDescription(null, propertyName, propertyType, PropertyValueBuilder.CreateCore(null, propertyType, propertyValue));
         }
 
         static IEnumerable<PropertyDescription> CreateDescriptions(Tree<PropertyDescription> tree, object owner) {

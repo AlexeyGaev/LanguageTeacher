@@ -25,30 +25,39 @@ namespace Reflection.Utils.PropertyTree {
     //}
 
     public static class PropertyValueBuilder {
-        public static PropertyValue Create(Tree<PropertyDescription> tree, Type type, object value) {
-            if (type == typeof(string))
-                return new PropertyValueString((string)value);
-            if (type.IsValueType) {
-                if (type.IsEnum) 
-                    return new PropertyValueEnum(value, Enum.GetUnderlyingType(type) == type, type);
-                if (type.IsPrimitive)
-                    return new PropertyValuePrimitive(value, Nullable.GetUnderlyingType(type) == type);
-                return new PropertyValueStruct(value, Nullable.GetUnderlyingType(type) == type); 
-            }
-            if (type.IsClass)
-                return new PropertyValueClass(value, tree == null ? false : !ContainsByOwner(tree, value));
-           
-            return new PropertyValueUndefined(value);
-        }
-
         public static PropertyValue Create(Tree<PropertyDescription> tree, object owner, PropertyInfo propertyInfo) {
             try {
                 object value = propertyInfo.GetValue(owner);
-                return Create(tree, propertyInfo.PropertyType, value);
+                return CreateCore(tree, propertyInfo.PropertyType, value);
             } catch (Exception e) {
                 return new PropertyValueException(e);
             }
         }
+
+        public static PropertyValue CreateCore(Tree<PropertyDescription> tree, Type type, object value) {
+            if (type == null)
+                return null;
+            if (type == typeof(string))
+                return new PropertyValueString((string)value);
+            if (type.IsClass)
+                return new PropertyValueClass(value, tree == null ? false : !ContainsByOwner(tree, value));
+            Type underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType != null) 
+                return CreateValueBased(value, underlyingType, true);
+            if (type.IsValueType) 
+                return CreateValueBased(value, type, false);
+            return new PropertyValueUndefined(value);
+        }
+
+        static PropertyValueNullable CreateValueBased(object value, Type type, bool isNullable) {
+            if (type.IsPrimitive)
+                return new PropertyValuePrimitive(value, isNullable);
+            if (type.IsEnum)
+                return new PropertyValueEnum(value, isNullable, type);
+            return new PropertyValueStruct(value, isNullable);
+        }
+
+       
 
         static bool ContainsByOwner(Tree<PropertyDescription> tree, object owner) {
             if (owner.GetType().IsValueType)
