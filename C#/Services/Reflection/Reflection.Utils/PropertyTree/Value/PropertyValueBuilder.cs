@@ -34,13 +34,26 @@ namespace Reflection.Utils.PropertyTree {
             }
         }
 
+        static bool IsValidClass(object value) {
+            if (value == null)
+                return false;
+            Type valueType = value.GetType();
+            if (valueType.IsValueType)
+                return false;
+            return true;
+        }
+
         public static PropertyValue CreateCore(Tree<PropertyDescription> tree, Type type, object value) {
             if (type == null)
                 return null;
             if (type == typeof(string))
                 return new PropertyValueString((string)value);
-            if (type.IsClass)
-                return new PropertyValueClass(value, tree == null ? false : !ContainsByOwner(tree, value));
+            if (type.IsClass) {
+                if (tree == null)
+                    return new PropertyValueClass(value, false);
+                return new PropertyValueClass(value, IsValidClass(value)/* && !ContainsByOwner(tree, value)*/);
+            }
+                
             Type underlyingType = Nullable.GetUnderlyingType(type);
             if (underlyingType != null) 
                 return CreateValueBased(value, underlyingType, true);
@@ -57,16 +70,14 @@ namespace Reflection.Utils.PropertyTree {
             return new PropertyValueStruct(value, isNullable);
         }
 
-       
+
 
         static bool ContainsByOwner(Tree<PropertyDescription> tree, object owner) {
-            if (owner.GetType().IsValueType)
-                return false;
             return ContainsByOwnerCore(tree.RootItem.Children, owner);
         }
 
         static bool ContainsByOwnerCore(List<TreeItem<PropertyDescription>> items, object owner) {
-            if (owner.GetType().IsValueType)
+            if (owner == null || owner.GetType().IsValueType)
                 return false;
             foreach (TreeItem<PropertyDescription> item in items) {
                 PropertyDescription parentProperty = item.Value;
