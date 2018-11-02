@@ -3,9 +3,9 @@
 namespace Reflection.Utils.PropertyTree {
     public abstract class PropertyValue {
         readonly object value;
-        readonly ParentValues parents;
+        readonly IEnumerable<object> parents;
 
-        protected PropertyValue(object value, ParentValues parents) {
+        protected PropertyValue(object value, IEnumerable<object> parents, IEnumerable<object> children) {
             this.value = value;
             this.parents = parents;
         }
