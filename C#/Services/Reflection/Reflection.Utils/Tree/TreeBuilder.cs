@@ -16,18 +16,19 @@ namespace Reflection.Utils.Tree {
             return tree;
         }
 
-        static void AddItems(List<TreeItem<T>> parents, List<TreeItem<T>> items, object owner, Func<List<TreeItem<T>>, object, IEnumerable<T>> createValueItems, Func<T, bool> canAddChildren, Func<T, object> getChildOwner) {
+        static void AddItems(IEnumerable<TreeItem<T>> parents, List<TreeItem<T>> items, object owner, Func<IEnumerable<TreeItem<T>>, object, IEnumerable<T>> createValueItems, Func<T, bool> canAddChildren, Func<T, object> getChildOwner) {
             if (owner == null)
                 return;
             foreach (T value in createValueItems(parents, owner)) {
-                TreeItem<T> item = new TreeItem<T>(value, parents);
-                items.Add(item);
                 if (canAddChildren(value)) 
                     AddItems(CloneParents(parents), item.Children, getChildOwner(value), (t, o) => createValueItems(t, o), i => canAddChildren(i), i => getChildOwner(i));
+
+                TreeItem<T> item = new TreeItem<T>(value, parents);
+                items.Add(item);
             }
         }
 
-        static List<TreeItem<T>> CloneParents(List<TreeItem<T>> parents) {
+        static List<TreeItem<T>> CloneParents(IEnumerable<TreeItem<T>> parents) {
             return new List<TreeItem<T>>(parents);
         }
     }

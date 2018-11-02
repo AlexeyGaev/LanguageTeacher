@@ -5,7 +5,7 @@ using Reflection.Utils.Tree;
 
 namespace Reflection.Utils.PropertyTree {
     public static class PropertyTreeBuilder {
-        public static Tree<PropertyDescription> Create(object source, string sourceName, Type sourceType, ParentValues parents) {
+        public static Tree<PropertyDescription> Create(object source, string sourceName, Type sourceType) {
             return TreeBuilder<PropertyDescription>.Create(
                 source,
                 s => CreateRootValue(s, sourceName, sourceType, parents.Clone()),
@@ -14,7 +14,7 @@ namespace Reflection.Utils.PropertyTree {
                 p => p.PropertyValue.Value);
         }
 
-        static PropertyDescription CreateRootValue(object propertyValue, string propertyName, Type propertyType, ParentValues parents) {
+        static PropertyDescription CreateRootValue(object propertyValue, string propertyName, Type propertyType) {
             return new PropertyDescription(null, propertyName, propertyType, PropertyValueBuilder.CreateCore(null, propertyType, propertyValue, parents));
         }
 

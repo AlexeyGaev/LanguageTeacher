@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Reflection.Utils.PropertyTree {
     public class PropertyValueString : PropertyValue {
-        public PropertyValueString(string value, ParentValues parents) 
-            : base(value, parents) {
+        public PropertyValueString(string value, IEnumerable<object> parents, IEnumerable<object> children) 
+            : base(value, parents, children) {
         }
 
-        public override bool HasChildren { get { return false; } }
         public override PropertyValueType Type { get { return PropertyValueType.String; } }
     }
 }

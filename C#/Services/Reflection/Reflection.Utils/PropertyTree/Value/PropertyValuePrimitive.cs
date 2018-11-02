@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Reflection.Utils.PropertyTree {
     public class PropertyValuePrimitive : PropertyValueNullable {
-        public PropertyValuePrimitive(object value, bool isNullable, ParentValues parents) 
-            : base(value, isNullable, parents) {
+        public PropertyValuePrimitive(object value, bool isNullable, IEnumerable<object> parents, IEnumerable<object> children) 
+            : base(value, isNullable, parents, children) {
         }
-        public override bool HasChildren { get { return false; } }
         public override PropertyValueType Type { get { return PropertyValueType.Primitive; } }
     }
 }
