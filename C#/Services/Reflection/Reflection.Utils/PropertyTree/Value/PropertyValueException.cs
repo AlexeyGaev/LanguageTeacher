@@ -2,8 +2,8 @@
 
 namespace Reflection.Utils.PropertyTree {
     public class PropertyValueException : PropertyValue {
-        public PropertyValueException(Exception value) 
-            : base(value) {
+        public PropertyValueException(Exception value, ParentValues parents) 
+            : base(value, parents) {
         }
 
         public override bool HasChildren { get { return false; } }

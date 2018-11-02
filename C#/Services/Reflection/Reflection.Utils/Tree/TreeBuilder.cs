@@ -4,26 +4,31 @@ using System.Collections.Generic;
 namespace Reflection.Utils.Tree {
     public static class TreeBuilder<T> {
         public static Tree<T> Create(object source, 
-            Func<object, T> createRootValue, 
-            Func<Tree<T>, object, IEnumerable<T>> createValueItems, 
+            Func<List<TreeItem<T>>, object, T> createRootValue, 
+            Func<List<TreeItem<T>>, object, IEnumerable<T>> createValueItems, 
             Func<T, bool> canAddChildren, 
             Func<T, object> getChildOwner) {
 
+            List<TreeItem<T>> parents = new List<TreeItem<T>>();
             Tree<T> tree = new Tree<T>();
-            tree.RootItem = new TreeItem<T>(createRootValue(source));
-            AddItems(tree, tree.RootItem.Children, source, (t, o) => createValueItems(t, o), i => canAddChildren(i), i => getChildOwner(i));
+            tree.RootItem = new TreeItem<T>(createRootValue(parents, source), parents);
+            AddItems(parents, tree.RootItem.Children, source, (p, o) => createValueItems(p, o), i => canAddChildren(i), i => getChildOwner(i));
             return tree;
         }
 
-        static void AddItems(Tree<T> tree, List<TreeItem<T>> items, object owner, Func<Tree<T>, object, IEnumerable<T>> createValueItems, Func<T, bool> canAddChildren, Func<T, object> getChildOwner) {
+        static void AddItems(List<TreeItem<T>> parents, List<TreeItem<T>> items, object owner, Func<List<TreeItem<T>>, object, IEnumerable<T>> createValueItems, Func<T, bool> canAddChildren, Func<T, object> getChildOwner) {
             if (owner == null)
                 return;
-            foreach (T value in createValueItems(tree, owner)) {
-                TreeItem<T> item = new TreeItem<T>(value);
+            foreach (T value in createValueItems(parents, owner)) {
+                TreeItem<T> item = new TreeItem<T>(value, parents);
                 items.Add(item);
-                if (canAddChildren(value))
-                    AddItems(tree, item.Children, getChildOwner(value), (t, o) => createValueItems(t, o), i => canAddChildren(i), i => getChildOwner(i));
+                if (canAddChildren(value)) 
+                    AddItems(CloneParents(parents), item.Children, getChildOwner(value), (t, o) => createValueItems(t, o), i => canAddChildren(i), i => getChildOwner(i));
             }
+        }
+
+        static List<TreeItem<T>> CloneParents(List<TreeItem<T>> parents) {
+            return new List<TreeItem<T>>(parents);
         }
     }
 }

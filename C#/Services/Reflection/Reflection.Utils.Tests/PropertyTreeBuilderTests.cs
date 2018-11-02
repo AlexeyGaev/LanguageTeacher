@@ -127,7 +127,7 @@ namespace Reflection.Utils.Tests {
         }
 
         [TestMethod]
-        public void EnumValue_Value1() {
+        public void TestEnumValue_Value1() {
             TestEnum source = TestEnum.Value1;
             string sourceName = "Test enum";
             Type sourceType = typeof(TestEnum);

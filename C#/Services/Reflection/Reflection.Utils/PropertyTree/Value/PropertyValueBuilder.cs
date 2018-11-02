@@ -25,12 +25,12 @@ namespace Reflection.Utils.PropertyTree {
     //}
 
     public static class PropertyValueBuilder {
-        public static PropertyValue Create(Tree<PropertyDescription> tree, object owner, PropertyInfo propertyInfo) {
+        public static PropertyValue Create(Tree<PropertyDescription> tree, object owner, PropertyInfo propertyInfo, ParentValues parents) {
             try {
                 object value = propertyInfo.GetValue(owner);
-                return CreateCore(tree, propertyInfo.PropertyType, value);
+                return CreateCore(tree, propertyInfo.PropertyType, value, parents);
             } catch (Exception e) {
-                return new PropertyValueException(e);
+                return new PropertyValueException(e, parents);
             }
         }
 
@@ -43,34 +43,29 @@ namespace Reflection.Utils.PropertyTree {
             return true;
         }
 
-        public static PropertyValue CreateCore(Tree<PropertyDescription> tree, Type type, object value) {
+        public static PropertyValue CreateCore(Tree<PropertyDescription> tree, Type type, object value, ParentValues parents) {
             if (type == null)
                 return null;
             if (type == typeof(string))
-                return new PropertyValueString((string)value);
-            if (type.IsClass) {
-                if (tree == null)
-                    return new PropertyValueClass(value, false);
-                return new PropertyValueClass(value, IsValidClass(value)/* && !ContainsByOwner(tree, value)*/);
-            }
+                return new PropertyValueString((string)value, parents);
+            if (type.IsClass) 
+                return new PropertyValueClass(value, parents);
                 
             Type underlyingType = Nullable.GetUnderlyingType(type);
             if (underlyingType != null) 
-                return CreateValueBased(value, underlyingType, true);
+                return CreateValueBased(value, underlyingType, true, parents);
             if (type.IsValueType) 
-                return CreateValueBased(value, type, false);
-            return new PropertyValueUndefined(value);
+                return CreateValueBased(value, type, false, parents);
+            return new PropertyValueUndefined(value, parents);
         }
 
-        static PropertyValueNullable CreateValueBased(object value, Type type, bool isNullable) {
+        static PropertyValueNullable CreateValueBased(object value, Type type, bool isNullable, ParentValues parents) {
             if (type.IsPrimitive)
-                return new PropertyValuePrimitive(value, isNullable);
+                return new PropertyValuePrimitive(value, isNullable, parents);
             if (type.IsEnum)
-                return new PropertyValueEnum(value, isNullable, type);
-            return new PropertyValueStruct(value, isNullable);
+                return new PropertyValueEnum(value, isNullable, type, parents);
+            return new PropertyValueStruct(value, isNullable, parents);
         }
-
-
 
         static bool ContainsByOwner(Tree<PropertyDescription> tree, object owner) {
             return ContainsByOwnerCore(tree.RootItem.Children, owner);
@@ -97,4 +92,16 @@ namespace Reflection.Utils.PropertyTree {
             return Object.ReferenceEquals(parent, owner);
         }
     }
+
+    //public class TreeWalker<T> {
+    //    readonly TreeItem<T> rootItem;
+    //    public PropertyTreeWalker(TreeItem<T> rootItem) {
+    //        this.rootItem = rootItem;
+    //    }
+
+    //    public bool NextChild() {
+    //        if ()
+    //    }
+
+    //}
 }

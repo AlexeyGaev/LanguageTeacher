@@ -2,14 +2,11 @@
 
 namespace Reflection.Utils.PropertyTree {
     public class PropertyValueClass : PropertyValue {
-        bool hasChildren;
-
-        public PropertyValueClass(object value, bool hasChildren) 
-            : base(value) {
-            this.hasChildren = hasChildren;
+        public PropertyValueClass(object value, ParentValues parents) 
+            : base(value, parents) {
         }
 
-        public override bool HasChildren { get { return this.hasChildren; } }
+        public override bool HasChildren { get { return HasParents && Parents.Contains(Value); } }
         public override PropertyValueType Type { get { return PropertyValueType.Class; } }
     }
 }

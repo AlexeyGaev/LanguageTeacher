@@ -4,8 +4,8 @@ namespace Reflection.Utils.PropertyTree {
     public class PropertyValueEnum : PropertyValueNullable {
         readonly Type enumType;
 
-        public PropertyValueEnum(object value, bool isNullable, Type enumType) 
-            : base(value, isNullable) {
+        public PropertyValueEnum(object value, bool isNullable, Type enumType, ParentValues parents) 
+            : base(value, isNullable, parents) {
             this.enumType = enumType;
         }
 

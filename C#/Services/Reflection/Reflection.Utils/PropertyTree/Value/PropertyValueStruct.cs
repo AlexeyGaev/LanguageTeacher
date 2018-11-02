@@ -2,8 +2,8 @@
 
 namespace Reflection.Utils.PropertyTree {
     public class PropertyValueStruct : PropertyValueNullable {
-        public PropertyValueStruct(object value, bool isNullable) 
-            : base(value, isNullable) {
+        public PropertyValueStruct(object value, bool isNullable, ParentValues parents) 
+            : base(value, isNullable, parents) {
         }
 
         public override bool HasChildren { get { return false; } }
