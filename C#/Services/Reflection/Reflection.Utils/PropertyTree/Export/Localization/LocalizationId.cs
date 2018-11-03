@@ -4,5 +4,7 @@ namespace Reflection.Utils.PropertyTree.Export {
     public enum LocalizationId {
         Null,
         Empty,
+        Nullable, 
+        Exception,
     }
 }

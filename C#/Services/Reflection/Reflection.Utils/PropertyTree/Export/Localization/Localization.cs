@@ -8,6 +8,8 @@ namespace Reflection.Utils.PropertyTree.Export {
             innerTable = new Dictionary<LocalizationId, string>();
             innerTable.Add(LocalizationId.Null, "Null");
             innerTable.Add(LocalizationId.Empty, "Empty");
+            innerTable.Add(LocalizationId.Nullable, "Nullable");
+            innerTable.Add(LocalizationId.Exception, "Exception");
         }
 
         public static string GetStringById(LocalizationId id) {

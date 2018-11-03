@@ -1,22 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Reflection.Utils.PropertyTree {
     public class PropertyDescription {
-        readonly object owner;
         readonly string propertyName;
-        readonly Type propertyType;
-        readonly PropertyValue propertyValue;
-
-        public PropertyDescription(object owner, string propertyName, Type propertyType, PropertyValue propertyValue) {
-            this.owner = owner;
+       
+        public PropertyDescription(string propertyName) {
             this.propertyName = propertyName;
-            this.propertyType = propertyType;
-            this.propertyValue = propertyValue;
         }
-
-        public object Owner { get { return this.owner; } }
+        
         public string PropertyName { get { return this.propertyName; } }
-        public Type PropertyType { get { return this.propertyType; } }
-        public PropertyValue PropertyValue { get { return this.propertyValue; } }
+                
+        public object PropertyOwner { get; set; }
+        public Type PropertyType { get; set; }
+        public PropertyValueType PropertyValueType { get; set; }
+        public object PropertyValue { get; set; }
     }
 }
