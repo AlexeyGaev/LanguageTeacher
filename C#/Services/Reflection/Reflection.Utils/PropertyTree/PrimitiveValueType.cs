@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Reflection.Utils.PropertyTree {
+﻿namespace Reflection.Utils.PropertyTree {
     public enum PrimitiveValueType {
         Boolean,
         Byte,

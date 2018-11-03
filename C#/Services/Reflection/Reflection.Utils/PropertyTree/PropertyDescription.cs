@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Reflection.Utils.PropertyTree {
     public class PropertyDescription {
@@ -15,5 +14,9 @@ namespace Reflection.Utils.PropertyTree {
         public Type PropertyType { get; set; }
         public PropertyValueType PropertyValueType { get; set; }
         public object PropertyValue { get; set; }
+
+        public override string ToString() {
+            return String.Format("{0} : {1}" , PropertyName, PropertyValue == null ? "None" : PropertyValue);
+        }
     }
 }

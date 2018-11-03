@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Reflection.Utils.Tree;
 
@@ -31,7 +30,6 @@ namespace Reflection.Utils.PropertyTree {
             result.Parents = parents;
             if (propertyName == null)
                 return result;
-            
             PropertyDescription description = new PropertyDescription(propertyName);
             result.Value = description;
             description.PropertyOwner = propertyOwner;
@@ -41,43 +39,46 @@ namespace Reflection.Utils.PropertyTree {
             description.PropertyType = propertyType;
             PropertyValueType propertyValueType = CreatePropertyValueType(propertyType, hasException);
             description.PropertyValueType = propertyValueType;
-            if (!CanCreateChildren(propertyValueType, propertyValue))
-                return result;
-            if (parents != null && propertyValueType.HasFlag(PropertyValueType.Class) && ContainsDescriptionValue(parents, propertyValue))
-                return result;
-
-            PropertyInfo[] propertyInfos = propertyValue.GetType().GetProperties();
+            result.Children = CreateChildren(parents, result, propertyValueType, propertyValue);
+            return result;
+        }
+        
+        static IEnumerable<TreeItem<PropertyDescription>> CreateChildren(IEnumerable<TreeItem<PropertyDescription>> parents, TreeItem<PropertyDescription> current, PropertyValueType type, object value) {
+            if (!CanCreateChildren(parents, type, value))
+                return null;
+            PropertyInfo[] propertyInfos = value.GetType().GetProperties();
             int count = propertyInfos.Length;
             if (count <= 0)
-                return result;
-                       
-            List<TreeItem<PropertyDescription>> children = new List<TreeItem<PropertyDescription>>();
-            for (int i = 0; i < count; i++) {
-                PropertyInfo propertyInfo = propertyInfos[i];
-                List<TreeItem<PropertyDescription>> childPropertyParents = new List<TreeItem<PropertyDescription>>();
-                if (parents != null)
-                    childPropertyParents.AddRange(parents);
-                childPropertyParents.Add(result);
-                string childPropertyName = propertyInfo.Name;
-                Type childPropertyType = propertyInfo.PropertyType;
-                object childPropertyOwner = propertyValue;
-                try {
-                    object childPropertyValue = propertyInfo.GetValue(propertyValue);
-                    children.Add(CreateItem(childPropertyParents, childPropertyName, childPropertyType, childPropertyOwner, childPropertyValue, false));
-                } catch (Exception e) {
-                    children.Add(CreateItem(childPropertyParents, childPropertyName, childPropertyType, childPropertyOwner, e, true));
-                }
-            }
-
-            result.Children = children;
+                return null;
+            List<TreeItem<PropertyDescription>> result = new List<TreeItem<PropertyDescription>>();
+            for (int i = 0; i < count; i++) 
+                result.Add(CreateChild(CreateChildParents(parents, current), propertyInfos[i], value));
             return result;
         }
 
+        static IEnumerable<TreeItem<PropertyDescription>> CreateChildParents(IEnumerable<TreeItem<PropertyDescription>> parents, TreeItem<PropertyDescription> current) {
+            List<TreeItem<PropertyDescription>> result = new List<TreeItem<PropertyDescription>>();
+            if (parents != null)
+                result.AddRange(parents);
+            result.Add(current);
+            return result;
+        }
+
+        static TreeItem<PropertyDescription> CreateChild(IEnumerable<TreeItem<PropertyDescription>> parents, PropertyInfo propertyInfo, object owner) {
+            string propertyName = propertyInfo.Name;
+            Type propertyType = propertyInfo.PropertyType;
+            try {
+                object childPropertyValue = propertyInfo.GetValue(owner);
+                return CreateItem(parents, propertyName, propertyType, owner, childPropertyValue, false);
+            } catch (Exception e) {
+                return CreateItem(parents, propertyName, propertyType, owner, e, true);
+            }
+        }
+
         static bool ContainsDescriptionValue(IEnumerable<TreeItem<PropertyDescription>> parents, object propertyValue) {
-            foreach (TreeItem<PropertyDescription> parent in parents) {
+            foreach (TreeItem<PropertyDescription> parent in parents) 
                 if (Object.ReferenceEquals(parent.Value.PropertyValue, propertyValue))
                     return true;
-            }
             return false;
         }
 
@@ -111,12 +112,15 @@ namespace Reflection.Utils.PropertyTree {
             return result;
         }
 
-        static bool CanCreateChildren(PropertyValueType propertyValueType, object propertyValue) {
+        static bool CanCreateChildren(IEnumerable<TreeItem<PropertyDescription>> parents, PropertyValueType propertyValueType, object propertyValue) {
             return
-                propertyValue != null && 
+                 propertyValue != null && 
                 !propertyValueType.HasFlag(PropertyValueType.Exception) &&
                 (propertyValueType.HasFlag(PropertyValueType.Class) ||
-                 propertyValueType.HasFlag(PropertyValueType.Struct));
+                 propertyValueType.HasFlag(PropertyValueType.Struct)) &&
+                (parents == null || 
+                !propertyValueType.HasFlag(PropertyValueType.Class) || 
+                !ContainsDescriptionValue(parents, propertyValue));
         }
     }
 }
