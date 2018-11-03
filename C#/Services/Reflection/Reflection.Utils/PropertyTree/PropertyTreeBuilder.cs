@@ -43,7 +43,7 @@ namespace Reflection.Utils.PropertyTree {
             description.PropertyValueType = propertyValueType;
             if (!CanCreateChildren(propertyValueType, propertyValue))
                 return result;
-            if (propertyValueType.HasFlag(PropertyValueType.Class) && ContainsDescriptionValue(parents, propertyValue))
+            if (parents != null && propertyValueType.HasFlag(PropertyValueType.Class) && ContainsDescriptionValue(parents, propertyValue))
                 return result;
 
             PropertyInfo[] propertyInfos = propertyValue.GetType().GetProperties();
@@ -55,7 +55,8 @@ namespace Reflection.Utils.PropertyTree {
             for (int i = 0; i < count; i++) {
                 PropertyInfo propertyInfo = propertyInfos[i];
                 List<TreeItem<PropertyDescription>> childPropertyParents = new List<TreeItem<PropertyDescription>>();
-                childPropertyParents.AddRange(parents);
+                if (parents != null)
+                    childPropertyParents.AddRange(parents);
                 childPropertyParents.Add(result);
                 string childPropertyName = propertyInfo.Name;
                 Type childPropertyType = propertyInfo.PropertyType;
@@ -81,20 +82,25 @@ namespace Reflection.Utils.PropertyTree {
         }
 
         static PropertyValueType CreatePropertyValueType(Type type, bool hasException) {
-            bool isNullable = Nullable.GetUnderlyingType(type) != null;
+            Type underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType == null) 
+                return CreatePropertyValueTypeCore(type, false, hasException);
+            return CreatePropertyValueTypeCore(underlyingType, true, hasException);
+        }
+
+        static PropertyValueType CreatePropertyValueTypeCore(Type type, bool isNullable, bool hasException) {
             if (type == typeof(string))
                 return GetPropertyValueType(PropertyValueType.String, isNullable, hasException);
-            if (type.IsClass)
-                return GetPropertyValueType(PropertyValueType.Class, isNullable, hasException);
             if (type.IsPrimitive)
                 return GetPropertyValueType(PropertyValueType.Primitive, isNullable, hasException);
             if (type.IsEnum)
                 return GetPropertyValueType(PropertyValueType.Enum, isNullable, hasException);
+            if (type.IsClass)
+                return GetPropertyValueType(PropertyValueType.Class, isNullable, hasException);
             if (type.IsValueType)
                 return GetPropertyValueType(PropertyValueType.Struct, isNullable, hasException);
             return GetPropertyValueType(PropertyValueType.Undefined, isNullable, hasException);
         }
-
 
         static PropertyValueType GetPropertyValueType(PropertyValueType underlyingType, bool isNullable, bool hasException) {
             PropertyValueType result = underlyingType;

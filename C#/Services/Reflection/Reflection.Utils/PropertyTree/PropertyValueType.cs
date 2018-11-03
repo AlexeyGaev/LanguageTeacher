@@ -9,9 +9,9 @@ namespace Reflection.Utils.PropertyTree {
         Nullable = 0x8,
         String = 0x10,
         Exception = 0x20,
-        Class = 0x30,
-        Interface = 0x40,
-        Array = 0x80,
-        Enumerable = 0x100
+        Class = 0x40,
+        Interface = 0x80,
+        Array = 0x100,
+        Enumerable = 0x200
     }
 }
