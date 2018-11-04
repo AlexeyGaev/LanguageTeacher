@@ -1,26 +1,17 @@
 ﻿using System;
-using System.Collections;
 
 namespace Reflection.Utils.PropertyTree {
-    public class PropertyDescription : IFormattable, IEquatable<PropertyDescription> {
+    public struct PropertyDescription : IEquatable<PropertyDescription> {
         public static bool operator ==(PropertyDescription left, PropertyDescription right) {
-            if ((object)left == null)
-                return (object)right == null;
-            if ((object)right == null)
-                return (object)left == null;
             return left.Equals(right);
         }
         public static bool operator !=(PropertyDescription left, PropertyDescription right) {
-            if ((object)left == null)
-                return (object)right != null;
-            if ((object)right == null)
-                return (object)left != null;
             return !left.Equals(right);
         }
 
-        readonly string propertyName;
-        readonly Type propertyType;
-        readonly object propertyValue;
+        string propertyName;
+        Type propertyType;
+        object propertyValue;
 
         public PropertyDescription(string propertyName, Type propertyType, object propertyValue) {
             this.propertyName = propertyName;
@@ -36,11 +27,13 @@ namespace Reflection.Utils.PropertyTree {
         public bool IsArray { get { return PropertyType != null && PropertyType.IsArray; } }
         
         public bool Equals(PropertyDescription other) {
-            return
-                (object)other != null &&
-                String.Compare(this.propertyName, other.propertyName, StringComparison.InvariantCulture) == 0 &&
-                this.propertyType.Equals(other.propertyType) &&
-                this.propertyValue.Equals(other.propertyValue);
+            if ((object)other == null ||
+                String.Compare(this.propertyName, other.propertyName, StringComparison.InvariantCulture) != 0 ||
+                this.propertyType != other.propertyType)
+                return false;
+            if (this.propertyValue == null)
+                return other.propertyValue == null;
+            return this.propertyValue.Equals(other.propertyValue);
         }
 
         public override bool Equals(object obj) {
@@ -48,18 +41,18 @@ namespace Reflection.Utils.PropertyTree {
         }
 
         public override int GetHashCode() {
-            return
-                this.propertyName.GetHashCode() ^
-                this.propertyType.GetHashCode() ^
-                this.propertyValue.GetHashCode();
+            int result = 0;
+            if (this.propertyName != null)
+                result ^= this.propertyName.GetHashCode();
+            if (this.propertyType != null)
+                result ^= this.propertyType.GetHashCode();
+            if (this.propertyValue != null)
+                result ^= this.propertyValue.GetHashCode();
+            return result;
         }
 
         public override string ToString() {
-            return String.Format("{0} : {1}" , PropertyName, PropertyValue == null ? "None" : PropertyValue);
-        }
-
-        public string ToString(string format, IFormatProvider formatProvider) {
-            throw new NotImplementedException();
+            return String.Format("{0} ({1}): {2}", PropertyName, PropertyType == null ? "Null" : PropertyType.Name, PropertyValue == null ? "None" : PropertyValue.ToString());
         }
     }
 }
