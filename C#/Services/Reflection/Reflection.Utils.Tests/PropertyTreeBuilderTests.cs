@@ -8,36 +8,44 @@ using System.Linq;
 namespace Reflection.Utils.Tests {
     [TestClass]
     public class PropertyTreeBuilderTests {
-        TreeItem<PropertyDescription> CreateItem(IEnumerable<TreeItem<PropertyDescription>> parents, string propertyName, Type propertyType, object propertyOwner, object propertyValue, bool hasException) {
-            return PropertyTreeBuilder.CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+        TreeItem<PropertyDescription> CreateItem(IEnumerable<TreeItem<PropertyDescription>> parents, string propertyName, Type propertyType, object propertyValue) {
+            PropertyDescription propertyDescription = new PropertyDescription(propertyName, propertyType, propertyValue);
+            return PropertyTreeBuilder.CreateItem(parents, propertyDescription);
         }
 
         [TestMethod]
         public void PropertyNameIsNull() {
-            TreeItem<PropertyDescription> treeItem = CreateItem(null, null, null, null, null, false);
-
-            Assert.IsNull(treeItem.Children);
+            TreeItem<PropertyDescription> treeItem = CreateItem(null, null, null, null);
+                        
             Assert.IsNull(treeItem.Parents);
-            Assert.IsNull(treeItem.Value);
-        }
+            Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
 
-       
+            PropertyDescription property = treeItem.Value;
+            Assert.IsNull(property.PropertyName);
+            Assert.IsNull(property.PropertyType);
+            Assert.IsNull(property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+        }
 
         [TestMethod]
         public void PropertyTypeIsNull() {
             string propertyName = "Test";
-            TreeItem<PropertyDescription> treeItem = CreateItem(null, propertyName, null, null, null, false);
-
-            Assert.IsNull(treeItem.Children);
+            TreeItem<PropertyDescription> treeItem = CreateItem(null, propertyName, null, null);
+                        
             Assert.IsNull(treeItem.Parents);
+            Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
-            PropertyDescription description = treeItem.Value;
-            Assert.AreEqual(propertyName, description.PropertyName);
-            Assert.IsNull(description.PropertyOwner);
-            Assert.IsNull(description.PropertyType);
-            Assert.IsNull(description.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Undefined, description.PropertyValueType);
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.IsNull(property.PropertyType);
+            Assert.IsNull(property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
         }
 
         [TestMethod]
@@ -45,22 +53,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Object";
             Type propertyType = typeof(object);
-            object propertyOwner = null;
             object propertyValue = new object();
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
+            Assert.AreEqual(0, treeItem.Children.Count());
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
         }
 
         [TestMethod]
@@ -68,22 +75,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Decimal";
             Type propertyType = typeof(decimal);
-            object propertyOwner = null;
             decimal propertyValue = 1;
-            bool hasException = false;
-
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
-
+            
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+            
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
+            Assert.AreEqual(0, treeItem.Children.Count());
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
-
+            
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Struct, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
         }
 
         [TestMethod]
@@ -91,22 +97,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "NullableDecimal";
             Type propertyType = typeof(decimal?);
-            object propertyOwner = null;
             decimal? propertyValue = null;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
             Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Struct | PropertyValueType.Nullable, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(true, property.IsNullable);
         }
 
         [TestMethod]
@@ -114,22 +119,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Int";
             Type propertyType = typeof(int);
-            object propertyOwner = null;
             int propertyValue = 1;
-            bool hasException = false;
-
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
+            Assert.AreEqual(0, treeItem.Children.Count());
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Primitive, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
         }
 
         [TestMethod]
@@ -137,22 +141,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Nullable Int";
             Type propertyType = typeof(int?);
-            object propertyOwner = null;
             int? propertyValue = null;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
             Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Primitive | PropertyValueType.Nullable, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(true, property.IsNullable);
         }
 
         [TestMethod]
@@ -160,22 +163,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Nullable Int";
             Type propertyType = typeof(int?);
-            object propertyOwner = null;
             int? propertyValue = 1;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
+            Assert.AreEqual(0, treeItem.Children.Count());
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Primitive | PropertyValueType.Nullable, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(true, property.IsNullable);
         }
 
         enum TestEnum {
@@ -188,22 +190,20 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "TestEnum";
             Type propertyType = typeof(TestEnum);
-            object propertyOwner = null;
             TestEnum propertyValue = TestEnum.Value1;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Enum, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
         }
 
         [TestMethod]
@@ -211,22 +211,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Nullable TestEnum";
             Type propertyType = typeof(TestEnum?);
-            object propertyOwner = null;
             TestEnum? propertyValue = null;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
             Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Enum | PropertyValueType.Nullable, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(true, property.IsNullable);
         }
 
         [TestMethod]
@@ -234,22 +233,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Nullable TestEnum";
             Type propertyType = typeof(TestEnum?);
-            object propertyOwner = null;
             TestEnum? propertyValue = TestEnum.Value1;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
+            Assert.AreEqual(0, treeItem.Children.Count());
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Enum | PropertyValueType.Nullable, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(true, property.IsNullable);
         }
 
         struct EmptyTestStruct { }
@@ -259,22 +257,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "EmptyTestStruct";
             Type propertyType = typeof(EmptyTestStruct);
-            object propertyOwner = null;
             EmptyTestStruct propertyValue = new EmptyTestStruct();
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
+            Assert.AreEqual(0, treeItem.Children.Count());
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Struct, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
         }
 
         [TestMethod]
@@ -282,22 +279,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Nullable EmptyTestStruct";
             Type propertyType = typeof(EmptyTestStruct?);
-            object propertyOwner = null;
             EmptyTestStruct? propertyValue = null;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
             Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Struct | PropertyValueType.Nullable, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(true, property.IsNullable);
         }
 
         [TestMethod]
@@ -305,22 +301,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "Nullable EmptyTestStruct";
             Type propertyType = typeof(EmptyTestStruct?);
-            object propertyOwner = null;
             EmptyTestStruct? propertyValue = new EmptyTestStruct();
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
+            Assert.AreEqual(0, treeItem.Children.Count());
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Struct | PropertyValueType.Nullable, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(true, property.IsNullable);
         }
 
         struct TestStruct {
@@ -337,25 +332,23 @@ namespace Reflection.Utils.Tests {
             string propertyName = "TestStruct";
 
             Type propertyType = typeof(TestStruct);
-            object propertyOwner = null;
             TestStruct propertyValue = new TestStruct();
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
             Assert.AreEqual(parents, treeItem.Parents);
-            CheckTestStruct(treeItem, propertyName, propertyType, propertyOwner, propertyValue, new List<TreeItem<PropertyDescription>>());
+            CheckTestStruct(treeItem, propertyName, propertyType, propertyValue, new List<TreeItem<PropertyDescription>>());
         }
 
-        void CheckTestStruct(TreeItem<PropertyDescription> treeItem, string propertyName, Type propertyType, object propertyOwner, object propertyValue, IEnumerable<TreeItem<PropertyDescription>> childParrents) {
-            Assert.IsNotNull(treeItem.Children);
+        void CheckTestStruct(TreeItem<PropertyDescription> treeItem, string propertyName, Type propertyType, object propertyValue, IEnumerable<TreeItem<PropertyDescription>> childParrents) {
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Struct, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
 
             Assert.AreEqual(3, treeItem.Children.Count());
 
@@ -364,47 +357,47 @@ namespace Reflection.Utils.Tests {
             for (int i = 0; i < childParrents.Count(); i++)
                 Assert.AreEqual(childParrents.ElementAt(i), childItem1.Parents.ElementAt(i));
             Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(childParrents.Count()));
-            Assert.IsNull(childItem1.Children);
+            Assert.IsFalse(childItem1.HasChildrenCycle);
             Assert.IsNotNull(childItem1.Value);
 
             PropertyDescription property1 = childItem1.Value;
             Assert.AreEqual("Property1", property1.PropertyName);
             Assert.AreEqual(typeof(int), property1.PropertyType);
-            Assert.AreEqual(propertyValue, property1.PropertyOwner);
             Assert.AreEqual(0, property1.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Primitive, property1.PropertyValueType);
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
 
             TreeItem<PropertyDescription> childItem2 = treeItem.Children.ElementAt(1);
             Assert.AreEqual(childParrents.Count() + 1, childItem2.Parents.Count());
             for (int i = 0; i < childParrents.Count(); i++)
                 Assert.AreEqual(childParrents.ElementAt(i), childItem2.Parents.ElementAt(i));
             Assert.AreEqual(treeItem, childItem2.Parents.ElementAt(childParrents.Count()));
-
-            Assert.IsNull(childItem2.Children);
+            Assert.AreEqual(0, childItem2.Children.Count());
+            Assert.IsFalse(childItem2.HasChildrenCycle);
             Assert.IsNotNull(childItem2.Value);
 
             PropertyDescription property2 = childItem2.Value;
             Assert.AreEqual("Property2", property2.PropertyName);
             Assert.AreEqual(typeof(TestEnum), property2.PropertyType);
-            Assert.AreEqual(propertyValue, property2.PropertyOwner);
             Assert.AreEqual(TestEnum.Value1, property2.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Enum, property2.PropertyValueType);
-
+            Assert.AreEqual(false, property2.IsException);
+            Assert.AreEqual(false, property2.IsNullable);
+            
             TreeItem<PropertyDescription> childItem3 = treeItem.Children.ElementAt(2);
             Assert.AreEqual(childParrents.Count() + 1, childItem3.Parents.Count());
             for (int i = 0; i < childParrents.Count(); i++)
                 Assert.AreEqual(childParrents.ElementAt(i), childItem3.Parents.ElementAt(i));
             Assert.AreEqual(treeItem, childItem3.Parents.ElementAt(childParrents.Count()));
-
             Assert.IsNull(childItem3.Children);
+            Assert.IsFalse(childItem3.HasChildrenCycle);
             Assert.IsNotNull(childItem3.Value);
 
             PropertyDescription property3 = childItem3.Value;
             Assert.AreEqual("Property3", property3.PropertyName);
             Assert.AreEqual(typeof(object), property3.PropertyType);
-            Assert.AreEqual(propertyValue, property3.PropertyOwner);
             Assert.AreEqual(null, property3.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property3.PropertyValueType);
+            Assert.AreEqual(false, property3.IsException);
+            Assert.AreEqual(false, property3.IsNullable);
         }
 
         class TestClass {
@@ -421,22 +414,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "TestClass";
             Type propertyType = typeof(TestClass);
-            object propertyOwner = null;
             TestClass propertyValue = null;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
             Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
         }
 
         [TestMethod]
@@ -444,71 +436,73 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "TestClass";
             Type propertyType = typeof(TestClass);
-            object propertyOwner = null;
             TestClass propertyValue = new TestClass();
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
             Assert.IsNotNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
 
             Assert.AreEqual(4, treeItem.Children.Count());
 
             TreeItem<PropertyDescription> childItem1 = treeItem.Children.ElementAt(0);
             Assert.AreEqual(1, childItem1.Parents.Count());
             Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(0));
-            Assert.IsNull(childItem1.Children);
+            Assert.AreEqual(0, childItem1.Children.Count());
+            Assert.IsFalse(childItem1.HasChildrenCycle);
             Assert.IsNotNull(childItem1.Value);
 
             PropertyDescription property1 = childItem1.Value;
             Assert.AreEqual("Property1", property1.PropertyName);
             Assert.AreEqual(typeof(int), property1.PropertyType);
-            Assert.AreEqual(propertyValue, property1.PropertyOwner);
             Assert.AreEqual(0, property1.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Primitive, property1.PropertyValueType);
-
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
+            
             TreeItem<PropertyDescription> childItem2 = treeItem.Children.ElementAt(1);
             Assert.AreEqual(1, childItem2.Parents.Count());
             Assert.AreEqual(treeItem, childItem2.Parents.ElementAt(0));
-            Assert.IsNull(childItem2.Children);
+            Assert.AreEqual(0, childItem2.Children.Count());
+            Assert.IsFalse(childItem2.HasChildrenCycle);
             Assert.IsNotNull(childItem2.Value);
 
             PropertyDescription property2 = childItem2.Value;
             Assert.AreEqual("Property2", property2.PropertyName);
             Assert.AreEqual(typeof(TestEnum), property2.PropertyType);
-            Assert.AreEqual(propertyValue, property2.PropertyOwner);
             Assert.AreEqual(TestEnum.Value1, property2.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Enum, property2.PropertyValueType);
-
+            Assert.AreEqual(false, property2.IsException);
+            Assert.AreEqual(false, property2.IsNullable);
+            
             TreeItem<PropertyDescription> childItem3 = treeItem.Children.ElementAt(2);
             Assert.AreEqual(1, childItem3.Parents.Count());
             Assert.AreEqual(treeItem, childItem3.Parents.ElementAt(0));
             Assert.IsNull(childItem3.Children);
+            Assert.IsFalse(childItem3.HasChildrenCycle);
             Assert.IsNotNull(childItem3.Value);
 
             PropertyDescription property3 = childItem3.Value;
             Assert.AreEqual("Property3", property3.PropertyName);
             Assert.AreEqual(typeof(object), property3.PropertyType);
-            Assert.AreEqual(propertyValue, property3.PropertyOwner);
             Assert.AreEqual(null, property3.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property3.PropertyValueType);
-
+            Assert.AreEqual(false, property3.IsException);
+            Assert.AreEqual(false, property3.IsNullable);
+            
             TreeItem<PropertyDescription> childItem4 = treeItem.Children.ElementAt(3);
             Assert.AreEqual(1, childItem4.Parents.Count());
             Assert.AreEqual(treeItem, childItem4.Parents.ElementAt(0));
 
             List<TreeItem<PropertyDescription>> childItem4Parents = new List<TreeItem<PropertyDescription>>();
             childItem4Parents.Add(treeItem);
-            CheckTestStruct(childItem4, "Property4", typeof(TestStruct), propertyValue, default(TestStruct), childItem4Parents);
+            CheckTestStruct(childItem4, "Property4", typeof(TestStruct), default(TestStruct), childItem4Parents);
         }
 
         class TestClass2 {
@@ -520,22 +514,21 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "TestClass2";
             Type propertyType = typeof(TestClass2);
-            object propertyOwner = null;
             TestClass2 propertyValue = null;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
             Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
         }
 
         [TestMethod]
@@ -543,22 +536,20 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "TestClass2";
             Type propertyType = typeof(TestClass2);
-            object propertyOwner = null;
             TestClass2 propertyValue = new TestClass2();
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNotNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
 
             Assert.AreEqual(1, treeItem.Children.Count());
 
@@ -566,14 +557,15 @@ namespace Reflection.Utils.Tests {
             Assert.AreEqual(1, childItem1.Parents.Count());
             Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(0));
             Assert.IsNull(childItem1.Children);
+            Assert.IsFalse(childItem1.HasChildrenCycle);
             Assert.IsNotNull(childItem1.Value);
 
             PropertyDescription property1 = childItem1.Value;
             Assert.AreEqual("Property", property1.PropertyName);
             Assert.AreEqual(typeof(TestClass2), property1.PropertyType);
-            Assert.AreEqual(propertyValue, property1.PropertyOwner);
             Assert.AreEqual(null, property1.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property1.PropertyValueType);
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
         }
 
         [TestMethod]
@@ -581,39 +573,37 @@ namespace Reflection.Utils.Tests {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "TestClass2";
             Type propertyType = typeof(TestClass2);
-            object propertyOwner = null;
             TestClass2 propertyValue = new TestClass2();
             TestClass2 childPropertyValue = new TestClass2();
             propertyValue.Property = childPropertyValue;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNotNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property.PropertyValueType);
-
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+            
             Assert.AreEqual(1, treeItem.Children.Count());
 
             TreeItem<PropertyDescription> childItem1 = treeItem.Children.ElementAt(0);
             Assert.AreEqual(1, childItem1.Parents.Count());
             Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(0));
-            Assert.IsNotNull(childItem1.Children);
+            Assert.IsFalse(childItem1.HasChildrenCycle);
             Assert.IsNotNull(childItem1.Value);
 
             PropertyDescription property1 = childItem1.Value;
             Assert.AreEqual("Property", property1.PropertyName);
             Assert.AreEqual(typeof(TestClass2), property1.PropertyType);
-            Assert.AreEqual(propertyValue, property1.PropertyOwner);
             Assert.AreEqual(childPropertyValue, property1.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property1.PropertyValueType);
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
 
             Assert.AreEqual(1, childItem1.Children.Count());
 
@@ -622,38 +612,37 @@ namespace Reflection.Utils.Tests {
             Assert.AreEqual(treeItem, childChildItem1.Parents.ElementAt(0));
             Assert.AreEqual(childItem1, childChildItem1.Parents.ElementAt(1));
             Assert.IsNull(childChildItem1.Children);
+            Assert.IsFalse(childChildItem1.HasChildrenCycle);
             Assert.IsNotNull(childChildItem1.Value);
 
             PropertyDescription childProperty1 = childChildItem1.Value;
             Assert.AreEqual("Property", childProperty1.PropertyName);
             Assert.AreEqual(typeof(TestClass2), childProperty1.PropertyType);
-            Assert.AreEqual(childPropertyValue, childProperty1.PropertyOwner);
             Assert.AreEqual(null, childProperty1.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, childProperty1.PropertyValueType);
+            Assert.AreEqual(false, childProperty1.IsException);
+            Assert.AreEqual(false, childProperty1.IsNullable);
         }
 
         [TestMethod]
-        public void TestClass2IsNotNull_PropertyIsTheSame() {
+        public void TestClass2IsNotNull_HasChildrenCycle() {
             IEnumerable<TreeItem<PropertyDescription>> parents = null;
             string propertyName = "TestClass2";
             Type propertyType = typeof(TestClass2);
-            object propertyOwner = null;
             TestClass2 propertyValue = new TestClass2();
             propertyValue.Property = propertyValue;
-            bool hasException = false;
 
-            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyOwner, propertyValue, hasException);
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
 
             Assert.AreEqual(parents, treeItem.Parents);
-            Assert.IsNotNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
             Assert.IsNotNull(treeItem.Value);
 
             PropertyDescription property = treeItem.Value;
             Assert.AreEqual(propertyName, property.PropertyName);
             Assert.AreEqual(propertyType, property.PropertyType);
-            Assert.AreEqual(propertyOwner, property.PropertyOwner);
             Assert.AreEqual(propertyValue, property.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property.PropertyValueType);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
 
             Assert.AreEqual(1, treeItem.Children.Count());
 
@@ -661,15 +650,448 @@ namespace Reflection.Utils.Tests {
             Assert.AreEqual(1, childItem1.Parents.Count());
             Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(0));
             Assert.IsNull(childItem1.Children);
+            Assert.IsTrue(childItem1.HasChildrenCycle);
             Assert.IsNotNull(childItem1.Value);
 
             PropertyDescription property1 = childItem1.Value;
             Assert.AreEqual("Property", property1.PropertyName);
             Assert.AreEqual(typeof(TestClass2), property1.PropertyType);
-            Assert.AreEqual(propertyValue, property1.PropertyOwner);
             Assert.AreEqual(propertyValue, property1.PropertyValue);
-            Assert.AreEqual(PropertyValueType.Class, property1.PropertyValueType);
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
+        }
+
+        [TestMethod]
+        public void StringIsNull() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "String";
+            Type propertyType = typeof(string);
+            string propertyValue = null;
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+        }
+
+        [TestMethod]
+        public void StringIsEmpty() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "String";
+            Type propertyType = typeof(string);
+            string propertyValue = String.Empty;
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+        }
+
+        [TestMethod]
+        public void StringIsNotEmpty() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "String";
+            Type propertyType = typeof(string);
+            string propertyValue = "testString";
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+        }
+
+        [TestMethod]
+        public void ListIntIsNull() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "List<int>";
+            Type propertyType = typeof(List<int>);
+            List<int> propertyValue = null;
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+        }
+
+        [TestMethod]
+        public void ListIntIsEmpty() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "List<double>";
+            Type propertyType = typeof(List<double>);
+            List<double> propertyValue = new List<double>();
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+
+            Assert.AreEqual(2, treeItem.Children.Count());
+
+            TreeItem<PropertyDescription> childItem1 = treeItem.Children.ElementAt(0);
+            Assert.AreEqual(1, childItem1.Parents.Count());
+            Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(0));
+            Assert.AreEqual(0, childItem1.Children.Count());
+            Assert.IsFalse(childItem1.HasChildrenCycle);
+            Assert.IsNotNull(childItem1.Value);
+
+            PropertyDescription property1 = childItem1.Value;
+            Assert.AreEqual("Capacity", property1.PropertyName);
+            Assert.AreEqual(typeof(int), property1.PropertyType);
+            Assert.AreEqual(0, property1.PropertyValue);
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
+
+            TreeItem<PropertyDescription> childItem2 = treeItem.Children.ElementAt(1);
+            Assert.AreEqual(1, childItem2.Parents.Count());
+            Assert.AreEqual(treeItem, childItem2.Parents.ElementAt(0));
+            Assert.AreEqual(0, childItem2.Children.Count());
+            Assert.IsFalse(childItem2.HasChildrenCycle);
+            Assert.IsNotNull(childItem2.Value);
+
+            PropertyDescription property2 = childItem2.Value;
+            Assert.AreEqual("Count", property2.PropertyName);
+            Assert.AreEqual(typeof(int), property2.PropertyType);
+            Assert.AreEqual(0, property2.PropertyValue);
+            Assert.AreEqual(false, property2.IsException);
+            Assert.AreEqual(false, property2.IsNullable);
+        }
+
+        [TestMethod]
+        public void ListIntIsNotEmpty() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "List<double>";
+            Type propertyType = typeof(List<double>);
+            List<double> propertyValue = new List<double>();
+            propertyValue.Add(2);
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+
+            Assert.AreEqual(2, treeItem.Children.Count());
+
+            TreeItem<PropertyDescription> childItem1 = treeItem.Children.ElementAt(0);
+            Assert.AreEqual(1, childItem1.Parents.Count());
+            Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(0));
+            Assert.AreEqual(0, childItem1.Children.Count());
+            Assert.IsFalse(childItem1.HasChildrenCycle);
+            Assert.IsNotNull(childItem1.Value);
+
+            PropertyDescription property1 = childItem1.Value;
+            Assert.AreEqual("Capacity", property1.PropertyName);
+            Assert.AreEqual(typeof(int), property1.PropertyType);
+            Assert.AreEqual(4, property1.PropertyValue);
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
+
+            TreeItem<PropertyDescription> childItem2 = treeItem.Children.ElementAt(1);
+            Assert.AreEqual(1, childItem2.Parents.Count());
+            Assert.AreEqual(treeItem, childItem2.Parents.ElementAt(0));
+            Assert.AreEqual(0, childItem2.Children.Count());
+            Assert.IsFalse(childItem2.HasChildrenCycle);
+            Assert.IsNotNull(childItem2.Value);
+
+            PropertyDescription property2 = childItem2.Value;
+            Assert.AreEqual("Count", property2.PropertyName);
+            Assert.AreEqual(typeof(int), property2.PropertyType);
+            Assert.AreEqual(1, property2.PropertyValue);
+            Assert.AreEqual(false, property2.IsException);
+            Assert.AreEqual(false, property2.IsNullable);
+        }
+
+        [TestMethod]
+        public void DictionaryIsNull() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "Dictionary<string, double>";
+            Type propertyType = typeof(Dictionary<string, double>);
+            Dictionary<string, double> propertyValue = null;
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+        }
+
+        [TestMethod]
+        public void DictionaryIsEmpty() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "Dictionary<string, double>";
+            Type propertyType = typeof(Dictionary<string, double>);
+            Dictionary<string, double> propertyValue = new Dictionary<string, double>();
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+
+            Assert.AreEqual(4, treeItem.Children.Count());
+
+            TreeItem<PropertyDescription> childItem1 = treeItem.Children.ElementAt(0);
+            Assert.AreEqual(1, childItem1.Parents.Count());
+            Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(0));
+            Assert.AreEqual(0, childItem1.Children.Count());
+            Assert.IsFalse(childItem1.HasChildrenCycle);
+            Assert.IsNotNull(childItem1.Value);
+
+            PropertyDescription property1 = childItem1.Value;
+            Assert.AreEqual("Comparer", property1.PropertyName);
+            Assert.AreEqual(typeof(IEqualityComparer<string>), property1.PropertyType);
+            Assert.AreEqual(propertyValue.Comparer, property1.PropertyValue);
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
+
+            TreeItem<PropertyDescription> childItem2 = treeItem.Children.ElementAt(1);
+            Assert.AreEqual(1, childItem2.Parents.Count());
+            Assert.AreEqual(treeItem, childItem2.Parents.ElementAt(0));
+            Assert.AreEqual(0, childItem2.Children.Count());
+            Assert.IsFalse(childItem2.HasChildrenCycle);
+            Assert.IsNotNull(childItem2.Value);
+
+            PropertyDescription property2 = childItem2.Value;
+            Assert.AreEqual("Count", property2.PropertyName);
+            Assert.AreEqual(typeof(int), property2.PropertyType);
+            Assert.AreEqual(0, property2.PropertyValue);
+            Assert.AreEqual(false, property2.IsException);
+            Assert.AreEqual(false, property2.IsNullable);
+
+            TreeItem<PropertyDescription> childItem3 = treeItem.Children.ElementAt(2);
+            Assert.AreEqual(1, childItem3.Parents.Count());
+            Assert.AreEqual(treeItem, childItem3.Parents.ElementAt(0));
+            Assert.IsFalse(childItem3.HasChildrenCycle);
+            Assert.IsNotNull(childItem3.Value);
+
+            PropertyDescription property3 = childItem3.Value;
+            Assert.AreEqual("Keys", property3.PropertyName);
+            Assert.AreEqual(typeof(Dictionary<string, double>.KeyCollection), property3.PropertyType);
+            Assert.AreEqual(false, property3.IsException);
+            Assert.AreEqual(false, property3.IsNullable);
+
+            Assert.AreEqual(1, childItem3.Children.Count());
+
+            TreeItem<PropertyDescription> childChildItem3 = childItem3.Children.ElementAt(0);
+            Assert.AreEqual(2, childChildItem3.Parents.Count());
+            Assert.AreEqual(treeItem, childChildItem3.Parents.ElementAt(0));
+            Assert.AreEqual(childItem3, childChildItem3.Parents.ElementAt(1));
+            Assert.AreEqual(0, childChildItem3.Children.Count());
+            Assert.IsFalse(childChildItem3.HasChildrenCycle);
+            Assert.IsNotNull(childChildItem3.Value);
+
+            PropertyDescription childProperty3 = childChildItem3.Value;
+            Assert.AreEqual("Count", childProperty3.PropertyName);
+            Assert.AreEqual(typeof(int), childProperty3.PropertyType);
+            Assert.AreEqual(0, childProperty3.PropertyValue);
+            Assert.AreEqual(false, childProperty3.IsException);
+            Assert.AreEqual(false, childProperty3.IsNullable);
+
+            TreeItem<PropertyDescription> childItem4 = treeItem.Children.ElementAt(3);
+            Assert.AreEqual(1, childItem4.Parents.Count());
+            Assert.AreEqual(treeItem, childItem4.Parents.ElementAt(0));
+            Assert.IsFalse(childItem4.HasChildrenCycle);
+            Assert.IsNotNull(childItem4.Value);
+
+            PropertyDescription property4 = childItem4.Value;
+            Assert.AreEqual("Values", property4.PropertyName);
+            Assert.AreEqual(typeof(Dictionary<string, double>.ValueCollection), property4.PropertyType);
+            Assert.AreEqual(false, property4.IsException);
+            Assert.AreEqual(false, property4.IsNullable);
+
+            Assert.AreEqual(1, childItem4.Children.Count());
+
+            TreeItem<PropertyDescription> childChildItem4 = childItem4.Children.ElementAt(0);
+            Assert.AreEqual(2, childChildItem4.Parents.Count());
+            Assert.AreEqual(treeItem, childChildItem4.Parents.ElementAt(0));
+            Assert.AreEqual(childItem4, childChildItem4.Parents.ElementAt(1));
+            Assert.AreEqual(0, childChildItem4.Children.Count());
+            Assert.IsFalse(childChildItem4.HasChildrenCycle);
+            Assert.IsNotNull(childChildItem4.Value);
+
+            PropertyDescription childProperty4 = childChildItem4.Value;
+            Assert.AreEqual("Count", childProperty4.PropertyName);
+            Assert.AreEqual(typeof(int), childProperty4.PropertyType);
+            Assert.AreEqual(0, childProperty4.PropertyValue);
+            Assert.AreEqual(false, childProperty4.IsException);
+            Assert.AreEqual(false, childProperty4.IsNullable);
+        }
+
+        [TestMethod]
+        public void DictionaryIsNotEmpty() {
+            IEnumerable<TreeItem<PropertyDescription>> parents = null;
+            string propertyName = "Dictionary<string, double>";
+            Type propertyType = typeof(Dictionary<string, double>);
+            Dictionary<string, double> propertyValue = new Dictionary<string, double>();
+            propertyValue.Add("Test", 2);
+
+            TreeItem<PropertyDescription> treeItem = CreateItem(parents, propertyName, propertyType, propertyValue);
+
+            Assert.AreEqual(parents, treeItem.Parents);
+            Assert.IsNotNull(treeItem.Children);
+            Assert.IsFalse(treeItem.HasChildrenCycle);
+            Assert.IsNotNull(treeItem.Value);
+
+            PropertyDescription property = treeItem.Value;
+            Assert.AreEqual(propertyName, property.PropertyName);
+            Assert.AreEqual(propertyType, property.PropertyType);
+            Assert.AreEqual(propertyValue, property.PropertyValue);
+            Assert.AreEqual(false, property.IsException);
+            Assert.AreEqual(false, property.IsNullable);
+
+            Assert.AreEqual(4, treeItem.Children.Count());
+
+            TreeItem<PropertyDescription> childItem1 = treeItem.Children.ElementAt(0);
+            Assert.AreEqual(1, childItem1.Parents.Count());
+            Assert.AreEqual(treeItem, childItem1.Parents.ElementAt(0));
+            Assert.AreEqual(0, childItem1.Children.Count());
+            Assert.IsFalse(childItem1.HasChildrenCycle);
+            Assert.IsNotNull(childItem1.Value);
+
+            PropertyDescription property1 = childItem1.Value;
+            Assert.AreEqual("Comparer", property1.PropertyName);
+            Assert.AreEqual(typeof(IEqualityComparer<string>), property1.PropertyType);
+            Assert.AreEqual(propertyValue.Comparer, property1.PropertyValue);
+            Assert.AreEqual(false, property1.IsException);
+            Assert.AreEqual(false, property1.IsNullable);
+
+            TreeItem<PropertyDescription> childItem2 = treeItem.Children.ElementAt(1);
+            Assert.AreEqual(1, childItem2.Parents.Count());
+            Assert.AreEqual(treeItem, childItem2.Parents.ElementAt(0));
+            Assert.AreEqual(0, childItem2.Children.Count());
+            Assert.IsFalse(childItem2.HasChildrenCycle);
+            Assert.IsNotNull(childItem2.Value);
+
+            PropertyDescription property2 = childItem2.Value;
+            Assert.AreEqual("Count", property2.PropertyName);
+            Assert.AreEqual(typeof(int), property2.PropertyType);
+            Assert.AreEqual(1, property2.PropertyValue);
+            Assert.AreEqual(false, property2.IsException);
+            Assert.AreEqual(false, property2.IsNullable);
+
+            TreeItem<PropertyDescription> childItem3 = treeItem.Children.ElementAt(2);
+            Assert.AreEqual(1, childItem3.Parents.Count());
+            Assert.AreEqual(treeItem, childItem3.Parents.ElementAt(0));
+            Assert.IsFalse(childItem3.HasChildrenCycle);
+            Assert.IsNotNull(childItem3.Value);
+
+            PropertyDescription property3 = childItem3.Value;
+            Assert.AreEqual("Keys", property3.PropertyName);
+            Assert.AreEqual(typeof(Dictionary<string, double>.KeyCollection), property3.PropertyType);
+            Assert.AreEqual(false, property3.IsException);
+            Assert.AreEqual(false, property3.IsNullable);
+
+            Assert.AreEqual(1, childItem3.Children.Count());
+
+            TreeItem<PropertyDescription> childChildItem3 = childItem3.Children.ElementAt(0);
+            Assert.AreEqual(2, childChildItem3.Parents.Count());
+            Assert.AreEqual(treeItem, childChildItem3.Parents.ElementAt(0));
+            Assert.AreEqual(childItem3, childChildItem3.Parents.ElementAt(1));
+            Assert.AreEqual(0, childChildItem3.Children.Count());
+            Assert.IsFalse(childChildItem3.HasChildrenCycle);
+            Assert.IsNotNull(childChildItem3.Value);
+
+            PropertyDescription childProperty3 = childChildItem3.Value;
+            Assert.AreEqual("Count", childProperty3.PropertyName);
+            Assert.AreEqual(typeof(int), childProperty3.PropertyType);
+            Assert.AreEqual(1, childProperty3.PropertyValue);
+            Assert.AreEqual(false, childProperty3.IsException);
+            Assert.AreEqual(false, childProperty3.IsNullable);
+
+            TreeItem<PropertyDescription> childItem4 = treeItem.Children.ElementAt(3);
+            Assert.AreEqual(1, childItem4.Parents.Count());
+            Assert.AreEqual(treeItem, childItem4.Parents.ElementAt(0));
+            Assert.IsFalse(childItem4.HasChildrenCycle);
+            Assert.IsNotNull(childItem4.Value);
+
+            PropertyDescription property4 = childItem4.Value;
+            Assert.AreEqual("Values", property4.PropertyName);
+            Assert.AreEqual(typeof(Dictionary<string, double>.ValueCollection), property4.PropertyType);
+            Assert.AreEqual(false, property4.IsException);
+            Assert.AreEqual(false, property4.IsNullable);
+
+            Assert.AreEqual(1, childItem4.Children.Count());
+
+            TreeItem<PropertyDescription> childChildItem4 = childItem4.Children.ElementAt(0);
+            Assert.AreEqual(2, childChildItem4.Parents.Count());
+            Assert.AreEqual(treeItem, childChildItem4.Parents.ElementAt(0));
+            Assert.AreEqual(childItem4, childChildItem4.Parents.ElementAt(1));
+            Assert.AreEqual(0, childChildItem4.Children.Count());
+            Assert.IsFalse(childChildItem4.HasChildrenCycle);
+            Assert.IsNotNull(childChildItem4.Value);
+
+            PropertyDescription childProperty4 = childChildItem4.Value;
+            Assert.AreEqual("Count", childProperty4.PropertyName);
+            Assert.AreEqual(typeof(int), childProperty4.PropertyType);
+            Assert.AreEqual(1, childProperty4.PropertyValue);
+            Assert.AreEqual(false, childProperty4.IsException);
+            Assert.AreEqual(false, childProperty4.IsNullable);
         }
     }
-
 }

@@ -2,40 +2,28 @@
 using System.Collections.Generic;
 
 namespace Reflection.Utils.Tree {
-    //public static class TreeBuilder<T> {
-    //    public static TreeItem<T> Create(
-    //        //IEnumerable<TreeItem<T>> parents, 
-    //        //object source, 
-    //        //Func<IEnumerable<TreeItem<T>>, object, T> createRootValue, 
-    //        //Func<IEnumerable<TreeItem<T>>, object, IEnumerable<T>> createValueItems, 
-    //        //Func<IEnumerable<TreeItem<T>>, T, bool> canAddChildren, 
-    //        //Func<T, object> getChildOwner) {
-                       
-    //        //T rootValue = createRootValue(parents, source);
-    //        //if (canAddChildren(parents, rootValue)) {
+    public static class TreeBuilder<T> {
+        public static TreeItem<T> Create(
+            IEnumerable<TreeItem<T>> parents,
+            T value,
+            Func<TreeItem<T>, bool> canCreateChildren,
+            Func<TreeItem<T>, bool> shouldCheckChildrenCycle,
+            Func<TreeItem<T>, bool> getHasChildrenCycle,
+            Func<TreeItem<T>, IEnumerable<TreeItem<T>>> createChildren) {
 
-    //        //}
-
-    //        //IEnumerable<TreeItem<T>> children = Create
-    //        //TreeItem <T> item = new TreeItem<T>(createRootValue(parents, source), parents);
-    //        //AddItems(parents, tree.RootItem.Children, source, (p, o) => createValueItems(p, o), i => canAddChildren(i), i => getChildOwner(i));
-    //        //return tree;
-    //    }
-
-    //    static void AddItems(IEnumerable<TreeItem<T>> parents, List<TreeItem<T>> items, object owner, Func<IEnumerable<TreeItem<T>>, object, IEnumerable<T>> createValueItems, Func<T, bool> canAddChildren, Func<T, object> getChildOwner) {
-    //        if (owner == null)
-    //            return;
-    //        foreach (T value in createValueItems(parents, owner)) {
-    //            if (canAddChildren(value)) 
-    //                AddItems(CloneParents(parents), item.Children, getChildOwner(value), (t, o) => createValueItems(t, o), i => canAddChildren(i), i => getChildOwner(i));
-
-    //            TreeItem<T> item = new TreeItem<T>(value, parents);
-    //            items.Add(item);
-    //        }
-    //    }
-
-    //    static List<TreeItem<T>> CloneParents(IEnumerable<TreeItem<T>> parents) {
-    //        return new List<TreeItem<T>>(parents);
-    //    }
-    //}
+            TreeItem<T> result = new TreeItem<T>();
+            result.Parents = parents;
+            result.Value = value;
+            if (!canCreateChildren(result))
+                return result;
+            if (shouldCheckChildrenCycle(result)) {
+                bool hasChildrenCycle = getHasChildrenCycle(result);
+                result.HasChildrenCycle = hasChildrenCycle;
+                if (hasChildrenCycle)
+                    return result;
+            }
+            result.Children = createChildren(result);
+            return result;
+        }
+    }
 }

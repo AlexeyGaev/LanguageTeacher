@@ -3,6 +3,17 @@ using Reflection.Utils.Tree.Export;
 using System;
 
 namespace Reflection.Utils.PropertyTree.Export {
+    // TODO:
+    //IsPrimitive: Boolean, Byte, SByte, Int16, UInt16, Int32, UInt32, Int64, UInt64, IntPtr, UIntPtr, Char, Double, Single.
+    //struct
+    //IsEnum
+    //Nullable: struct, IsPrimitive, IsEnum
+    //IsValueType: IsPrimitive, struct, IsEnum
+    //IsGenericType
+    //string 
+    //IsArray
+    //IEnumerable
+
     //public static class PropertyTreeExporter {
     //    public static void Export(StringWriter writer, Tree<PropertyDescription> tree, ExportStringFormat format) {
     //        TreeExporter<StringWriter, PropertyDescription, ExportStringFormat>.Export(
