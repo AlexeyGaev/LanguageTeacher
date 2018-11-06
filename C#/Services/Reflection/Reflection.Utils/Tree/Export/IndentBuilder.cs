@@ -1,4 +1,4 @@
-﻿namespace Reflection.Utils.PropertyTree.Export {
+﻿namespace Reflection.Utils.Tree.Export {
     public static class IndentBuilder {
         public static string CreateLevelSpace(int level, string space) {
             string indent = string.Empty;

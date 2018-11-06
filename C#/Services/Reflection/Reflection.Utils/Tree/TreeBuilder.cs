@@ -9,20 +9,20 @@ namespace Reflection.Utils.Tree {
             Func<TreeItem<T>, bool> canCreateChildren,
             Func<TreeItem<T>, bool> shouldCheckChildrenCycle,
             Func<TreeItem<T>, bool> getHasChildrenCycle,
-            Func<TreeItem<T>, IEnumerable<TreeItem<T>>> createChildren) {
+            Action<TreeItem<T>> addChildren) {
 
-            TreeItem<T> result = new TreeItem<T>();
-            result.Parents = parents;
-            result.Value = value;
+            TreeItem<T> result = new TreeItem<T>(parents, value);
             if (!canCreateChildren(result))
                 return result;
             if (shouldCheckChildrenCycle(result)) {
                 bool hasChildrenCycle = getHasChildrenCycle(result);
-                result.HasChildrenCycle = hasChildrenCycle;
-                if (hasChildrenCycle)
+                if (getHasChildrenCycle(result)) {
+                    result.SetHasChildrenCycle(true);
                     return result;
+                }
             }
-            result.Children = createChildren(result);
+            result.InitChildren();
+            addChildren(result);
             return result;
         }
     }
