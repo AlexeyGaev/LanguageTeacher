@@ -4,11 +4,15 @@
         Empty,
         Nullable, 
         Exception,
-        Children,
-        HasChildrenCycle,
+        
         Type, 
         TypeCode,
         Name, 
         Value,
+
+        ObjectChildren,
+        HasObjectChildrenCycle,
+        ArrayChildren,
+        HasArrayChildren,
     }
 }

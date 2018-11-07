@@ -1,15 +1,14 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Reflection.Utils.Tree;
 using Reflection.Utils.Tree.Export;
-using Reflection.Utils.Tree.MappingTree;
 using System.Linq;
 
-namespace Reflection.Utils.Tests {
+namespace Reflection.Utils.PropertyTree.Tests {
     [TestClass]
     public class TreeExporterTests {
         [TestMethod]
         public void NotChild() {
-            Mapping emptyMapping = new Mapping(new MappingField(null, null), new MappingValue(null));
+            Mapping emptyMapping = new Mapping(new PropertyField(null, null), new PropertyValue(null));
             TreeItem<Mapping> treeItem = new TreeItem<Mapping>(null, emptyMapping);
             
             StringWriter writer = new StringWriter();
@@ -21,7 +20,7 @@ namespace Reflection.Utils.Tests {
 
         [TestMethod]
         public void OneChild() {
-            Mapping emptyMapping = new Mapping(new MappingField(null, null), new MappingValue(null));
+            Mapping emptyMapping = new Mapping(new PropertyField(null, null), new PropertyValue(null));
             TreeItem<Mapping> treeItem = new TreeItem<Mapping>(null, emptyMapping);
             treeItem.InitChildren();
             treeItem.AddChild(new TreeItem<Mapping>(null, emptyMapping));

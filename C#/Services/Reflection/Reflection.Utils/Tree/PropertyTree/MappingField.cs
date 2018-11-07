@@ -1,19 +1,19 @@
 ﻿using Reflection.Utils.Tree.Localization;
 using System;
 
-namespace Reflection.Utils.Tree.MappingTree {
-    public struct MappingField : IEquatable<MappingField> {
-        public static bool operator ==(MappingField left, MappingField right) {
+namespace Reflection.Utils.PropertyTree {
+    public struct PropertyField : IEquatable<PropertyField> {
+        public static bool operator ==(PropertyField left, PropertyField right) {
             return left.Equals(right);
         }
-        public static bool operator !=(MappingField left, MappingField right) {
+        public static bool operator !=(PropertyField left, PropertyField right) {
             return !left.Equals(right);
         }
 
         string name;
         Type type;
 
-        public MappingField(string name, Type type) {
+        public PropertyField(string name, Type type) {
             this.name = name;
             this.type = type;
         }
@@ -23,14 +23,14 @@ namespace Reflection.Utils.Tree.MappingTree {
 
         public bool IsNullable { get { return this.type != null && Nullable.GetUnderlyingType(this.type) != null; } }
 
-        public bool Equals(MappingField other) {
+        public bool Equals(PropertyField other) {
             return
                 String.Compare(this.name, other.name, StringComparison.InvariantCulture) == 0 &&
                 this.type == other.type;
         }
 
         public override bool Equals(object obj) {
-            return obj is MappingField && Equals((MappingField)obj);
+            return obj is PropertyField && Equals((PropertyField)obj);
         }
 
         public override int GetHashCode() {

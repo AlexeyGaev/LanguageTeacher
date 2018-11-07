@@ -46,20 +46,20 @@ namespace Reflection.Utils.Tree {
             if (Children == null) {
                 if (HasChildrenCycle)
                     return
-                        "(" + LocalizationTable.GetStringById(LocalizationId.Children) + ": " +
+                        "(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
                         LocalizationTable.GetStringById(LocalizationId.Null) + ", " +
-                        LocalizationTable.GetStringById(LocalizationId.HasChildrenCycle) + ")";
+                        LocalizationTable.GetStringById(LocalizationId.HasObjectChildrenCycle) + ")";
                 else
                     return
-                        "(" + LocalizationTable.GetStringById(LocalizationId.Children) + ": " +
+                        "(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
                         LocalizationTable.GetStringById(LocalizationId.Null) + ")";
             }
             int childrenCount = Children.Count();
             if (childrenCount == 0)
                 return 
-                    "(" +  LocalizationTable.GetStringById(LocalizationId.Children) + ": " +
+                    "(" +  LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
                     LocalizationTable.GetStringById(LocalizationId.Empty) + ")";
-            return String.Format("(" + LocalizationTable.GetStringById(LocalizationId.Children) + ": {0})", childrenCount);
+            return String.Format("(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": {0})", childrenCount);
         }
     }
 }

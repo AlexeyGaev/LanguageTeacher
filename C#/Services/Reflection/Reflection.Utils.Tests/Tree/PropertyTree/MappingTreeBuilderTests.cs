@@ -1,53 +1,43 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Reflection.Utils.Tree.MappingTree;
 using Reflection.Utils.Tree;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Reflection.Utils.Tests {
+namespace Reflection.Utils.PropertyTree.Tests {
     [TestClass]
-    public class MappingTreeBuilderTests {
-        TreeItem<Mapping> CreateItem(IEnumerable<TreeItem<Mapping>> parents, string propertyName, Type propertyType, object propertyValue) {
-            Mapping propertyDescription = new Mapping(new MappingField(propertyName, propertyType), new MappingValue(propertyValue));
-            return MappingTreeBuilder.CreateItem(parents, propertyDescription);
+    public class PropertyTreeBuilderTests {
+        PropertyTreeItem CreateItem(IEnumerable<PropertyTreeItem> parents, string propertyName, Type propertyType, object propertyValue) {
+            return PropertyTreeBuilder.CreateItem(parents, new PropertyField(propertyName, propertyType), propertyValue);
         }
 
-        void CheckField(string name, Type type, MappingField field) {
+        void CheckField(string name, Type type, PropertyField field) {
             Assert.AreEqual(name, field.Name);
             Assert.AreEqual(type, field.Type);
         }
-
-        void CheckValue(object value, MappingValue mappingValue) {
-            Assert.AreEqual(value, mappingValue.Value);
-        }
-
-        void CheckMapping(string name, Type type, object value, Mapping mapping) {
-            CheckField(name, type, mapping.Field);
-            CheckValue(value, mapping.Value);
-        }
-
+        
         [TestMethod]
         public void PropertyNameIsNull() {
-            TreeItem<Mapping> treeItem = CreateItem(null, null, null, null);
+            PropertyTreeItem item = CreateItem(null, null, null, null);
                         
-            Assert.IsNull(treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
-            Assert.IsFalse(treeItem.HasChildrenCycle);
-            
-            CheckMapping(null, null, null, treeItem.Value);
+            Assert.IsNull(item.ObjectParents);
+            Assert.IsNull(item.ObjectChildren);
+            Assert.IsFalse(item.HasObjectCycle);
+            CheckField(null, null, item.Field);
+            Assert.AreEqual(null, item.Value);
         }
 
         [TestMethod]
         public void PropertyTypeIsNull() {
             string propertyName = "Test";
-            TreeItem<Mapping> treeItem = CreateItem(null, propertyName, null, null);
-                        
-            Assert.IsNull(treeItem.Parents);
-            Assert.IsNull(treeItem.Children);
-            Assert.IsFalse(treeItem.HasChildrenCycle);
+            PropertyTreeItem treeItem = CreateItem(null, propertyName, null, null);
 
-            CheckMapping(propertyName, null, null, treeItem.Value);
+            Assert.IsNull(treeItem.ObjectParents);
+            Assert.IsNull(treeItem.ObjectChildren);
+            Assert.IsFalse(treeItem.HasObjectCycle);
+            Assert.IsFalse(treeItem.HasArrayChildren);
+
+            CheckTreeItem(propertyName, null, null, treeItem);
         }
 
         [TestMethod]

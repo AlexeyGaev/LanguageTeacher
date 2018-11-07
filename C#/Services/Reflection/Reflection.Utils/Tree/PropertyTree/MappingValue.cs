@@ -1,31 +1,31 @@
 ﻿using Reflection.Utils.Tree.Localization;
 using System;
 
-namespace Reflection.Utils.Tree.MappingTree {
-    public struct MappingValue : IEquatable<MappingValue> {
-        public static bool operator ==(MappingValue left, MappingValue right) {
+namespace Reflection.Utils.PropertyTree {
+    public struct PropertyValue : IEquatable<PropertyValue> {
+        public static bool operator ==(PropertyValue left, PropertyValue right) {
             return left.Equals(right);
         }
-        public static bool operator !=(MappingValue left, MappingValue right) {
+        public static bool operator !=(PropertyValue left, PropertyValue right) {
             return !left.Equals(right);
         }
 
         object value;
        
-        public MappingValue(object value) {
+        public PropertyValue(object value) {
             this.value = value;
         }
                
         public object Value { get { return this.value; } }
 
-        public bool Equals(MappingValue other) {
+        public bool Equals(PropertyValue other) {
             if (this.value == null)
                 return other.value == null;
             return this.value.Equals(other.value);
         }
 
         public override bool Equals(object obj) {
-            return obj is MappingValue && Equals((MappingValue)obj);
+            return obj is PropertyValue && Equals((PropertyValue)obj);
         }
 
         public override int GetHashCode() {

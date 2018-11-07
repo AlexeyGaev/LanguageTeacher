@@ -10,8 +10,10 @@ namespace Reflection.Utils.Tree.Localization {
             innerTable.Add(LocalizationId.Empty, "#Empty");
             innerTable.Add(LocalizationId.Nullable, "Nullable");
             innerTable.Add(LocalizationId.Exception, "Exception");
-            innerTable.Add(LocalizationId.Children, "Children");
-            innerTable.Add(LocalizationId.HasChildrenCycle, "HasCycle");
+            innerTable.Add(LocalizationId.ObjectChildren, "ObjectChildren");
+            innerTable.Add(LocalizationId.HasObjectChildrenCycle, "HasObjectChildrenCycle");
+            innerTable.Add(LocalizationId.ArrayChildren, "ArrayChildren");
+            innerTable.Add(LocalizationId.HasArrayChildren, "HasArrayChildren");
             innerTable.Add(LocalizationId.Name, "Name");
             innerTable.Add(LocalizationId.Type, "Type");
             innerTable.Add(LocalizationId.TypeCode, "TypeCode");

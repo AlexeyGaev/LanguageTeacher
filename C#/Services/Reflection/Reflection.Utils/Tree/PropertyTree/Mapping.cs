@@ -1,7 +1,6 @@
-﻿using Reflection.Utils.Tree.Localization;
-using System;
+﻿using System;
 
-namespace Reflection.Utils.Tree.MappingTree {
+namespace Reflection.Utils.PropertyTree {
     public struct Mapping : IEquatable<Mapping> {
         public static bool operator ==(Mapping left, Mapping right) {
             return left.Equals(right);
@@ -10,16 +9,16 @@ namespace Reflection.Utils.Tree.MappingTree {
             return !left.Equals(right);
         }
 
-        MappingField field;
-        MappingValue value;
+        PropertyField field;
+        PropertyValue value;
 
-        public Mapping(MappingField field, MappingValue value) {
+        public Mapping(PropertyField field, PropertyValue value) {
             this.field = field;
             this.value = value;
         }
 
-        public MappingField Field { get { return this.field; } }
-        public MappingValue Value { get { return this.value; } }
+        public PropertyField Field { get { return this.field; } }
+        public PropertyValue Value { get { return this.value; } }
         
         public bool Equals(Mapping other) {
             return

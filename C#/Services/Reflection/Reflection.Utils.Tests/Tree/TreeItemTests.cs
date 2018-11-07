@@ -1,16 +1,15 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Reflection.Utils.Tree;
-using Reflection.Utils.Tree.MappingTree;
 
-namespace Reflection.Utils.Tests {
+namespace Reflection.Utils.PropertyTree.Tests {
     [TestClass]
     public class TreeItemTests {
         [TestMethod]
         public void CheckToString() {
-            Mapping emptyMapping = new Mapping(new MappingField(null, null), new MappingValue(null));
+            Mapping emptyMapping = new Mapping(new PropertyField(null, null), new PropertyValue(null));
             Assert.AreEqual("(Name = #Null, Type = #Null) : (Value = #Null) (Children: #Null)", new TreeItem<Mapping>(null, emptyMapping).ToString());
 
-            Mapping mapping = new Mapping(new MappingField("Test", typeof(int)), new MappingValue(1));
+            Mapping mapping = new Mapping(new PropertyField("Test", typeof(int)), new PropertyValue(1));
             TreeItem<Mapping> treeItem = new TreeItem<Mapping>(null, mapping);
 
             string mappingValue = "(Name = Test, Type = Int32) : (Type = Int32, Value = 1)";
