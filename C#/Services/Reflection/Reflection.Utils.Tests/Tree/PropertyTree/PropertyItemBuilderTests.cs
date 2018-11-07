@@ -21,6 +21,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(null, null, null, null);
 
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(PropertyArrayChildren.Empty, item.ArrayChildren);
             CheckField(null, null, item.Field);
             Assert.AreEqual(null, item.Value);
         }
@@ -31,6 +32,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(null, propertyName, null, null);
 
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, null, item.Field);
             Assert.AreEqual(null, item.Value);
         }
@@ -43,6 +45,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -55,6 +58,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
             
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -67,6 +71,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -79,6 +84,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
             
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -91,6 +97,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -103,6 +110,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -120,6 +128,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -132,6 +141,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -144,6 +154,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -158,6 +169,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -170,6 +182,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -182,6 +195,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -205,6 +219,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
         }
 
         void CheckTestStruct(PropertyItem item, string propertyName, Type propertyType, object propertyValue) {
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
                                     
@@ -243,6 +258,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -255,6 +271,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             CheckField(propertyName, propertyType, item.Field);
+            Assert.AreEqual(null, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
                         
             Assert.AreEqual(4, item.ObjectChildren.Count());
@@ -290,6 +307,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -302,6 +320,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             CheckField(propertyName, propertyType, item.Field);
+            Assert.AreEqual(null, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
 
             Assert.AreEqual(1, item.ObjectChildren.Count());
@@ -322,12 +341,12 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             CheckField(propertyName, propertyType, item.Field);
+            Assert.AreEqual(null, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
 
             Assert.AreEqual(1, item.ObjectChildren.Count());
 
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
-            Assert.AreEqual(PropertyObjectChildren.Empty, childItem1.ObjectChildren);
             CheckField("Property", typeof(TestClass2), childItem1.Field);
             Assert.AreEqual(childPropertyValue, childItem1.Value);
                       
@@ -348,6 +367,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             CheckField(propertyName, propertyType, item.Field);
+            Assert.AreEqual(null, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
             
             Assert.AreEqual(1, item.ObjectChildren.Count());
@@ -366,6 +386,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -378,6 +399,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -390,6 +412,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -402,9 +425,12 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
+
+        // TODO : =============================
 
         [TestMethod]
         public void ListIntIsEmpty() {
@@ -414,17 +440,20 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             CheckField(propertyName, propertyType, item.Field);
+            Assert.AreEqual(PropertyArrayChildren.Empty, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
 
             Assert.AreEqual(2, item.ObjectChildren.Count());
 
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
             Assert.AreEqual(PropertyObjectChildren.Empty, childItem1.ObjectChildren);
+            Assert.AreEqual(null, childItem1.ArrayChildren);
             CheckField("Capacity", typeof(int), childItem1.Field);
             Assert.AreEqual(0, childItem1.Value);
 
             PropertyItem childItem2 = item.ObjectChildren.ElementAt(1);
             Assert.AreEqual(PropertyObjectChildren.Empty, childItem2.ObjectChildren);
+            Assert.AreEqual(null, childItem2.ArrayChildren);
             CheckField("Count", typeof(int), childItem2.Field);
             Assert.AreEqual(0, childItem2.Value);
         }
@@ -439,7 +468,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
-
+            
             Assert.AreEqual(2, item.ObjectChildren.Count());
 
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
@@ -451,6 +480,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             Assert.AreEqual(PropertyObjectChildren.Empty, childItem2.ObjectChildren);
             CheckField("Count", typeof(int), childItem2.Field);
             Assert.AreEqual(1, childItem2.Value);
+
+            Assert.AreEqual(1, item.ArrayChildren.Count());
         }
 
         [TestMethod]
@@ -461,6 +492,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
             Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
+            Assert.AreEqual(null, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
         }
@@ -472,6 +504,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
             Dictionary<string, double> propertyValue = new Dictionary<string, double>();
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
+            Assert.AreEqual(PropertyArrayChildren.Empty, item.ArrayChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
 
@@ -518,7 +551,6 @@ namespace Reflection.Utils.PropertyTree.Tests {
             propertyValue.Add("Test", 2);
 
             PropertyItem item = CreateItem(null, propertyName, propertyType, propertyValue);
-            Assert.AreEqual(PropertyObjectChildren.Empty, item.ObjectChildren);
             CheckField(propertyName, propertyType, item.Field);
             Assert.AreEqual(propertyValue, item.Value);
 

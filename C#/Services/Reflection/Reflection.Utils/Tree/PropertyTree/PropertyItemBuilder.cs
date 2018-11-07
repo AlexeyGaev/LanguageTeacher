@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -25,14 +26,23 @@ namespace Reflection.Utils.PropertyTree {
             List<PropertyItem> children = new List<PropertyItem>();
             foreach (PropertyInfo propertyInfo in current.Value.GetType().GetProperties()) {
                 PropertyItem child = Create(CreateObjectChildParents(parents, current), new PropertyField(propertyInfo.Name, propertyInfo.PropertyType), CreatePropertyValue(propertyInfo, current));
-                if (CanAddChild(current, child))
+                if (CanAddChild(child))
                     children.Add(child);
             }
             return new PropertyObjectChildren(children);
         }
 
         static PropertyArrayChildren CreateArrayChildren(PropertyItem current) {
-            return PropertyArrayChildren.Empty;
+            object value = current.Value;
+            if (value == null || !(value is IEnumerable))
+                return null;
+            List<PropertyItem> arrayItems = new List<PropertyItem>();
+            PropertyField field = new PropertyField();
+            foreach (object arrayValue in (IEnumerable)value) {
+                PropertyItem item = Create(null, field, arrayValue);
+                arrayItems.Add(item);
+            }
+            return new PropertyArrayChildren(arrayItems);
         }
 
         static bool CanCreateChildren(PropertyItem item) {
@@ -65,7 +75,7 @@ namespace Reflection.Utils.PropertyTree {
             return result;
         }
         
-        static bool CanAddChild(PropertyItem current, PropertyItem child) {
+        static bool CanAddChild(PropertyItem child) {
             return !(child.Value is TargetParameterCountException);
         }
 
