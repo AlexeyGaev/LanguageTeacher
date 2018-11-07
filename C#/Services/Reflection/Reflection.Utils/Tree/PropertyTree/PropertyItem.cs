@@ -15,7 +15,7 @@ namespace Reflection.Utils.PropertyTree {
 
         readonly PropertyField field;
         readonly object value;
- 
+
         public PropertyItem(PropertyField field, object value) {
             this.value = value;
             this.field = field;
@@ -25,7 +25,7 @@ namespace Reflection.Utils.PropertyTree {
         public object Value { get { return this.value; } }
                 
         public PropertyObjectChildren ObjectChildren { get; set; }
-        public IEnumerable<PropertyItem> ArrayChildren { get; set; }
+        public PropertyArrayChildren ArrayChildren { get; set; }
                 
         public bool Equals(PropertyItem other) {
             return

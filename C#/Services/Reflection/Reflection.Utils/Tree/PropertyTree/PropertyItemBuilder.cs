@@ -6,27 +6,33 @@ namespace Reflection.Utils.PropertyTree {
     public static class PropertyItemBuilder {
         public static PropertyItem Create(IEnumerable<PropertyItem> parents, PropertyField field, object value) {
             PropertyItem result = new PropertyItem(field, value);
-            // TODO : array
-            if (!CanCreateChildren(result))
-                return result;
-            if (ShouldCheckChildrenCycle(result)) {
-                if (GetHasChildrenCycle(parents, result)) {
-                    result.ObjectChildren = PropertyObjectChildren.Cycle;
-                    return result;
-                }
-            }
-            result.ObjectChildren = CreateChildren(parents, result);
+            result.ObjectChildren = CreateObjectChildren(parents, result);
+            result.ArrayChildren = CreateArrayChildren(result);
             return result;
         }
         
-        static PropertyObjectChildren CreateChildren(IEnumerable<PropertyItem> parents, PropertyItem current) {
-            PropertyObjectChildren result = new PropertyObjectChildren();
+        static PropertyObjectChildren CreateObjectChildren(IEnumerable<PropertyItem> parents, PropertyItem current) {
+            if (!CanCreateChildren(current))
+                return PropertyObjectChildren.Empty;
+            if (ShouldCheckChildrenCycle(current) && GetHasChildrenCycle(parents, current))
+                return PropertyObjectChildren.Cycle;
+            PropertyInfo[] properties = current.Value.GetType().GetProperties();
+            if (properties == null)
+                return PropertyObjectChildren.Empty;
+            int count = properties.Length;
+            if (count == 0)
+                return PropertyObjectChildren.Empty;
+            List<PropertyItem> children = new List<PropertyItem>();
             foreach (PropertyInfo propertyInfo in current.Value.GetType().GetProperties()) {
                 PropertyItem child = Create(CreateObjectChildParents(parents, current), new PropertyField(propertyInfo.Name, propertyInfo.PropertyType), CreatePropertyValue(propertyInfo, current));
                 if (CanAddChild(current, child))
-                    result.Add(child);
+                    children.Add(child);
             }
-            return result;
+            return new PropertyObjectChildren(children);
+        }
+
+        static PropertyArrayChildren CreateArrayChildren(PropertyItem current) {
+            return PropertyArrayChildren.Empty;
         }
 
         static bool CanCreateChildren(PropertyItem item) {
