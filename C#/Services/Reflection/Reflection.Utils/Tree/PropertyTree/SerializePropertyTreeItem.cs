@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 
 namespace Reflection.Utils.PropertyTree {
-    public class SerializePropertyTreeItem {
+    public class SerializePropertyItem {
         readonly SerializeInfo field;
         readonly SerializeInfo value;
 
-        public SerializePropertyTreeItem(SerializeInfo field, SerializeInfo value) {
+        public SerializePropertyItem(SerializeInfo field, SerializeInfo value) {
             this.field = field;
             this.value = value;
         }
@@ -14,8 +14,7 @@ namespace Reflection.Utils.PropertyTree {
         public SerializeInfo Value { get { return this.value; } }
 
         public bool HasObjectCycle { get; set; }
-        public bool HasArrayChildren { get; set; }
-        public IEnumerable<SerializePropertyTreeItem> ObjectChildren { get; set; }
-        public IEnumerable<SerializePropertyTreeItem> ArrayChildren { get; set; }
+        public IEnumerable<SerializePropertyItem> ObjectChildren { get; set; }
+        public IEnumerable<SerializePropertyItem> ArrayChildren { get; set; }
     }
 }

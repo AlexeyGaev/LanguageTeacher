@@ -3,7 +3,7 @@ using System;
 
 namespace Reflection.Utils.PropertyTree.Tests {
     [TestClass]
-    public class MappingFieldTests {
+    public class PropertyFieldTests {
         [TestMethod]
         public void CheckEquals() {
             PropertyField field1 = new PropertyField("Test", typeof(int));
