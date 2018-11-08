@@ -6,7 +6,6 @@ namespace Reflection.Utils.PropertyTree {
 
     }
 
-
     public static class PropertyValueStringBuilder {
         public static string Create(object value) {
             if (value == null)

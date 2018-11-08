@@ -13,8 +13,7 @@ namespace Reflection.Utils.PropertyTree {
         public SerializeInfo Field { get { return this.field; } }
         public SerializeInfo Value { get { return this.value; } }
 
-        public bool HasObjectCycle { get; set; }
-        public IEnumerable<SerializePropertyItem> ObjectChildren { get; set; }
+        public SerializePropertyObjectChildren ObjectChildren { get; set; }
         public IEnumerable<SerializePropertyItem> ArrayChildren { get; set; }
     }
 }

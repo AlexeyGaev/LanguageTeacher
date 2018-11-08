@@ -10,22 +10,26 @@ namespace Reflection.Utils.PropertyTree {
             return !left.Equals(right);
         }
 
-        string name;
+        object id;
         Type type;
 
-        public PropertyField(string name, Type type) {
-            this.name = name;
+        public PropertyField(object id, Type type) {
+            this.id = id;
             this.type = type;
         }
 
-        public string Name { get { return this.name; } }
+        public object Id { get { return this.id; } }
         public Type Type { get { return this.type; } }
 
         public bool IsNullable { get { return this.type != null && Nullable.GetUnderlyingType(this.type) != null; } }
 
         public bool Equals(PropertyField other) {
-            return
-                String.Compare(this.name, other.name, StringComparison.InvariantCulture) == 0 &&
+            if ((object)other.id == null)
+                return (object)this.id == null && this.type == other.type;
+            else if ((object)this.id == null)
+                return (object)other.id == null && this.type == other.type;
+            return 
+                this.id.Equals(other.id) &&
                 this.type == other.type;
         }
 
@@ -35,8 +39,8 @@ namespace Reflection.Utils.PropertyTree {
 
         public override int GetHashCode() {
             int result = 0;
-            if (this.name != null)
-                result ^= this.name.GetHashCode();
+            if (this.id != null)
+                result ^= this.id.GetHashCode();
             if (this.type != null)
                 result ^= this.type.GetHashCode();
             return result;
@@ -44,15 +48,19 @@ namespace Reflection.Utils.PropertyTree {
 
         public override string ToString() {
             string format = LocalizationTable.GetStringById(LocalizationId.Name) + " = {0}, " + LocalizationTable.GetStringById(LocalizationId.Type) + " = {1}";
-            return String.Format(format, NameToString(), TypeToString());
+            return String.Format(format, IdToString(), TypeToString());
         }
 
-        public string NameToString() {
-            if (this.name == null)
+        public string IdToString() {
+            if (this.id == null)
                 return LocalizationTable.GetStringById(LocalizationId.Null);
-            if (String.IsNullOrEmpty(this.name))
-                return LocalizationTable.GetStringById(LocalizationId.Empty);
-            return this.name;
+            if (this.id is string) {
+                string stringId = (string)this.id;
+                if (String.IsNullOrEmpty(stringId))
+                    return LocalizationTable.GetStringById(LocalizationId.Empty);
+                return stringId;
+            }
+            return this.id.ToString();
         }
 
         public string TypeToString() {
@@ -64,6 +72,4 @@ namespace Reflection.Utils.PropertyTree {
             return this.type.Name;
         } 
     }
-
-
 }

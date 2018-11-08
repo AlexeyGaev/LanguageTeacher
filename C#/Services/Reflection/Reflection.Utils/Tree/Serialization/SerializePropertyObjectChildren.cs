@@ -5,29 +5,27 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Reflection.Utils.PropertyTree {
-    public class PropertyObjectChildren : IEnumerable<PropertyItem> {
-        static PropertyObjectChildren cycle = CreateCycle();
-        static PropertyObjectChildren CreateCycle() {
-            PropertyObjectChildren result = new PropertyObjectChildren(Enumerable.Empty<PropertyItem>());
-            result.hasCycle = true;
-            return result;
-        }
-
-        public static PropertyObjectChildren Cycle { get { return cycle; } }
+    public class SerializePropertyObjectChildren : IEnumerable<SerializePropertyItem> {
+        static SerializePropertyObjectChildren cycle = new SerializePropertyObjectChildren(Enumerable.Empty<SerializePropertyItem>(), true);
+        public static SerializePropertyObjectChildren Cycle { get { return cycle; } }
         
-        readonly IEnumerable<PropertyItem> items;
+        readonly IEnumerable<SerializePropertyItem> items;
         bool hasCycle;
 
-        PropertyObjectChildren() { }
+        SerializePropertyObjectChildren(IEnumerable<SerializePropertyItem> items, bool hasCycle) {
+            this.items = items; 
+            this.hasCycle = hasCycle;
+        }
 
-        public PropertyObjectChildren(IEnumerable<PropertyItem> items) {
+        public SerializePropertyObjectChildren(IEnumerable<SerializePropertyItem> items) 
+            : this(items, false) {
             this.items = items;
             this.hasCycle = false;
         }
                 
         public bool HasCycle { get { return this.hasCycle; } }
 
-        public IEnumerator<PropertyItem> GetEnumerator() {
+        public IEnumerator<SerializePropertyItem> GetEnumerator() {
             return this.items.GetEnumerator();
         }
 
@@ -42,6 +40,4 @@ namespace Reflection.Utils.PropertyTree {
             return result;
         }
     }
-
-
 }
