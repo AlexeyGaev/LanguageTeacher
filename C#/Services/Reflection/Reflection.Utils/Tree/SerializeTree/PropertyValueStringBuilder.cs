@@ -2,6 +2,11 @@
 using System;
 
 namespace Reflection.Utils.PropertyTree {
+    public static class PropertyFieldStringBuilder {
+
+    }
+
+
     public static class PropertyValueStringBuilder {
         public static string Create(object value) {
             if (value == null)

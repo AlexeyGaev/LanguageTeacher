@@ -5,24 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Reflection.Utils.PropertyTree {
-    public class PropertyObjectChildren : IEnumerable<PropertyItem>, IEquatable<PropertyObjectChildren> {
-        public static bool operator ==(PropertyObjectChildren left, PropertyObjectChildren right) {
-            if ((object)left == null)
-                return (object)right == null;
-            if ((object)right == null)
-                return (object)left == null;
-            return left.Equals(right);
-        }
-        public static bool operator !=(PropertyObjectChildren left, PropertyObjectChildren right) {
-            if ((object)left == null)
-                return (object)right != null;
-            if ((object)right == null)
-                return (object)left != null;
-            return !left.Equals(right);
-        }
-        
+    public class PropertyObjectChildren : IEnumerable<PropertyItem> {
         static PropertyObjectChildren cycle = CreateCycle();
-        static PropertyObjectChildren empty = new PropertyObjectChildren(Enumerable.Empty<PropertyItem>());
         static PropertyObjectChildren CreateCycle() {
             PropertyObjectChildren result = new PropertyObjectChildren(Enumerable.Empty<PropertyItem>());
             result.hasCycle = true;
@@ -30,8 +14,7 @@ namespace Reflection.Utils.PropertyTree {
         }
 
         public static PropertyObjectChildren Cycle { get { return cycle; } }
-        public static PropertyObjectChildren Empty { get { return empty; } }
-
+        
         readonly IEnumerable<PropertyItem> items;
         bool hasCycle;
 
@@ -48,18 +31,6 @@ namespace Reflection.Utils.PropertyTree {
             return this.items.GetEnumerator();
         }
 
-        public override bool Equals(object obj) {
-            return base.Equals(obj);
-        }
-
-        public override int GetHashCode() {
-            return base.GetHashCode();
-        }
-
-        public bool Equals(PropertyObjectChildren other) {
-            throw new NotImplementedException();
-        }
-
         IEnumerator IEnumerable.GetEnumerator() {
             return GetEnumerator();
         }
@@ -70,7 +41,7 @@ namespace Reflection.Utils.PropertyTree {
                 result += ", " + LocalizationTable.GetStringById(LocalizationId.HasObjectChildrenCycle);
             return result;
         }
-
-       
     }
+
+
 }
