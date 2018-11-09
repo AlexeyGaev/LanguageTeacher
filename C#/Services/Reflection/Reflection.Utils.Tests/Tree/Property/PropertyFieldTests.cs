@@ -54,13 +54,13 @@ namespace Reflection.Utils.PropertyTree.Tests {
             Assert.AreNotEqual(0, new PropertyField("Test", typeof(int)).GetHashCode());
         }
 
-        [TestMethod]
-        public void CheckToString() {
-            Assert.AreEqual("Name = #Null, Type = #Null", new PropertyField(null, null).ToString());
-            Assert.AreEqual("Name = #Empty, Type = #Null", new PropertyField(String.Empty, null).ToString());
-            Assert.AreEqual("Name = Test, Type = #Null", new PropertyField("Test", null).ToString());
-            Assert.AreEqual("Name = Test, Type = Int32", new PropertyField("Test", typeof(int)).ToString());
-            Assert.AreEqual("Name = Test, Type = Nullable Int32", new PropertyField("Test", typeof(int?)).ToString());
-        }
+        //[TestMethod]
+        //public void CheckToString() {
+        //    Assert.AreEqual("Name = #Null, Type = #Null", new PropertyField(null, null).ToString());
+        //    Assert.AreEqual("Name = #Empty, Type = #Null", new PropertyField(String.Empty, null).ToString());
+        //    Assert.AreEqual("Name = Test, Type = #Null", new PropertyField("Test", null).ToString());
+        //    Assert.AreEqual("Name = Test, Type = Int32", new PropertyField("Test", typeof(int)).ToString());
+        //    Assert.AreEqual("Name = Test, Type = Nullable Int32", new PropertyField("Test", typeof(int?)).ToString());
+        //}
     }
 }

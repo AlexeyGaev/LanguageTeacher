@@ -1,7 +1,7 @@
 ﻿using Reflection.Utils.Tree.Localization;
 using System;
 
-namespace Reflection.Utils.PropertyTree {
+namespace Reflection.Utils.PropertyTree.Selialization {
     public static class PropertyFieldStringBuilder {
 
     }

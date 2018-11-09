@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace Reflection.Utils.PropertyTree.Tests {
+namespace Reflection.Utils.PropertyTree.Selialization.Tests {
     [TestClass]
     public class PropertyValueStringBuilderTests {
         [TestMethod]

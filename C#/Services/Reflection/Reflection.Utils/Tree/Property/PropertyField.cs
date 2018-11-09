@@ -45,31 +45,5 @@ namespace Reflection.Utils.PropertyTree {
                 result ^= this.type.GetHashCode();
             return result;
         }
-
-        public override string ToString() {
-            string format = LocalizationTable.GetStringById(LocalizationId.Name) + " = {0}, " + LocalizationTable.GetStringById(LocalizationId.Type) + " = {1}";
-            return String.Format(format, IdToString(), TypeToString());
-        }
-
-        public string IdToString() {
-            if (this.id == null)
-                return LocalizationTable.GetStringById(LocalizationId.Null);
-            if (this.id is string) {
-                string stringId = (string)this.id;
-                if (String.IsNullOrEmpty(stringId))
-                    return LocalizationTable.GetStringById(LocalizationId.Empty);
-                return stringId;
-            }
-            return this.id.ToString();
-        }
-
-        public string TypeToString() {
-            if (this.type == null)
-                return LocalizationTable.GetStringById(LocalizationId.Null);
-            Type underlyingType = Nullable.GetUnderlyingType(this.type);
-            if (underlyingType != null)
-                return LocalizationTable.GetStringById(LocalizationId.Nullable) + " " + underlyingType.Name;
-            return this.type.Name;
-        } 
     }
 }

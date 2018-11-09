@@ -38,28 +38,28 @@ namespace Reflection.Utils.Tree {
                 this.children = null;
         } 
 
-        public override string ToString() {
-            return Value.ToString() + " " + GetChildrenStringInfo();
-        }
+        //public override string ToString() {
+        //    return Value.ToString() + " " + GetChildrenStringInfo();
+        //}
 
-        string GetChildrenStringInfo() {
-            if (Children == null) {
-                if (HasChildrenCycle)
-                    return
-                        "(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
-                        LocalizationTable.GetStringById(LocalizationId.Null) + ", " +
-                        LocalizationTable.GetStringById(LocalizationId.HasObjectChildrenCycle) + ")";
-                else
-                    return
-                        "(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
-                        LocalizationTable.GetStringById(LocalizationId.Null) + ")";
-            }
-            int childrenCount = Children.Count();
-            if (childrenCount == 0)
-                return 
-                    "(" +  LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
-                    LocalizationTable.GetStringById(LocalizationId.Empty) + ")";
-            return String.Format("(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": {0})", childrenCount);
-        }
+        //string GetChildrenStringInfo() {
+        //    if (Children == null) {
+        //        if (HasChildrenCycle)
+        //            return
+        //                "(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
+        //                LocalizationTable.GetStringById(LocalizationId.Null) + ", " +
+        //                LocalizationTable.GetStringById(LocalizationId.HasObjectChildrenCycle) + ")";
+        //        else
+        //            return
+        //                "(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
+        //                LocalizationTable.GetStringById(LocalizationId.Null) + ")";
+        //    }
+        //    int childrenCount = Children.Count();
+        //    if (childrenCount == 0)
+        //        return 
+        //            "(" +  LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": " +
+        //            LocalizationTable.GetStringById(LocalizationId.Empty) + ")";
+        //    return String.Format("(" + LocalizationTable.GetStringById(LocalizationId.ObjectChildren) + ": {0})", childrenCount);
+        //}
     }
 }
