@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Reflection.Utils.Tree.Serialization.Localization {
+namespace Reflection.Utils.PropertyTree.Serialization {
     public static class LocalizationTable {
         static Dictionary<LocalizationId, string> innerTable;
 
@@ -14,12 +14,10 @@ namespace Reflection.Utils.Tree.Serialization.Localization {
             innerTable.Add(LocalizationId.ObjectChildren, "ObjectChildren");
             innerTable.Add(LocalizationId.ArrayChildren, "ArrayChildren");
             innerTable.Add(LocalizationId.Null, "#Null");
-
             innerTable.Add(LocalizationId.Empty, "#Empty");
-            innerTable.Add(LocalizationId.Nullable, "Nullable");
             innerTable.Add(LocalizationId.Exception, "Exception");
-            innerTable.Add(LocalizationId.HasArrayChildren, "HasArrayChildren");
-            innerTable.Add(LocalizationId.TypeCode, "TypeCode");
+            innerTable.Add(LocalizationId.Nullable, "Nullable");
+            innerTable.Add(LocalizationId.Delimeter, "|");
         }
 
         public static string GetStringById(LocalizationId id) {

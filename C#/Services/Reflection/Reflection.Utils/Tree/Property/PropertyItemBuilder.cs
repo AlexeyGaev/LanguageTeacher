@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Reflection.Utils.PropertyTree {
     public static class PropertyItemBuilder {
-        public static PropertyItem Create(IEnumerable<PropertyItem> parents, PropertyField propertyField, object propertyValue) {
+        public static PropertyItem Create(PropertyField propertyField, object propertyValue, IEnumerable<PropertyItem> parents = null) {
             PropertyItem result = new PropertyItem(propertyField, propertyValue);
             Type fieldType = propertyField.Type;
             if (fieldType == null || propertyValue == null || fieldType == typeof(string))
@@ -28,9 +28,9 @@ namespace Reflection.Utils.PropertyTree {
             int index = 0;
             List<PropertyItem> children = new List<PropertyItem>();
             foreach (object item in (IEnumerable)propertyValue) {
-                IEnumerable<PropertyItem> childParents = CreateObjectChildParents(parents, current);
                 PropertyField propertyField = new PropertyField(index, item.GetType());
-                PropertyItem child = Create(childParents, propertyField, item);
+                IEnumerable<PropertyItem> childParents = CreateObjectChildParents(parents, current);
+                PropertyItem child = Create(propertyField, item, childParents);
                 children.Add(child);
                 index++;
             }
@@ -50,10 +50,10 @@ namespace Reflection.Utils.PropertyTree {
                 if (propertyInfo.CanRead) {
                     ParameterInfo[] indexParameters = propertyInfo.GetIndexParameters();
                     if (indexParameters.Length == 0) {
+                        PropertyField propertyField = new PropertyField(propertyInfo.Name, propertyInfo.PropertyType);
                         object childValue = CreatePropertyValue(propertyInfo, current);
                         IEnumerable<PropertyItem> childParents = CreateObjectChildParents(parents, current);
-                        PropertyField propertyField = new PropertyField(propertyInfo.Name, propertyInfo.PropertyType);
-                        PropertyItem child = Create(childParents, propertyField, childValue);
+                        PropertyItem child = Create(propertyField, childValue, childParents);
                         children.Add(child);
                     }
                 }

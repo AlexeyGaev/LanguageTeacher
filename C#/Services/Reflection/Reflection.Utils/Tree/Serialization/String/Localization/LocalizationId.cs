@@ -1,4 +1,4 @@
-﻿namespace Reflection.Utils.Tree.Serialization.Localization {
+﻿namespace Reflection.Utils.PropertyTree.Serialization {
     public enum LocalizationId {
         Id,
         Type,
@@ -8,11 +8,9 @@
         ObjectChildren,
         ArrayChildren,
         Null,
-
         Empty,
-        Nullable, 
         Exception,
-        TypeCode,
-        HasArrayChildren,
+        Nullable,
+        Delimeter,
     }
 }
