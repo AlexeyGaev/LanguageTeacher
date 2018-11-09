@@ -4,14 +4,12 @@ using System.Linq;
 
 namespace Reflection.Utils.PropertyTree.Serialization.Tests {
     [TestClass]
-    public class StringSerializerTests {
-        
-
+    public class SerializeContentItemBuilderTests {
         [TestMethod]
         public void CheckAllNull() {
             PropertyField propertyField = new PropertyField(null, null);
             PropertyItem propertyItem = new PropertyItem(propertyField, null);
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -39,7 +37,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         public void CheckEmptyIdNullTypeNullValue() {
             PropertyField propertyField = new PropertyField(String.Empty, null);
             PropertyItem propertyItem = new PropertyItem(propertyField, null);
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -67,7 +65,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         public void CheckStringIdNullTypeNullValue() {
             PropertyField propertyField = new PropertyField("Test", null);
             PropertyItem propertyItem = new PropertyItem(propertyField, null);
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -95,7 +93,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         public void CheckStringIdIntTypeNullValue() {
             PropertyField propertyField = new PropertyField("Test", typeof(int));
             PropertyItem propertyItem = new PropertyItem(propertyField, null);
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -123,7 +121,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         public void CheckStringIdNullableIntTypeNullValue() {
             PropertyField propertyField = new PropertyField("Test", typeof(int?));
             PropertyItem propertyItem = new PropertyItem(propertyField, null);
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -151,7 +149,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         public void CheckIntIdIntTypeEmptyValue() {
             PropertyField propertyField = new PropertyField(1, typeof(int));
             PropertyItem propertyItem = new PropertyItem(propertyField, String.Empty);
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(5, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -184,7 +182,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         public void CheckIntIdIntTypeStringValue() {
             PropertyField propertyField = new PropertyField(1, typeof(int));
             PropertyItem propertyItem = new PropertyItem(propertyField, "Test");
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(5, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -217,7 +215,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         public void CheckIntIdIntTypeObjectValue() {
             PropertyField propertyField = new PropertyField(1, typeof(int));
             PropertyItem propertyItem = new PropertyItem(propertyField, new object());
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(5, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -251,7 +249,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             PropertyField propertyField = new PropertyField(1, typeof(int));
             int? value = 1;
             PropertyItem propertyItem = new PropertyItem(propertyField, value);
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(5, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
@@ -285,7 +283,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             PropertyField propertyField = new PropertyField(1, typeof(int));
             int? value = null;
             PropertyItem propertyItem = new PropertyItem(propertyField, value);
-            SerializeContentItem contentItem = StringSerializer.Serialize(propertyItem);
+            SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
 
