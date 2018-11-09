@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Reflection.Utils.Tree.Export {
+namespace Reflection.Utils.PropertyTree.Serialization {
     public class StringWriter {
         List<string> result;
 

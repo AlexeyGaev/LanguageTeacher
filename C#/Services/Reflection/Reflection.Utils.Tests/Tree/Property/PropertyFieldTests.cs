@@ -11,7 +11,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
             Assert.IsTrue(field1 == field1);
 #pragma warning restore CS1718 // Comparison made to same variable
             Assert.IsTrue(field1.Equals(field1));
-            
+
             Assert.IsFalse(field1 == null);
             Assert.IsFalse(null == field1);
             Assert.IsFalse(field1.Equals(null));
@@ -21,7 +21,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
             Assert.IsTrue(field2 == field1);
             Assert.IsTrue(field1.Equals(field2));
             Assert.IsTrue(field2.Equals(field1));
-            
+
             PropertyField field3 = new PropertyField("Test", typeof(double));
             Assert.IsFalse(field1 == field3);
             Assert.IsFalse(field3 == field1);
@@ -53,14 +53,5 @@ namespace Reflection.Utils.PropertyTree.Tests {
             Assert.AreNotEqual(0, new PropertyField(String.Empty, null).GetHashCode());
             Assert.AreNotEqual(0, new PropertyField("Test", typeof(int)).GetHashCode());
         }
-
-        //[TestMethod]
-        //public void CheckToString() {
-        //    Assert.AreEqual("Name = #Null, Type = #Null", new PropertyField(null, null).ToString());
-        //    Assert.AreEqual("Name = #Empty, Type = #Null", new PropertyField(String.Empty, null).ToString());
-        //    Assert.AreEqual("Name = Test, Type = #Null", new PropertyField("Test", null).ToString());
-        //    Assert.AreEqual("Name = Test, Type = Int32", new PropertyField("Test", typeof(int)).ToString());
-        //    Assert.AreEqual("Name = Test, Type = Nullable Int32", new PropertyField("Test", typeof(int?)).ToString());
-        //}
     }
 }

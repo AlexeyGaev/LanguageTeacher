@@ -1,5 +1,4 @@
-﻿using Reflection.Utils.Tree.Localization;
-using System;
+﻿using System;
 
 namespace Reflection.Utils.PropertyTree {
     public struct PropertyField : IEquatable<PropertyField> {
