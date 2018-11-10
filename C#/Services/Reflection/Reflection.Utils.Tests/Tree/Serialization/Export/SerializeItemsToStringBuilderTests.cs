@@ -22,10 +22,10 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual("Test", SerializeItemsToStringBuilder.Create(list));
 
             list.Add(SerializeItem.CreateTwoValues("Test1", "Test2"));
-            Assert.AreEqual("Test,Test1=Test2", SerializeItemsToStringBuilder.Create(list));
+            Assert.AreEqual("Test Test1=Test2", SerializeItemsToStringBuilder.Create(list));
 
             list.Add(SerializeItem.Empty);
-            Assert.AreEqual("Test,Test1=Test2", SerializeItemsToStringBuilder.Create(list));
+            Assert.AreEqual("Test Test1=Test2", SerializeItemsToStringBuilder.Create(list));
         }
     }
 }

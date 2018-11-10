@@ -5,87 +5,87 @@ using System.Reflection;
 
 namespace Reflection.Utils.PropertyTree {
     public static class PropertyItemBuilder {
-        public static PropertyItem Create(PropertyField propertyField, object propertyValue, IEnumerable<PropertyItem> parents = null) {
+        public static PropertyItem Create(PropertyField propertyField, object propertyValue, IEnumerable<object> parents = null) {
             PropertyItem result = new PropertyItem(propertyField, propertyValue);
-            Type fieldType = propertyField.Type;
-            if (fieldType == null || propertyValue == null || fieldType == typeof(string))
+            Type type = propertyField.Type;
+            if (type == null || propertyValue == null || type == typeof(string))
                 return result;
-            if (fieldType.IsPrimitive || fieldType.IsEnum)
+            Type underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType != null)
+                type = underlyingType;
+            if (type.IsPrimitive || type.IsEnum)
                 return result;
-            Type underlyingType = Nullable.GetUnderlyingType(fieldType);
-            if (underlyingType != null && (underlyingType.IsPrimitive || underlyingType.IsEnum))
+            TypeCode typeCode = Type.GetTypeCode(type);
+            if (typeCode != TypeCode.DateTime && typeCode != TypeCode.Object)
                 return result;
-            if (!fieldType.IsArray)  
-                CreateObjectChildren(parents, result);
-            CreateArrayChildren(parents, result);
+            if (!type.IsArray)
+                result.ObjectChildren = CreateObjectChildren(parents, propertyValue, type.GetProperties());
+            result.ArrayChildren = CreateArrayChildren(parents, propertyValue as IEnumerable);
             return result;
         }
 
-        static void CreateArrayChildren(IEnumerable<PropertyItem> parents, PropertyItem current) {
-            object propertyValue = current.Value;
-            if (!(propertyValue is IEnumerable))
-                return;
+        static IEnumerable<PropertyItem> CreateArrayChildren(IEnumerable<object> parents, IEnumerable enumerable) {
+            if (enumerable == null)
+                return null;
             int index = 0;
             List<PropertyItem> children = new List<PropertyItem>();
-            foreach (object item in (IEnumerable)propertyValue) {
+            foreach (object item in enumerable) {
                 PropertyField propertyField = new PropertyField(index, item.GetType());
-                IEnumerable<PropertyItem> childParents = CreateObjectChildParents(parents, current);
+                IEnumerable<object> childParents = CreateObjectChildParents(parents, enumerable);
                 PropertyItem child = Create(propertyField, item, childParents);
                 children.Add(child);
                 index++;
             }
-            current.ArrayChildren = children;
+            return children;
         }
 
-        static void CreateObjectChildren(IEnumerable<PropertyItem> parents, PropertyItem current) {
-            if (ShouldCheckChildrenCycle(current) && GetHasChildrenCycle(parents, current)) {
-                current.ObjectChildren = PropertyObjectChildren.Cycle;
-                return;
-            }
-            PropertyInfo[] propertyInfos = current.Value.GetType().GetProperties();
+        static PropertyObjectChildren CreateObjectChildren(IEnumerable<object> parents, object currentValue, PropertyInfo[] propertyInfos) {
+            if (GetHasChildrenCycle(parents, currentValue)) 
+                return PropertyObjectChildren.Cycle;
             if (propertyInfos == null)
-                return;
+                return null;
             List<PropertyItem> children = new List<PropertyItem>();
             foreach (PropertyInfo propertyInfo in propertyInfos) {
                 if (propertyInfo.CanRead) {
                     ParameterInfo[] indexParameters = propertyInfo.GetIndexParameters();
                     if (indexParameters.Length == 0) {
                         PropertyField propertyField = new PropertyField(propertyInfo.Name, propertyInfo.PropertyType);
-                        object childValue = CreatePropertyValue(propertyInfo, current);
-                        IEnumerable<PropertyItem> childParents = CreateObjectChildParents(parents, current);
+                        object childValue = CreatePropertyValue(propertyInfo, currentValue);
+                        IEnumerable<object> childParents = CreateObjectChildParents(parents, currentValue);
                         PropertyItem child = Create(propertyField, childValue, childParents);
                         children.Add(child);
                     }
                 }
             }
-            current.ObjectChildren = new PropertyObjectChildren(children);
+            return new PropertyObjectChildren(children);
         }
         
-        static bool ShouldCheckChildrenCycle(PropertyItem item) {
-            return Type.GetTypeCode(item.Field.Type) == TypeCode.Object;
-        }
-
-        static bool GetHasChildrenCycle(IEnumerable<PropertyItem> parents, PropertyItem current) {
+        static bool GetHasChildrenCycle(IEnumerable<object> parents, object currentValue) {
             if (parents == null)
                 return false;
-            object currentValue = current.Value;
-            foreach (PropertyItem parent in parents)
-                if (Object.ReferenceEquals(parent.Value, currentValue))
+            foreach (object parent in parents) {
+                Type currentType = currentValue.GetType();
+                if (currentType.IsValueType) {
+                    if (parent.GetType() == currentType)
+                        return true;
+                }
+                else if (Object.ReferenceEquals(parent, currentValue))
                     return true;
+            }
             return false;
         }
 
-        static IEnumerable<PropertyItem> CreateObjectChildParents(IEnumerable<PropertyItem> parents, PropertyItem current) {
-            List<PropertyItem> result = new List<PropertyItem>();
+        static IEnumerable<object> CreateObjectChildParents(IEnumerable<object> parents, object value) {
+            List<object> result = new List<object>();
             if (parents != null)
                 result.AddRange(parents);
-            result.Add(current);
+            result.Add(value);
             return result;
         }
       
-        static object CreatePropertyValue(PropertyInfo propertyInfo, PropertyItem item) {
+        static object CreatePropertyValue(PropertyInfo propertyInfo, object value) {
             try {
-                return propertyInfo.GetValue(item.Value);
+                return propertyInfo.GetValue(value);
             } catch (Exception e) {
                 return e;
             }

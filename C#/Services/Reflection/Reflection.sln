@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.28010.2046
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reflection.Utils", "Reflection.Utils\Reflection.Utils.csproj", "{E65E4419-050D-4DFE-8BDA-891FD4DBD35C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflection.Utils.Tests", "Reflection.Utils.Tests\Reflection.Utils.Tests.csproj", "{02741619-B6C8-48FE-BD21-9570B9416410}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reflection.Utils.Tests", "Reflection.Utils.Tests\Reflection.Utils.Tests.csproj", "{02741619-B6C8-48FE-BD21-9570B9416410}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reflection.Services", "Reflection.Services\Reflection.Services.csproj", "{8C284ED2-C689-4312-A4FC-F4D550665D4B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{02741619-B6C8-48FE-BD21-9570B9416410}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02741619-B6C8-48FE-BD21-9570B9416410}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02741619-B6C8-48FE-BD21-9570B9416410}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C284ED2-C689-4312-A4FC-F4D550665D4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C284ED2-C689-4312-A4FC-F4D550665D4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C284ED2-C689-4312-A4FC-F4D550665D4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C284ED2-C689-4312-A4FC-F4D550665D4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

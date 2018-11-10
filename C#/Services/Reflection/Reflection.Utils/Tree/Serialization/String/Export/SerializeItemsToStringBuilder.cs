@@ -11,7 +11,7 @@ namespace Reflection.Utils.PropertyTree.Serialization {
                 string value = SerializeItemToStringBuilder.Create(item);
                 if (!String.IsNullOrEmpty(value)) {
                     if (!String.IsNullOrEmpty(result))
-                        result += ",";
+                        result += " ";
                     result += value;
                 }
             }
