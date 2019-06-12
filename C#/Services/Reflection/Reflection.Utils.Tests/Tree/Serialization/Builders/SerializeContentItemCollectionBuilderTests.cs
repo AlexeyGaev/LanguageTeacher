@@ -5,9 +5,9 @@ using System.Linq;
 namespace Reflection.Utils.PropertyTree.Serialization.Tests {
     [TestClass]
     public class SerializeContentItemCollectionBuilderTests {
-        public static void CheckCycle(SerializeContentItemCollection collection, string name) {
+        public static void CheckCycle(SerializeContentItemCollection collection, string name, string cycle) {
             Assert.AreEqual(0, collection.Count);
-            SerializeItemsBuilderTests.CheckCollectionCycleHeader(collection.Header, name);
+            SerializeItemsBuilderTests.CheckCollectionCycleHeader(collection.Header, name, cycle);
         }
 
         public static void CheckEmpty(SerializeContentItemCollection collection, string name) {
@@ -16,22 +16,31 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         }
 
         [TestMethod]
-        public void CreateCycle() {
-            SerializeContentItemCollection collection = SerializeContentItemCollectionBuilder.CreateCycle("Test");
-            CheckCycle(collection, "Test");
+        public void Create_ValueCycle() {
+            List<PropertyItem> propertyItems = new List<PropertyItem>();
+            SerializeContentItemCollection collection = SerializeContentItemCollectionBuilder.Create(propertyItems, "Test", CycleMode.Value);
+            CheckCycle(collection, "Test", Localization.ValueCycle);
         }
+
+        [TestMethod]
+        public void Create_ReferenceCycle() {
+            List<PropertyItem> propertyItems = new List<PropertyItem>();
+            SerializeContentItemCollection collection = SerializeContentItemCollectionBuilder.Create(propertyItems, "Test", CycleMode.Reference);
+            CheckCycle(collection, "Test", Localization.ReferenceCycle);
+        }
+
 
         [TestMethod]
         public void Create_Empty() {
             List<PropertyItem> propertyItems = new List<PropertyItem>();
-            SerializeContentItemCollection collection = SerializeContentItemCollectionBuilder.Create(propertyItems, "Test");
+            SerializeContentItemCollection collection = SerializeContentItemCollectionBuilder.Create(propertyItems, "Test", CycleMode.None);
             CheckEmpty(collection, "Test");
         }
 
         [TestMethod]
         public void Create_NotEmpty() {
-            List<PropertyItem> propertyItems = new List<PropertyItem>() { new PropertyItem(new PropertyField(null, null), null) };
-            SerializeContentItemCollection collection = SerializeContentItemCollectionBuilder.Create(propertyItems, "Test");
+            List<PropertyItem> propertyItems = new List<PropertyItem>() { new PropertyItem(null, null, null) };
+            SerializeContentItemCollection collection = SerializeContentItemCollectionBuilder.Create(propertyItems, "Test", CycleMode.None);
             SerializeItemsBuilderTests.CheckCollectionCountHeader(collection.Header, "Test", 1);
 
             Assert.AreEqual(1, collection.Count);
@@ -51,8 +60,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(Localization.NullValue, serializeItem2.SecondValue);
 
             SerializeItem serializeItem3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, serializeItem3.Mode);
-            Assert.AreEqual(Localization.Delimeter, serializeItem3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, serializeItem3.Mode);
 
             SerializeItem serializeItem4 = contentItem.Header.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, serializeItem4.Mode);

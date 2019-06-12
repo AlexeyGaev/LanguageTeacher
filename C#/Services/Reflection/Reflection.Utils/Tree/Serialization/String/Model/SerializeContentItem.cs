@@ -11,4 +11,6 @@ namespace Reflection.Utils.PropertyTree.Serialization {
         public IEnumerable<SerializeItem> Header { get { return this.header; } }
         public IEnumerable<SerializeContentItemCollection> Content { get; set; }
     }
+
+    //SerializeContentItemHeaderFormat
 }

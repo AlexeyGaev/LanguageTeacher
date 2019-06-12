@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Reflection.Utils.PropertyTree;
+using System;
 
 namespace Reflection.Services {
     public class Startup {
@@ -21,7 +22,10 @@ namespace Reflection.Services {
                 //PropertyField field = new PropertyField(new object(), typeof(object));
                 //string info = PropertyStringSerializer.Serialize("PropertyField", typeof(PropertyField), field);
                 //string info = PropertyStringSerializer.Serialize("Object", typeof(object), new object());
-                string info = PropertyStringSerializer.Serialize("HttpContext", typeof(HttpContext), context);
+                Filter filter = new Filter();
+                filter.LevelCount = 1;
+                filter.StopTypes.Add(typeof(Type));
+                string info = PropertyStringSerializer.Serialize("HttpContext", typeof(HttpContext), context, filter);
                 await context.Response.WriteAsync(info);
             });
         }

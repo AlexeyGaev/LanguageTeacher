@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace Reflection.Utils.PropertyTree.Serialization {
     public static class StringExporter {
-        
-
         public static void Export(StringWriter writer, SerializeContentItem item, int level = 0) {
             if (writer == null || item == null)
                 return;

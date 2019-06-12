@@ -7,6 +7,8 @@ namespace Reflection.Utils.PropertyTree.Serialization {
                 return item.FirstValue;
             else if (item.Mode == SerializeItemMode.TwoValues)
                 return item.FirstValue + "=" + item.SecondValue;
+            else if (item.Mode == SerializeItemMode.Delimeter)
+                return Localization.Delimeter;
             else
                 return String.Empty;
         }

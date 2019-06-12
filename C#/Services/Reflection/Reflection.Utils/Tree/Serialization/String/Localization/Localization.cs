@@ -11,6 +11,7 @@
         public static string Count { get { return LocalizationTable.GetStringById(LocalizationId.Count); } }
         public static string Nullable { get { return LocalizationTable.GetStringById(LocalizationId.Nullable); } }
         public static string Exception { get { return LocalizationTable.GetStringById(LocalizationId.Exception); } }
-        public static string HasCycle { get { return LocalizationTable.GetStringById(LocalizationId.HasCycle); } }
+        public static string ValueCycle { get { return LocalizationTable.GetStringById(LocalizationId.ValueCycle); } }
+        public static string ReferenceCycle { get { return LocalizationTable.GetStringById(LocalizationId.ReferenceCycle); } }
     }
 }

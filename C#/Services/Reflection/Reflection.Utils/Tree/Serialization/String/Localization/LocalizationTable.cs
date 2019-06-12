@@ -10,7 +10,7 @@ namespace Reflection.Utils.PropertyTree.Serialization {
             innerTable.Add(LocalizationId.Type, "Type");
             innerTable.Add(LocalizationId.Value, "Value");
             innerTable.Add(LocalizationId.Count, "Count");
-            innerTable.Add(LocalizationId.HasCycle, "HasCycle");
+          
             innerTable.Add(LocalizationId.ObjectChildren, "ObjectChildren");
             innerTable.Add(LocalizationId.ArrayChildren, "ArrayChildren");
             innerTable.Add(LocalizationId.Null, "#Null");
@@ -18,6 +18,9 @@ namespace Reflection.Utils.PropertyTree.Serialization {
             innerTable.Add(LocalizationId.Exception, "Exception");
             innerTable.Add(LocalizationId.Nullable, "Nullable");
             innerTable.Add(LocalizationId.Delimeter, "|");
+
+            innerTable.Add(LocalizationId.ValueCycle, "ValueCycle");
+            innerTable.Add(LocalizationId.ReferenceCycle, "ReferenceCycle");
         }
 
         public static string GetStringById(LocalizationId id) {

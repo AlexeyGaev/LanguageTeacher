@@ -7,8 +7,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
     public class SerializeContentItemBuilderTests {
         [TestMethod]
         public void CheckAllNull() {
-            PropertyField propertyField = new PropertyField(null, null);
-            PropertyItem propertyItem = new PropertyItem(propertyField, null);
+            PropertyItem propertyItem = new PropertyItem(null, null, null);
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -24,9 +23,8 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(Localization.NullValue, item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
-            
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
+                      
             SerializeItem item4 = contentItem.Header.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
             Assert.AreEqual(Localization.ValueName, item4.FirstValue);
@@ -35,8 +33,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckEmptyIdNullTypeNullValue() {
-            PropertyField propertyField = new PropertyField(String.Empty, null);
-            PropertyItem propertyItem = new PropertyItem(propertyField, null);
+            PropertyItem propertyItem = new PropertyItem(String.Empty, null, null);
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -52,8 +49,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(Localization.NullValue, item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
 
             SerializeItem item4 = contentItem.Header.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
@@ -63,8 +59,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckStringIdNullTypeNullValue() {
-            PropertyField propertyField = new PropertyField("Test", null);
-            PropertyItem propertyItem = new PropertyItem(propertyField, null);
+            PropertyItem propertyItem = new PropertyItem("Test", null, null);
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -80,8 +75,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(Localization.NullValue, item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
 
             SerializeItem item4 = contentItem.Header.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
@@ -91,8 +85,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckStringIdIntTypeNullValue() {
-            PropertyField propertyField = new PropertyField("Test", typeof(int));
-            PropertyItem propertyItem = new PropertyItem(propertyField, null);
+            PropertyItem propertyItem = new PropertyItem("Test", typeof(int), null);
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -108,8 +101,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual("Int32", item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
 
             SerializeItem item4 = contentItem.Header.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
@@ -119,8 +111,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckStringIdNullableIntTypeNullValue() {
-            PropertyField propertyField = new PropertyField("Test", typeof(int?));
-            PropertyItem propertyItem = new PropertyItem(propertyField, null);
+            PropertyItem propertyItem = new PropertyItem("Test", typeof(int?), null);
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -136,8 +127,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(Localization.Nullable + " Int32", item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
 
             SerializeItem item4 = contentItem.Header.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
@@ -147,8 +137,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckIntIdIntTypeEmptyValue() {
-            PropertyField propertyField = new PropertyField(1, typeof(int));
-            PropertyItem propertyItem = new PropertyItem(propertyField, String.Empty);
+            PropertyItem propertyItem = new PropertyItem(1, typeof(int), String.Empty);
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(5, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -161,12 +150,11 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             SerializeItem item2 = contentItem.Header.ElementAt(1);
             Assert.AreEqual(SerializeItemMode.TwoValues, item2.Mode);
             Assert.AreEqual(Localization.TypeName, item2.FirstValue);
-            Assert.AreEqual("Int32", item2.SecondValue);
+            Assert.AreEqual(typeof(int).Name, item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
-            
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
+
             SerializeItem item4 = contentItem.Header.ElementAt(4);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
             Assert.AreEqual(Localization.TypeName, item4.FirstValue);
@@ -180,8 +168,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckIntIdIntTypeStringValue() {
-            PropertyField propertyField = new PropertyField(1, typeof(int));
-            PropertyItem propertyItem = new PropertyItem(propertyField, "Test");
+            PropertyItem propertyItem = new PropertyItem(1, typeof(int), "Test");
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(5, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -194,11 +181,10 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             SerializeItem item2 = contentItem.Header.ElementAt(1);
             Assert.AreEqual(SerializeItemMode.TwoValues, item2.Mode);
             Assert.AreEqual(Localization.TypeName, item2.FirstValue);
-            Assert.AreEqual("Int32", item2.SecondValue);
+            Assert.AreEqual(typeof(int).Name, item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
 
             SerializeItem item4 = contentItem.Header.ElementAt(4);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
@@ -213,8 +199,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckIntIdIntTypeObjectValue() {
-            PropertyField propertyField = new PropertyField(1, typeof(int));
-            PropertyItem propertyItem = new PropertyItem(propertyField, new object());
+            PropertyItem propertyItem = new PropertyItem(1, typeof(int), new object());
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(5, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -227,11 +212,10 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             SerializeItem item2 = contentItem.Header.ElementAt(1);
             Assert.AreEqual(SerializeItemMode.TwoValues, item2.Mode);
             Assert.AreEqual(Localization.TypeName, item2.FirstValue);
-            Assert.AreEqual("Int32", item2.SecondValue);
+            Assert.AreEqual(typeof(int).Name, item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
 
             SerializeItem item4 = contentItem.Header.ElementAt(4);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
@@ -246,9 +230,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckIntIdIntTypeNullableIntValue() {
-            PropertyField propertyField = new PropertyField(1, typeof(int));
-            int? value = 1;
-            PropertyItem propertyItem = new PropertyItem(propertyField, value);
+            PropertyItem propertyItem = new PropertyItem(1, typeof(int?), (int?)1);
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(5, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -261,16 +243,15 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             SerializeItem item2 = contentItem.Header.ElementAt(1);
             Assert.AreEqual(SerializeItemMode.TwoValues, item2.Mode);
             Assert.AreEqual(Localization.TypeName, item2.FirstValue);
-            Assert.AreEqual("Int32", item2.SecondValue);
+            Assert.AreEqual(Localization.Nullable + " " + typeof(int).Name, item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
 
             SerializeItem item4 = contentItem.Header.ElementAt(4);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
             Assert.AreEqual(Localization.TypeName, item4.FirstValue);
-            Assert.AreEqual("Int32", item4.SecondValue);
+            Assert.AreEqual(typeof(int).Name, item4.SecondValue);
 
             SerializeItem item5 = contentItem.Header.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, item5.Mode);
@@ -280,9 +261,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CheckIntIdIntTypeNullableNullIntValue() {
-            PropertyField propertyField = new PropertyField(1, typeof(int));
-            int? value = null;
-            PropertyItem propertyItem = new PropertyItem(propertyField, value);
+            PropertyItem propertyItem = new PropertyItem(1, typeof(int?), (int?)null);
             SerializeContentItem contentItem = SerializeContentItemBuilder.Create(propertyItem);
             Assert.AreEqual(4, contentItem.Header.Count());
             Assert.AreEqual(null, contentItem.Content);
@@ -295,11 +274,10 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             SerializeItem item2 = contentItem.Header.ElementAt(1);
             Assert.AreEqual(SerializeItemMode.TwoValues, item2.Mode);
             Assert.AreEqual(Localization.TypeName, item2.FirstValue);
-            Assert.AreEqual("Int32", item2.SecondValue);
+            Assert.AreEqual(Localization.Nullable + " " + typeof(int).Name, item2.SecondValue);
 
             SerializeItem item3 = contentItem.Header.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
 
             SerializeItem item4 = contentItem.Header.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);

@@ -23,20 +23,20 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
                 PropertyItem item1 = children.ElementAt(0);
                 Assert.AreEqual(null, item1.ObjectChildren);
-                Assert.AreEqual("Property1", item1.Field.Id);
-                Assert.AreEqual(typeof(int), item1.Field.Type);
+                Assert.AreEqual("Property1", item1.Id);
+                Assert.AreEqual(typeof(int), item1.Type);
                 Assert.AreEqual(Property1, item1.Value);
 
                 PropertyItem item2 = children.ElementAt(1);
                 Assert.AreEqual(null, item2.ObjectChildren);
-                Assert.AreEqual("Property2", item2.Field.Id);
-                Assert.AreEqual(typeof(TestEnum), item2.Field.Type);
+                Assert.AreEqual("Property2", item2.Id);
+                Assert.AreEqual(typeof(TestEnum), item2.Type);
                 Assert.AreEqual(Property2, item2.Value);
 
                 PropertyItem item3 = children.ElementAt(2);
                 Assert.AreEqual(null, item3.ObjectChildren);
-                Assert.AreEqual("Property3", item3.Field.Id);
-                Assert.AreEqual(typeof(object), item3.Field.Type);
+                Assert.AreEqual("Property3", item3.Id);
+                Assert.AreEqual(typeof(object), item3.Type);
                 Assert.AreEqual(Property3, item3.Value);
             }
         }
@@ -54,29 +54,28 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
                 PropertyItem item1 = children.ElementAt(0);
                 Assert.AreEqual(null, item1.ObjectChildren);
-                Assert.AreEqual("Property1", item1.Field.Id);
-                Assert.AreEqual(typeof(int), item1.Field.Type);
+                Assert.AreEqual("Property1", item1.Id);
+                Assert.AreEqual(typeof(int), item1.Type);
                 Assert.AreEqual(Property1, item1.Value);
 
                 PropertyItem item2 = children.ElementAt(1);
                 Assert.AreEqual(null, item2.ObjectChildren);
-                Assert.AreEqual("Property2", item2.Field.Id);
-                Assert.AreEqual(typeof(TestEnum), item2.Field.Type);
+                Assert.AreEqual("Property2", item2.Id);
+                Assert.AreEqual(typeof(TestEnum), item2.Type);
                 Assert.AreEqual(Property2, item2.Value);
 
                 PropertyItem item3 = children.ElementAt(2);
                 Assert.AreEqual(null, item3.ObjectChildren);
-                Assert.AreEqual("Property3", item3.Field.Id);
-                Assert.AreEqual(typeof(object), item3.Field.Type);
+                Assert.AreEqual("Property3", item3.Id);
+                Assert.AreEqual(typeof(object), item3.Type);
                 Assert.AreEqual(Property3, item3.Value);
 
                 PropertyItem item4 = children.ElementAt(3);
+                Assert.AreEqual(null, item4.ObjectChildren);
                 Assert.AreEqual(null, item4.ArrayChildren);
-                Assert.AreEqual("Property4", item4.Field.Id);
-                Assert.AreEqual(typeof(TestStruct), item4.Field.Type);
+                Assert.AreEqual("Property4", item4.Id);
+                Assert.AreEqual(typeof(TestStruct), item4.Type);
                 Assert.AreEqual(Property4, item4.Value);
-
-                Property4.CheckChildren(item4.ObjectChildren);
             }
         }
 
@@ -87,8 +86,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
                 Assert.AreEqual(1, children.Count());
 
                 PropertyItem item1 = children.ElementAt(0);
-                Assert.AreEqual("Property", item1.Field.Id);
-                Assert.AreEqual(typeof(TestClass2), item1.Field.Type);
+                Assert.AreEqual("Property", item1.Id);
+                Assert.AreEqual(typeof(TestClass2), item1.Type);
 
                 if (Property == null) {
                     Assert.AreEqual(null, item1.Value);
@@ -105,7 +104,7 @@ namespace Reflection.Utils.PropertyTree.Tests {
         struct EmptyTestStruct { }
 
         PropertyItem CreateItem(string propertyName, Type propertyType, object propertyValue) {
-            return PropertyItemBuilder.Create(new PropertyField(propertyName, propertyType), propertyValue);
+            return PropertyItemBuilder.Create(propertyName, propertyType, propertyValue, null, null);
         }
                                        
         [TestMethod]
@@ -114,8 +113,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(null, item.Field.Id);
-            Assert.AreEqual(null, item.Field.Type);
+            Assert.AreEqual(null, item.Id);
+            Assert.AreEqual(null, item.Type);
             Assert.AreEqual(null, item.Value);
         }
 
@@ -126,8 +125,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(null, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(null, item.Type);
             Assert.AreEqual(null, item.Value);
         }
 
@@ -140,8 +139,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(0, item.ObjectChildren.Count());
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -154,16 +153,16 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(16, item.ObjectChildren.Count());
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
 
             PropertyItem child1 = item.ObjectChildren.ElementAt(0);
             Assert.AreEqual(0, child1.ObjectChildren.Count());
-            Assert.AreEqual(true, child1.ObjectChildren.HasCycle);
+            Assert.AreEqual(CycleMode.Value, child1.ObjectChildren.CycleMode);
             Assert.AreEqual(null, child1.ArrayChildren);
-            Assert.AreEqual("UtcNow", child1.Field.Id);
-            Assert.AreEqual(propertyType, child1.Field.Type);
+            Assert.AreEqual("UtcNow", child1.Id);
+            Assert.AreEqual(propertyType, child1.Type);
             
             // TODO
 
@@ -190,8 +189,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -204,8 +203,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -218,8 +217,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -232,8 +231,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -244,11 +243,25 @@ namespace Reflection.Utils.PropertyTree.Tests {
             int? propertyValue = 1;
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(null, item.ObjectChildren);
+            Assert.AreEqual(2, item.ObjectChildren.Count());
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
+
+            PropertyItem child1 = item.ObjectChildren.ElementAt(0);
+            Assert.AreEqual(null, child1.ObjectChildren);
+            Assert.AreEqual(null, child1.ArrayChildren);
+            Assert.AreEqual("HasValue", child1.Id);
+            Assert.AreEqual(typeof(bool), child1.Type);
+            Assert.AreEqual(true, child1.Value);
+
+            PropertyItem child2 = item.ObjectChildren.ElementAt(1);
+            Assert.AreEqual(null, child1.ObjectChildren);
+            Assert.AreEqual(null, child2.ArrayChildren);
+            Assert.AreEqual("Value", child2.Id);
+            Assert.AreEqual(typeof(int), child2.Type);
+            Assert.AreEqual(propertyValue, child2.Value);
         }
 
         [TestMethod]
@@ -260,8 +273,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -274,8 +287,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -286,12 +299,27 @@ namespace Reflection.Utils.PropertyTree.Tests {
             TestEnum? propertyValue = TestEnum.Value1;
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(null, item.ObjectChildren);
+            Assert.AreEqual(2, item.ObjectChildren.Count());
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
+
+            PropertyItem child1 = item.ObjectChildren.ElementAt(0);
+            Assert.AreEqual(null, child1.ObjectChildren);
+            Assert.AreEqual(null, child1.ArrayChildren);
+            Assert.AreEqual("HasValue", child1.Id);
+            Assert.AreEqual(typeof(bool), child1.Type);
+            Assert.AreEqual(true, child1.Value);
+
+            PropertyItem child2 = item.ObjectChildren.ElementAt(1);
+            Assert.AreEqual(null, child1.ObjectChildren);
+            Assert.AreEqual(null, child2.ArrayChildren);
+            Assert.AreEqual("Value", child2.Id);
+            Assert.AreEqual(typeof(TestEnum), child2.Type);
+            Assert.AreEqual(propertyValue, child2.Value);
         }
+
 
         [TestMethod]
         public void EmptyTestStructValue() {
@@ -300,10 +328,10 @@ namespace Reflection.Utils.PropertyTree.Tests {
             EmptyTestStruct propertyValue = new EmptyTestStruct();
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(0, item.ObjectChildren.Count());
+            Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -316,8 +344,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -328,28 +356,57 @@ namespace Reflection.Utils.PropertyTree.Tests {
             EmptyTestStruct? propertyValue = new EmptyTestStruct();
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(0, item.ObjectChildren.Count());
+            Assert.AreEqual(2, item.ObjectChildren.Count());
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
+
+            PropertyItem child1 = item.ObjectChildren.ElementAt(0);
+            Assert.AreEqual(null, child1.ObjectChildren);
+            Assert.AreEqual(null, child1.ArrayChildren);
+            Assert.AreEqual("HasValue", child1.Id);
+            Assert.AreEqual(typeof(bool), child1.Type);
+            Assert.AreEqual(true, child1.Value);
+
+            PropertyItem child2 = item.ObjectChildren.ElementAt(1);
+            Assert.AreEqual(null, child2.ObjectChildren);
+            Assert.AreEqual(null, child2.ArrayChildren);
+            Assert.AreEqual("Value", child2.Id);
+            Assert.AreEqual(typeof(EmptyTestStruct), child2.Type);
+            Assert.AreEqual(propertyValue, child2.Value);
         }
 
         [TestMethod]
-        public void TestStructValue() {
+        public void TestStructValue_Default() {
             string propertyName = "TestStruct";
             Type propertyType = typeof(TestStruct);
             TestStruct propertyValue = new TestStruct();
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
+            Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
+            Assert.AreEqual(propertyValue, item.Value);
+        }
+
+        [TestMethod]
+        public void TestStructValue_NotDefault() {
+            string propertyName = "TestStruct";
+            Type propertyType = typeof(TestStruct);
+            TestStruct propertyValue = new TestStruct();
+            propertyValue.Property1 = 1;
+
+            PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
+            Assert.AreEqual(null, item.ArrayChildren);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
 
             propertyValue.CheckChildren(item.ObjectChildren);
         }
-        
+
         [TestMethod]
         public void TestClassIsNull() {
             string propertyName = "TestClass";
@@ -359,8 +416,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -371,8 +428,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             TestClass propertyValue = new TestClass();
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(null, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
 
@@ -388,8 +445,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -400,8 +457,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             TestClass2 propertyValue = new TestClass2();
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(null, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
 
@@ -417,8 +474,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             propertyValue.Property = childPropertyValue;
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(null, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
 
@@ -433,17 +490,17 @@ namespace Reflection.Utils.PropertyTree.Tests {
             propertyValue.Property = propertyValue;
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(null, item.ArrayChildren);
             Assert.AreEqual(propertyValue, item.Value);
             
             Assert.AreEqual(1, item.ObjectChildren.Count());
 
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
-            Assert.AreEqual(PropertyObjectChildren.Cycle, childItem1.ObjectChildren);
-            Assert.AreEqual("Property", childItem1.Field.Id);
-            Assert.AreEqual(typeof(TestClass2), childItem1.Field.Type);
+            Assert.AreEqual(PropertyObjectChildren.ReferenceCycle, childItem1.ObjectChildren);
+            Assert.AreEqual("Property", childItem1.Id);
+            Assert.AreEqual(typeof(TestClass2), childItem1.Type);
             Assert.AreEqual(propertyValue, childItem1.Value);
         }
 
@@ -456,8 +513,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -470,8 +527,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -484,8 +541,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -498,8 +555,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -510,8 +567,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             List<double> propertyValue = new List<double>();
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(0, item.ArrayChildren.Count());
             Assert.AreEqual(propertyValue, item.Value);
 
@@ -520,15 +577,15 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, childItem1.ObjectChildren);
             Assert.AreEqual(null, childItem1.ArrayChildren);
-            Assert.AreEqual("Capacity", childItem1.Field.Id);
-            Assert.AreEqual(typeof(int), childItem1.Field.Type);
+            Assert.AreEqual("Capacity", childItem1.Id);
+            Assert.AreEqual(typeof(int), childItem1.Type);
             Assert.AreEqual(0, childItem1.Value);
 
             PropertyItem childItem2 = item.ObjectChildren.ElementAt(1);
             Assert.AreEqual(null, childItem2.ObjectChildren);
             Assert.AreEqual(null, childItem2.ArrayChildren);
-            Assert.AreEqual("Count", childItem2.Field.Id);
-            Assert.AreEqual(typeof(int), childItem2.Field.Type);
+            Assert.AreEqual("Count", childItem2.Id);
+            Assert.AreEqual(typeof(int), childItem2.Type);
             Assert.AreEqual(0, childItem2.Value);
         }
 
@@ -540,8 +597,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             propertyValue.Add(5);
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
             
             Assert.AreEqual(2, item.ObjectChildren.Count());
@@ -549,15 +606,15 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, childItem1.ObjectChildren);
             Assert.AreEqual(null, childItem1.ArrayChildren);
-            Assert.AreEqual("Capacity", childItem1.Field.Id);
-            Assert.AreEqual(typeof(int), childItem1.Field.Type);
+            Assert.AreEqual("Capacity", childItem1.Id);
+            Assert.AreEqual(typeof(int), childItem1.Type);
             Assert.AreEqual(4, childItem1.Value);
 
             PropertyItem childItem2 = item.ObjectChildren.ElementAt(1);
             Assert.AreEqual(null, childItem2.ObjectChildren);
             Assert.AreEqual(null, childItem2.ArrayChildren);
-            Assert.AreEqual("Count", childItem2.Field.Id);
-            Assert.AreEqual(typeof(int), childItem2.Field.Type);
+            Assert.AreEqual("Count", childItem2.Id);
+            Assert.AreEqual(typeof(int), childItem2.Type);
             Assert.AreEqual(1, childItem2.Value);
 
             Assert.AreEqual(1, item.ArrayChildren.Count());
@@ -565,8 +622,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem arrayItem1 = item.ArrayChildren.ElementAt(0);
             Assert.AreEqual(null, arrayItem1.ObjectChildren);
             Assert.AreEqual(null, arrayItem1.ArrayChildren);
-            Assert.AreEqual(0, arrayItem1.Field.Id);
-            Assert.AreEqual(typeof(double), arrayItem1.Field.Type);
+            Assert.AreEqual(0, arrayItem1.Id);
+            Assert.AreEqual(typeof(double), arrayItem1.Type);
             Assert.AreEqual((double)5, arrayItem1.Value);
         }
 
@@ -578,8 +635,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             propertyValue.Add('5');
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
 
             Assert.AreEqual(2, item.ObjectChildren.Count());
@@ -587,15 +644,15 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, childItem1.ObjectChildren);
             Assert.AreEqual(null, childItem1.ArrayChildren);
-            Assert.AreEqual("Capacity", childItem1.Field.Id);
-            Assert.AreEqual(typeof(int), childItem1.Field.Type);
+            Assert.AreEqual("Capacity", childItem1.Id);
+            Assert.AreEqual(typeof(int), childItem1.Type);
             Assert.AreEqual(4, childItem1.Value);
 
             PropertyItem childItem2 = item.ObjectChildren.ElementAt(1);
             Assert.AreEqual(null, childItem2.ObjectChildren);
             Assert.AreEqual(null, childItem2.ArrayChildren);
-            Assert.AreEqual("Count", childItem2.Field.Id);
-            Assert.AreEqual(typeof(int), childItem2.Field.Type);
+            Assert.AreEqual("Count", childItem2.Id);
+            Assert.AreEqual(typeof(int), childItem2.Type);
             Assert.AreEqual(1, childItem2.Value);
 
             Assert.AreEqual(1, item.ArrayChildren.Count());
@@ -603,8 +660,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem arrayItem1 = item.ArrayChildren.ElementAt(0);
             Assert.AreEqual(null, arrayItem1.ObjectChildren);
             Assert.AreEqual(null, arrayItem1.ArrayChildren);
-            Assert.AreEqual(0, arrayItem1.Field.Id);
-            Assert.AreEqual(typeof(char), arrayItem1.Field.Type);
+            Assert.AreEqual(0, arrayItem1.Id);
+            Assert.AreEqual(typeof(char), arrayItem1.Type);
             Assert.AreEqual('5', arrayItem1.Value);
         }
 
@@ -617,8 +674,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -630,8 +687,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(0, item.ArrayChildren.Count());
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
 
             Assert.AreEqual(4, item.ObjectChildren.Count());
@@ -639,21 +696,21 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
             Assert.AreEqual(0, childItem1.ObjectChildren.Count());
             Assert.AreEqual(null, childItem1.ArrayChildren);
-            Assert.AreEqual("Comparer", childItem1.Field.Id);
-            Assert.AreEqual(typeof(IEqualityComparer<string>), childItem1.Field.Type);
+            Assert.AreEqual("Comparer", childItem1.Id);
+            Assert.AreEqual(typeof(IEqualityComparer<string>), childItem1.Type);
             Assert.AreEqual(propertyValue.Comparer, childItem1.Value);
 
             PropertyItem childItem2 = item.ObjectChildren.ElementAt(1);
             Assert.AreEqual(null, childItem2.ObjectChildren);
             Assert.AreEqual(null, childItem2.ArrayChildren);
-            Assert.AreEqual("Count", childItem2.Field.Id);
-            Assert.AreEqual(typeof(int), childItem2.Field.Type);
+            Assert.AreEqual("Count", childItem2.Id);
+            Assert.AreEqual(typeof(int), childItem2.Type);
             Assert.AreEqual(0, childItem2.Value);
 
             PropertyItem childItem3 = item.ObjectChildren.ElementAt(2);
             Assert.AreEqual(0, childItem3.ArrayChildren.Count());
-            Assert.AreEqual("Keys", childItem3.Field.Id);
-            Assert.AreEqual(typeof(Dictionary<string, double>.KeyCollection), childItem3.Field.Type);
+            Assert.AreEqual("Keys", childItem3.Id);
+            Assert.AreEqual(typeof(Dictionary<string, double>.KeyCollection), childItem3.Type);
             Assert.AreEqual(propertyValue.Keys, childItem3.Value);
                                   
             Assert.AreEqual(1, childItem3.ObjectChildren.Count());
@@ -661,14 +718,14 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childChildItem3 = childItem3.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, childChildItem3.ObjectChildren);
             Assert.AreEqual(null, childChildItem3.ArrayChildren);
-            Assert.AreEqual("Count", childChildItem3.Field.Id);
-            Assert.AreEqual(typeof(int), childChildItem3.Field.Type);
+            Assert.AreEqual("Count", childChildItem3.Id);
+            Assert.AreEqual(typeof(int), childChildItem3.Type);
             Assert.AreEqual(0, childChildItem3.Value);
 
             PropertyItem childItem4 = item.ObjectChildren.ElementAt(3);
             Assert.AreEqual(0, childItem4.ArrayChildren.Count());
-            Assert.AreEqual("Values", childItem4.Field.Id);
-            Assert.AreEqual(typeof(Dictionary<string, double>.ValueCollection), childItem4.Field.Type);
+            Assert.AreEqual("Values", childItem4.Id);
+            Assert.AreEqual(typeof(Dictionary<string, double>.ValueCollection), childItem4.Type);
             Assert.AreEqual(propertyValue.Values, childItem4.Value);
                        
             Assert.AreEqual(1, childItem4.ObjectChildren.Count());
@@ -676,8 +733,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childChildItem4 = childItem4.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, childChildItem4.ArrayChildren);
             Assert.AreEqual(null, childChildItem4.ObjectChildren);
-            Assert.AreEqual("Count", childChildItem4.Field.Id);
-            Assert.AreEqual(typeof(int), childChildItem4.Field.Type);
+            Assert.AreEqual("Count", childChildItem4.Id);
+            Assert.AreEqual(typeof(int), childChildItem4.Type);
             Assert.AreEqual(0, childChildItem4.Value);
         }
 
@@ -689,15 +746,15 @@ namespace Reflection.Utils.PropertyTree.Tests {
             propertyValue.Add("Test", 2);
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
 
             Assert.AreEqual(1, item.ArrayChildren.Count());
             PropertyItem arrayItem1 = item.ArrayChildren.ElementAt(0);
             Assert.AreEqual(null, arrayItem1.ArrayChildren);
-            Assert.AreEqual(0, arrayItem1.Field.Id);
-            Assert.AreEqual(typeof(KeyValuePair<string, double>), arrayItem1.Field.Type);
+            Assert.AreEqual(0, arrayItem1.Id);
+            Assert.AreEqual(typeof(KeyValuePair<string, double>), arrayItem1.Type);
             Assert.AreEqual(new KeyValuePair<string, double>("Test", 2), arrayItem1.Value);
 
             Assert.AreEqual(2, arrayItem1.ObjectChildren.Count());
@@ -705,15 +762,15 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem arrayItem1Child1 = arrayItem1.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, arrayItem1Child1.ObjectChildren);
             Assert.AreEqual(null, arrayItem1Child1.ArrayChildren);
-            Assert.AreEqual("Key", arrayItem1Child1.Field.Id);
-            Assert.AreEqual(typeof(string), arrayItem1Child1.Field.Type);
+            Assert.AreEqual("Key", arrayItem1Child1.Id);
+            Assert.AreEqual(typeof(string), arrayItem1Child1.Type);
             Assert.AreEqual("Test", arrayItem1Child1.Value);
 
             PropertyItem arrayItem1Child2 = arrayItem1.ObjectChildren.ElementAt(1);
             Assert.AreEqual(null, arrayItem1Child2.ObjectChildren);
             Assert.AreEqual(null, arrayItem1Child2.ArrayChildren);
-            Assert.AreEqual("Value", arrayItem1Child2.Field.Id);
-            Assert.AreEqual(typeof(double), arrayItem1Child2.Field.Type);
+            Assert.AreEqual("Value", arrayItem1Child2.Id);
+            Assert.AreEqual(typeof(double), arrayItem1Child2.Type);
             Assert.AreEqual((double)2, arrayItem1Child2.Value);
             
             Assert.AreEqual(4, item.ObjectChildren.Count());
@@ -721,20 +778,20 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childItem1 = item.ObjectChildren.ElementAt(0);
             Assert.AreEqual(0, childItem1.ObjectChildren.Count());
             Assert.AreEqual(null, childItem1.ArrayChildren);
-            Assert.AreEqual("Comparer", childItem1.Field.Id);
-            Assert.AreEqual(typeof(IEqualityComparer<string>), childItem1.Field.Type);
+            Assert.AreEqual("Comparer", childItem1.Id);
+            Assert.AreEqual(typeof(IEqualityComparer<string>), childItem1.Type);
             Assert.AreEqual(propertyValue.Comparer, childItem1.Value);
 
             PropertyItem childItem2 = item.ObjectChildren.ElementAt(1);
             Assert.AreEqual(null, childItem2.ObjectChildren);
             Assert.AreEqual(null, childItem2.ArrayChildren);
-            Assert.AreEqual("Count", childItem2.Field.Id);
-            Assert.AreEqual(typeof(int), childItem2.Field.Type);
+            Assert.AreEqual("Count", childItem2.Id);
+            Assert.AreEqual(typeof(int), childItem2.Type);
             Assert.AreEqual(1, childItem2.Value);
 
             PropertyItem childItem3 = item.ObjectChildren.ElementAt(2);
-            Assert.AreEqual("Keys", childItem3.Field.Id);
-            Assert.AreEqual(typeof(Dictionary<string, double>.KeyCollection), childItem3.Field.Type);
+            Assert.AreEqual("Keys", childItem3.Id);
+            Assert.AreEqual(typeof(Dictionary<string, double>.KeyCollection), childItem3.Type);
             Assert.AreEqual(propertyValue.Keys, childItem3.Value);
 
             Assert.AreEqual(1, childItem3.ArrayChildren.Count());
@@ -742,8 +799,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem arrayItemChildItem3 = childItem3.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, arrayItemChildItem3.ObjectChildren);
             Assert.AreEqual(null, arrayItemChildItem3.ArrayChildren);
-            Assert.AreEqual("Count", arrayItemChildItem3.Field.Id);
-            Assert.AreEqual(typeof(int), arrayItemChildItem3.Field.Type);
+            Assert.AreEqual("Count", arrayItemChildItem3.Id);
+            Assert.AreEqual(typeof(int), arrayItemChildItem3.Type);
             Assert.AreEqual(1, arrayItemChildItem3.Value);
 
             Assert.AreEqual(1, childItem3.ObjectChildren.Count());
@@ -751,13 +808,13 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childChildItem3 = childItem3.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, childChildItem3.ObjectChildren);
             Assert.AreEqual(null, childChildItem3.ArrayChildren);
-            Assert.AreEqual("Count", childChildItem3.Field.Id);
-            Assert.AreEqual(typeof(int), childChildItem3.Field.Type);
+            Assert.AreEqual("Count", childChildItem3.Id);
+            Assert.AreEqual(typeof(int), childChildItem3.Type);
             Assert.AreEqual(1, childChildItem3.Value);
 
             PropertyItem childItem4 = item.ObjectChildren.ElementAt(3);
-            Assert.AreEqual("Values", childItem4.Field.Id);
-            Assert.AreEqual(typeof(Dictionary<string, double>.ValueCollection), childItem4.Field.Type);
+            Assert.AreEqual("Values", childItem4.Id);
+            Assert.AreEqual(typeof(Dictionary<string, double>.ValueCollection), childItem4.Type);
             Assert.AreEqual(propertyValue.Values, childItem4.Value);
 
             Assert.AreEqual(1, childItem4.ArrayChildren.Count());
@@ -765,8 +822,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem arrayItemChildItem4 = childItem4.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, arrayItemChildItem4.ObjectChildren);
             Assert.AreEqual(null, arrayItemChildItem4.ArrayChildren);
-            Assert.AreEqual("Count", arrayItemChildItem4.Field.Id);
-            Assert.AreEqual(typeof(int), arrayItemChildItem4.Field.Type);
+            Assert.AreEqual("Count", arrayItemChildItem4.Id);
+            Assert.AreEqual(typeof(int), arrayItemChildItem4.Type);
             Assert.AreEqual(1, arrayItemChildItem4.Value);
 
             Assert.AreEqual(1, childItem4.ObjectChildren.Count());
@@ -774,8 +831,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem childChildItem4 = childItem4.ObjectChildren.ElementAt(0);
             Assert.AreEqual(null, childChildItem4.ObjectChildren);
             Assert.AreEqual(null, childChildItem4.ArrayChildren);
-            Assert.AreEqual("Count", childChildItem4.Field.Id);
-            Assert.AreEqual(typeof(int), childChildItem4.Field.Type);
+            Assert.AreEqual("Count", childChildItem4.Id);
+            Assert.AreEqual(typeof(int), childChildItem4.Type);
             Assert.AreEqual(1, childChildItem4.Value);
         }
 
@@ -788,8 +845,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(null, item.ArrayChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -802,8 +859,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
             Assert.AreEqual(0, item.ArrayChildren.Count());
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
         }
 
@@ -815,8 +872,8 @@ namespace Reflection.Utils.PropertyTree.Tests {
 
             PropertyItem item = CreateItem(propertyName, propertyType, propertyValue);
             Assert.AreEqual(null, item.ObjectChildren);
-            Assert.AreEqual(propertyName, item.Field.Id);
-            Assert.AreEqual(propertyType, item.Field.Type);
+            Assert.AreEqual(propertyName, item.Id);
+            Assert.AreEqual(propertyType, item.Type);
             Assert.AreEqual(propertyValue, item.Value);
 
             Assert.AreEqual(2, item.ArrayChildren.Count());
@@ -824,15 +881,15 @@ namespace Reflection.Utils.PropertyTree.Tests {
             PropertyItem arrayItem1 = item.ArrayChildren.ElementAt(0);
             Assert.AreEqual(null, arrayItem1.ObjectChildren);
             Assert.AreEqual(null, arrayItem1.ArrayChildren);
-            Assert.AreEqual(0, arrayItem1.Field.Id);
-            Assert.AreEqual(typeof(int), arrayItem1.Field.Type);
+            Assert.AreEqual(0, arrayItem1.Id);
+            Assert.AreEqual(typeof(int), arrayItem1.Type);
             Assert.AreEqual(3, arrayItem1.Value);
 
             PropertyItem arrayItem2 = item.ArrayChildren.ElementAt(1);
             Assert.AreEqual(null, arrayItem2.ObjectChildren);
             Assert.AreEqual(null, arrayItem2.ArrayChildren);
-            Assert.AreEqual(1, arrayItem2.Field.Id);
-            Assert.AreEqual(typeof(int), arrayItem2.Field.Type);
+            Assert.AreEqual(1, arrayItem2.Id);
+            Assert.AreEqual(typeof(int), arrayItem2.Type);
             Assert.AreEqual(4, arrayItem2.Value);
         }
     }

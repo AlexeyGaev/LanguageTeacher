@@ -3,5 +3,6 @@
         Empty,
         OneValue,
         TwoValues,
+        Delimeter,
     }
 }

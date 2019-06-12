@@ -6,14 +6,10 @@ namespace Reflection.Utils.PropertyTree.Serialization {
             if (objectChildren == null && arrayChildren == null)
                 return null;
             List<SerializeContentItemCollection> result = new List<SerializeContentItemCollection>();
-            if (objectChildren != null) {
-                if (objectChildren.HasCycle)
-                    result.Add(SerializeContentItemCollectionBuilder.CreateCycle(Localization.ObjectChildren));
-                else
-                    result.Add(SerializeContentItemCollectionBuilder.Create(objectChildren, Localization.ObjectChildren));
-            }
+            if (objectChildren != null) 
+                result.Add(SerializeContentItemCollectionBuilder.Create(objectChildren, Localization.ObjectChildren, objectChildren.CycleMode));
             if (arrayChildren != null) 
-                result.Add(SerializeContentItemCollectionBuilder.Create(arrayChildren, Localization.ArrayChildren));
+                result.Add(SerializeContentItemCollectionBuilder.Create(arrayChildren, Localization.ArrayChildren, CycleMode.None));
             return result;
         }
     }

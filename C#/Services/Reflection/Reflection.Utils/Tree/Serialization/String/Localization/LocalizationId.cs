@@ -4,7 +4,6 @@
         Type,
         Value,
         Count,
-        HasCycle,
         ObjectChildren,
         ArrayChildren,
         Null,
@@ -12,5 +11,7 @@
         Exception,
         Nullable,
         Delimeter,
+        ValueCycle,
+        ReferenceCycle,
     }
 }

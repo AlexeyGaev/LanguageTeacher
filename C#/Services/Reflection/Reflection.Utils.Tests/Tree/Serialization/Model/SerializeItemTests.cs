@@ -12,6 +12,14 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
         }
 
         [TestMethod]
+        public void CheckDelimeter() {
+            SerializeItem item = SerializeItem.Delimeter;
+            Assert.AreEqual(null, item.FirstValue);
+            Assert.AreEqual(null, item.SecondValue);
+            Assert.AreEqual(SerializeItemMode.Delimeter, item.Mode);
+        }
+
+        [TestMethod]
         public void CheckOneValue() {
             SerializeItem item = SerializeItem.CreateOneValue("Test");
             Assert.AreEqual("Test", item.FirstValue);

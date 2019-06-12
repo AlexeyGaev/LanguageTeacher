@@ -5,9 +5,9 @@ using System.Text;
 
 namespace Reflection.Utils.PropertyTree {
     public static class PropertyStringSerializer {
-        public static string Serialize(string name, Type type, object value) {
+        public static string Serialize(string name, Type type, object value, Filter filter) {
             StringWriter writer = new StringWriter();
-            PropertyItem propertyItem = PropertyItemBuilder.Create(new PropertyField(name, type), value);
+            PropertyItem propertyItem = PropertyItemBuilder.Create(name, type, value, null, filter);
             SerializeContentItem serializeContentItem = SerializeContentItemBuilder.Create(propertyItem);
             StringExporter.Export(writer, serializeContentItem);
             IEnumerable<string> strings = writer.Result;

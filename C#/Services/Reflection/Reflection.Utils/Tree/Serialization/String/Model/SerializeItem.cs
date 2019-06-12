@@ -2,6 +2,9 @@
     public struct SerializeItem {
         static SerializeItem empty = CreateEmpty();
         public static SerializeItem Empty { get { return empty; } }
+        static SerializeItem delimeter = CreateDelimeter();
+        public static SerializeItem Delimeter { get { return delimeter; } }
+
         public static SerializeItem CreateOneValue(string value) {
             SerializeItem result = new SerializeItem();
             result.firstValue = value;
@@ -9,11 +12,18 @@
             result.mode = SerializeItemMode.OneValue;
             return result;
         }
+
         public static SerializeItem CreateTwoValues(string value1, string value2) {
             SerializeItem result = new SerializeItem();
             result.firstValue = value1;
             result.secondValue = value2;
             result.mode = SerializeItemMode.TwoValues;
+            return result;
+        }
+
+        static SerializeItem CreateDelimeter() {
+            SerializeItem result = new SerializeItem();
+            result.mode = SerializeItemMode.Delimeter;
             return result;
         }
 

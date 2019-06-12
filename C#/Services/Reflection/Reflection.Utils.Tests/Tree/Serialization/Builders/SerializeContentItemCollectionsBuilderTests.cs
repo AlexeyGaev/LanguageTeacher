@@ -12,9 +12,9 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void Create_ObjectChildrenCycle() {
-            IEnumerable<SerializeContentItemCollection> collections = SerializeContentItemCollectionsBuilder.Create(PropertyObjectChildren.Cycle, null);
+            IEnumerable<SerializeContentItemCollection> collections = SerializeContentItemCollectionsBuilder.Create(PropertyObjectChildren.ReferenceCycle, null);
             Assert.AreEqual(1, collections.Count());
-            SerializeContentItemCollectionBuilderTests.CheckCycle(collections.ElementAt(0), Localization.ObjectChildren);
+            SerializeContentItemCollectionBuilderTests.CheckCycle(collections.ElementAt(0), Localization.ObjectChildren, Localization.ReferenceCycle);
         }
 
         [TestMethod]

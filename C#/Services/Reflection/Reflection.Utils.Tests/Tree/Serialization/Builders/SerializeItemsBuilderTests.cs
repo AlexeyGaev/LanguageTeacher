@@ -18,7 +18,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(SerializeItemMode.TwoValues, item2.Mode);
         }
 
-        public static void CheckCollectionCycleHeader(IEnumerable<SerializeItem> items, string name) {
+        public static void CheckCollectionCycleHeader(IEnumerable<SerializeItem> items, string name, string cycle) {
             Assert.AreEqual(3, items.Count());
 
             SerializeItem item1 = items.ElementAt(0);
@@ -31,41 +31,24 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(SerializeItemMode.TwoValues, item2.Mode);
 
             SerializeItem headerItem3 = items.ElementAt(2);
-            Assert.AreEqual(Localization.HasCycle, headerItem3.FirstValue);
+            Assert.AreEqual(cycle, headerItem3.FirstValue);
             Assert.AreEqual(SerializeItemMode.OneValue, headerItem3.Mode);
         }
 
         [TestMethod]
         public void CreateCollectionCountHeader() {
             string name = "Test";
-            IEnumerable<SerializeItem> items = SerializeItemsBuilder.CreateCollectionCountHeader(name, 2);
+            IEnumerable<SerializeItem> items = SerializeItemsBuilder.CreateCollectionHeader(name, 2, CycleMode.None);
             CheckCollectionCountHeader(items, name, 2);
         }
 
         [TestMethod]
         public void CreateCollectionCycleHeader() {
             string name = "Test";
-            IEnumerable<SerializeItem> items = SerializeItemsBuilder.CreateCollectionCycleHeader(name);
-            CheckCollectionCycleHeader(items, name);
+            IEnumerable<SerializeItem> items = SerializeItemsBuilder.CreateCollectionHeader(name, 0, CycleMode.Value);
+            CheckCollectionCycleHeader(items, name, Localization.ValueCycle);
         }
-
-        [TestMethod]
-        public void CreateItemsFromPropertyField() {
-            PropertyField field = new PropertyField(null, null);
-            IEnumerable<SerializeItem> items = SerializeItemsBuilder.CreateItemsFromPropertyField(field);
-            Assert.AreEqual(2, items.Count());
-
-            SerializeItem item1 = items.ElementAt(0);
-            Assert.AreEqual(Localization.IdName, item1.FirstValue);
-            Assert.AreEqual(Localization.NullValue, item1.SecondValue);
-            Assert.AreEqual(SerializeItemMode.TwoValues, item1.Mode);
-
-            SerializeItem item2 = items.ElementAt(1);
-            Assert.AreEqual(Localization.TypeName, item2.FirstValue);
-            Assert.AreEqual(Localization.NullValue, item2.SecondValue);
-            Assert.AreEqual(SerializeItemMode.TwoValues, item2.Mode);
-        }
-
+        
         [TestMethod]
         public void CreateItemsFromPropertyValue_Null() {
             IEnumerable<SerializeItem> items = SerializeItemsBuilder.CreateItemsFromPropertyValue(null);
@@ -96,8 +79,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
 
         [TestMethod]
         public void CreatePropertyItemHeader() {
-            PropertyField field = new PropertyField(null, null);
-            IEnumerable<SerializeItem> items = SerializeItemsBuilder.CreatePropertyItemHeader(field, null);
+            IEnumerable<SerializeItem> items = SerializeItemsBuilder.CreatePropertyItemHeader(null, null, null);
             Assert.AreEqual(4, items.Count());
           
             SerializeItem item1 = items.ElementAt(0);
@@ -111,9 +93,8 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(Localization.NullValue, item2.SecondValue);
 
             SerializeItem item3 = items.ElementAt(2);
-            Assert.AreEqual(SerializeItemMode.OneValue, item3.Mode);
-            Assert.AreEqual(Localization.Delimeter, item3.FirstValue);
-
+            Assert.AreEqual(SerializeItemMode.Delimeter, item3.Mode);
+          
             SerializeItem item4 = items.ElementAt(3);
             Assert.AreEqual(SerializeItemMode.TwoValues, item4.Mode);
             Assert.AreEqual(Localization.ValueName, item4.FirstValue);

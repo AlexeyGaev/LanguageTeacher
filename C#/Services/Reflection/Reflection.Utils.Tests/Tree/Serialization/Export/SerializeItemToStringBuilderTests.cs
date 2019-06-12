@@ -9,6 +9,7 @@ namespace Reflection.Utils.PropertyTree.Serialization.Tests {
             Assert.AreEqual(String.Empty, SerializeItemToStringBuilder.Create(SerializeItem.Empty));
             Assert.AreEqual("Test", SerializeItemToStringBuilder.Create(SerializeItem.CreateOneValue("Test")));
             Assert.AreEqual("Test1=Test2", SerializeItemToStringBuilder.Create(SerializeItem.CreateTwoValues("Test1", "Test2")));
+            Assert.AreEqual(Localization.Delimeter, SerializeItemToStringBuilder.Create(SerializeItem.Delimeter));
         }
     }
 }
