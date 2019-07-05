@@ -136,23 +136,29 @@ def AddCards(cursor):
             break
     PressAnyKey()
 
-def AddToAccountsTable(account, cursor):
-    row = GetCurrentRow(sql_getAccountId.format(account), cursor)
-    if row:
-        return row[0]
-    else:
-        accountId = GetFirstCurrentRowValue(sql_getRowCount.format(db_accountsTableName), cursor)
-        AddRowToTable(db_accountsTableName, f"{accountId}, \'{account}\'", cursor)
-        return accountId
+def GetAccountIdRowByName(account_name, cursor):
+    return GetCurrentRow(sql_getAccountId.format(account_name), cursor)
+
+def AddNewAccountRow(account_name, cursor):
+    accountId = GetFirstCurrentRowValue(sql_getRowCount.format(db_accountsTableName), cursor)
+    AddRowToTable(db_accountsTableName, f"{accountId}, \'{account_name}\'", cursor)
+    return accountId
+
+def AddToAccountsTable(account_name, cursor):
+    row = GetAccountIdRowByName(account_name, cursor)
+    return row[0] if row else AddNewAccountRow(account_name, cursor)
+
+def GetThemeIdRowByName(theme_desc, cursor):
+    return GetCurrentRow(sql_getThemeId.format(theme_desc), cursor)
+
+def AddNewThemeRow(theme_desc, theme_level, cursor):
+    themeId = GetFirstCurrentRowValue(sql_getRowCount.format(db_themesTableName), cursor)
+    AddRowToTable(db_themesTableName, f"{themeId}, \'{theme_desc}\', {theme_level}", cursor)
+    return themeId
 
 def AddToThemesTable(theme_desc, theme_level, cursor):
-    row = GetCurrentRow(sql_getThemeId.format(theme_desc), cursor)
-    if row:
-        return row[0]
-    else:
-        themeId = GetFirstCurrentRowValue(sql_getRowCount.format(db_themesTableName), cursor)
-        AddRowToTable(db_themesTableName, f"{themeId}, \'{theme_desc}\', {theme_level}", cursor)
-        return themeId
+    row = GetThemeIdRowByName(theme_desc, cursor)
+    return row[0] if row else AddNewThemeRow(theme_desc, theme_level, cursor)
 
 def AddToCardsTable(primary_side, secondary_side, card_level, cursor):
     index = GetFirstCurrentRowValue(sql_getRowCount.format(db_cardsTableName), cursor)
@@ -200,6 +206,7 @@ def GetLinesFromFile(file_name):
     return lines
 
 def AddToTables(primary_side, secondary_side, card_level, theme_desc, theme_level, account_name):
+
     print("TODO add: ", primary_side, secondary_side, card_level, theme_desc, theme_level, account_name)
 
 def ShowTables(cursor):
