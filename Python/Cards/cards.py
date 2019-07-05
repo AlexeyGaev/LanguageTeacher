@@ -1,8 +1,10 @@
 import pyodbc
 import os
-import sys
 
-script, db_connection_string = sys.argv
+from sys import argv
+from os.path import exists
+
+script, db_connection_string = argv
 
 db_themesTableName = "Themes"
 db_cardsTableName = "Cards"
@@ -18,8 +20,8 @@ sql_select = "select * from {}"
 sql_getThemeId = "Select Theme_Id from Themes where Themes.Theme_desc like '{}'"
 sql_getAccountId = "Select Account_Id from Accounts where Accounts.Account_Name like '{}'"
 
-sql_createThemesColumns = "Theme_Id integer not null default 1 primary key, Theme_Desc text"
-sql_createCardsColumns = "Card_Id integer not null default 1 primary key, Primary_Side text, Secondary_Side text"
+sql_createThemesColumns = "Theme_Id integer not null default 1 primary key, Theme_Desc text, Theme_Level integer"
+sql_createCardsColumns = "Card_Id integer not null default 1 primary key, Primary_Side text, Secondary_Side text, Card_Level integer"
 sql_createAccountsColumns = "Account_Id integer not null default 1 primary key, Account_Name text"
 sql_createAnswersColumns = "Answer_Id integer not null default 1 primary key, BeginDateTime DateTime, EndDateTime DateTime, Card_Id integer, AnswerResult integer"
 sql_createThemeCardsColumns = "Theme_Id integer not null, Card_Id integer not null"
@@ -32,7 +34,7 @@ sql_getTableColumnNames = "select column_name from information_schema.columns wh
 sql_insertRow = "insert into {} values({})"
 sql_getColumnCount = "select COUNT(*) from INFORMATION_SCHEMA.COLUMNS where table_name = '{}'"
 sql_getRowCount = "select COUNT(*) from {}"
-sql_getAllCards = "Select Primary_side, Secondary_side, Theme_desc, Account_Name from Cards left join ThemeCards on ThemeCards.Card_Id = Cards.Card_Id left join Themes on ThemeCards.Theme_Id = Themes.Theme_Id left join AccountCards on AccountCards.Card_Id = Cards.Card_Id left join Accounts on ThemeCards.Card_Id = AccountCards.Card_Id"
+sql_getAllCards = "Select Primary_side, Secondary_side, Card_Level, Theme_desc, Theme_Level, Account_Name from Cards left join ThemeCards on ThemeCards.Card_Id = Cards.Card_Id left join Themes on ThemeCards.Theme_Id = Themes.Theme_Id left join AccountCards on AccountCards.Card_Id = Cards.Card_Id left join Accounts on ThemeCards.Card_Id = AccountCards.Card_Id"
 
 def ClearScreen():
     os.system('cls' if os.name=='nt' else 'clear')
@@ -59,8 +61,7 @@ def CreateTable(tableName, columns, cursor):
         print("Создаем таблицу", tableName, ":")
         cursor.execute(sql_createTable.format(tableName, columns))
     rows = GetRowsFromTable(sql_getTableColumnDescriptions.format(tableName), cursor)
-    for row in rows:
-        print(GetRowString(row, 6, ", "))
+    PrintLines(GetLinesFromRows(rows, 6, ", "))
     print("======================================")
 
 def DropTables(cursor):
@@ -115,15 +116,17 @@ def AddCards(cursor):
     shouldCreateTheme = input("Создать тему (1 - да)?")
     themeId = -1
     if shouldCreateTheme == "1":
-        theme = input("Theme : ")
-        themeId = AddToThemesTable(theme, cursor)
+        theme_desc = input("Theme : ")
+        theme_level = input("Theme Level: ")
+        themeId = AddToThemesTable(theme_desc, theme_level, cursor)
     print("======================================")
     while True:
         switch = input("Создать карточку (1 - да)?")
         if switch == "1":
             primary_side = input("Primary Side : ");
             secondary_side = input("Secondary Side : ");
-            cardId = AddToCardsTable(primary_side, secondary_side, cursor)
+            card_level = input("Card Level : ");
+            cardId = AddToCardsTable(primary_side, secondary_side, card_level, cursor)
             if themeId != -1:
                 AddToThemeCardsTable(themeId, cardId, cursor)
             if accountId != -1:
@@ -142,18 +145,18 @@ def AddToAccountsTable(account, cursor):
         AddRowToTable(db_accountsTableName, f"{accountId}, \'{account}\'", cursor)
         return accountId
 
-def AddToThemesTable(theme, cursor):
-    row = GetCurrentRow(sql_getThemeId.format(theme), cursor)
+def AddToThemesTable(theme_desc, theme_level, cursor):
+    row = GetCurrentRow(sql_getThemeId.format(theme_desc), cursor)
     if row:
         return row[0]
     else:
         themeId = GetFirstCurrentRowValue(sql_getRowCount.format(db_themesTableName), cursor)
-        AddRowToTable(db_themesTableName, f"{themeId}, \'{theme}\'", cursor)
+        AddRowToTable(db_themesTableName, f"{themeId}, \'{theme_desc}\', {theme_level}", cursor)
         return themeId
 
-def AddToCardsTable(primary_side, secondary_side, cursor):
+def AddToCardsTable(primary_side, secondary_side, card_level, cursor):
     index = GetFirstCurrentRowValue(sql_getRowCount.format(db_cardsTableName), cursor)
-    AddRowToTable(db_cardsTableName, f"{index}, \'{primary_side}\', \'{secondary_side}\'", cursor)
+    AddRowToTable(db_cardsTableName, f"{index}, \'{primary_side}\', \'{secondary_side}\', {card_level}", cursor)
     return index
 
 def AddToThemeCardsTable(themeId, cardId, cursor):
@@ -167,10 +170,37 @@ def AddRowToTable(tableName, valuesString, cursor):
 
 def ImportCards(cursor):
     ClearScreen()
-    print("Импорт карточек из текстового файла:")
-    print("Временно не поддерживается")
+    print("Импорт карточек из текстового файла.")
+    file_name = input("Введите имя файла:")
+    if exists(file_name):
+        lines = GetLinesFromFile(file_name)
+        if lines:
+            print("Содержимое файла {file_name}:")
+            PrintLines(lines)
+            for line in lines:
+                lineItems = line.split(',')
+                primary_side = lineItems[0].strip()
+                secondary_side = lineItems[1].strip()
+                card_level = lineItems[2].strip()
+                theme_desc = lineItems[3].strip()
+                theme_level = lineItems[4].strip()
+                account_name = lineItems[5].strip()
+                AddToTables(primary_side, secondary_side, card_level, theme_desc, theme_level, account_name)
+        else:
+            print("Файл {file_name} пустой.")
+    else:
+        print("Файл {file_name} не существует.")
     print("======================================")
     PressAnyKey()
+
+def GetLinesFromFile(file_name):
+    txt_file = open(file_name, 'r')
+    lines = [line.strip() for line in txt_file]
+    txt_file.close()
+    return lines
+
+def AddToTables(primary_side, secondary_side, card_level, theme_desc, theme_level, account_name):
+    print("TODO add: ", primary_side, secondary_side, card_level, theme_desc, theme_level, account_name)
 
 def ShowTables(cursor):
     ClearScreen()
@@ -190,8 +220,7 @@ def ShowTable(tableName, cursor):
         columnCount = GetFirstCurrentRowValue(sql_getColumnCount.format(tableName), cursor)
         header = GetTableHeader(tableName, columnCount, cursor)
         print(header)
-        for row in rows:
-            print(GetRowString(row, columnCount, ", "))
+        PrintLines(GetLinesFromRows(rows, columnCount, ", "))
     else:
         print("Таблица", tableName, "пустая.")
     print("======================================")
@@ -232,9 +261,8 @@ def ShowCards(cursor):
     rows = GetRowsFromTable(sql_getAllCards, cursor)
     if rows:
         print("База карточек :")
-        print("Primary_Side, Secondary_Side, Theme, Acccount")
-        for row in rows:
-            print(GetRowString(row, 4, ", "))
+        print("Формат: Primary_Side, Secondary_Side, Card_Level, Theme_Desc, Theme_Level, Acccount_Name")
+        PrintLines(GetLinesFromRows(rows, 6, ", "))
     else:
         print("Карточки отсутствуют.")
     print("======================================")
@@ -251,9 +279,78 @@ def CommitChanges(cursor):
 def ExportCards(cursor):
     ClearScreen()
     print("Экспорт карточек в текстовый файл:")
-    print("Временно не поддерживается")
+    rows = GetRowsFromTable(sql_getAllCards, cursor)
+    if not rows:
+        print("Карточки отсутствуют.")
+    else:
+        print("База карточек :")
+        print("Формат: Primary_Side, Secondary_Side, Card_Level, Theme_Desc, Theme_Level, Acccount_Name")
+        linesFromRows = GetLinesFromRows(rows, 6, ", ")
+        PrintLines(linesFromRows)
+        file_name = input("Введите имя файла:")
+        if not exists(file_name):
+            print("Создаем файл {file_name}.")
+            ExportToNewTxtFile(file_name, linesFromRows)
+        else:
+            print("Файл {file_name} существует:")
+            linesFromFile = GetLinesFromFile(file_name)
+            PrintLines(linesFromFile)
+            print("Выберите действие:")
+            print("1 - перезаписать (все прежние данные очищаются)")
+            print("2 - добавить в конец")
+            print("3 - обновить (одинаковые карточки не дублируются)")
+            reWriteAction = input("\> ")
+            if reWriteAction == "1":
+                print("Перезаписываем файла {file_name}.")
+                ExportToNewTxtFile(file_name, linesFromRows)
+            if reWriteAction == "2":
+                print("Добавляем в конец файла {file_name}.")
+                ExportToEndTxtFile(file_name, linesFromRows)
+            if reWriteAction == "3":
+                print("Обновляем файл {file_name}.")
+                ExportToNewTxtFile(file_name, JoinLines(linesFromFile, linesFromRows, 6, ','))
     print("======================================")
     PressAnyKey()
+
+def ExportToNewTxtFile(file_name, lines):
+    txt_file = open(file_name, 'w')
+    [txt_file.write(line + "\n") for line in lines]
+    txt_file.close()
+
+def ExportToEndTxtFile(file_name, lines):
+    txt_file = open(file_name, 'a')
+    [txt_file.write(line + "\n") for line in lines]
+    txt_file.close()
+
+def JoinLines(targetLines, addedLines, columnCount, delimeter):
+    result = ()
+    for targetLine in targetLines:
+        result += (targetLine,)
+    for addedLine in addedLines:
+        if not Contains(targetLines, addedLine, columnCount, delimeter):
+            result += (addedLine,)
+    return result
+
+def Contains(targetLines, line, columnCount, delimeter):
+    lineItems = line.split(',')
+    lineItems = [lineItem.strip() for lineItem in lineItems]
+    for targetLine in targetLines:
+        targetLineItems = targetLine.split(delimeter)
+        targetLineItems = [targetLineItem.strip() for targetLineItem in targetLineItems]
+        hasDifferences = False
+        for i in range(columnCount):
+            if targetLineItems[i] != lineItems[i]:
+                hasDifferences = True
+                break;
+        if not hasDifferences:
+            return True
+    return False
+
+def PrintLines(lines):
+    [print(line) for line in lines]
+
+def GetLinesFromRows(rows, columnCount, delimeter):
+    return [GetRowString(row, columnCount, delimeter) for row in rows]
 
 def RunTesting(cursor):
     ClearScreen()
@@ -305,15 +402,15 @@ def MainMenu(cursor):
         if (showMainMenuSwitch == "0"):
             break
 
-try:
-    db_connection = pyodbc.connect(db_connection_string)
-    db_cursor = db_connection.cursor()
-    MainMenu(db_cursor)
-    db_cursor.close()
-    db_connection.close()
-except:
-    ClearScreen()
-    print("Увы. Не могу связаться к базой данных.")
-    print("Работа с приложением невозможна.")
-    print("======================================")
-    PressAnyKey()
+#try:
+db_connection = pyodbc.connect(db_connection_string)
+db_cursor = db_connection.cursor()
+MainMenu(db_cursor)
+db_cursor.close()
+db_connection.close()
+#except:
+#    ClearScreen()
+#    print("Увы. Не могу связаться к базой данных.")
+#    print("Работа с приложением невозможна.")
+#    print("======================================")
+#    PressAnyKey()
