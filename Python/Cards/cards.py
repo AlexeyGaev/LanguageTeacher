@@ -6,28 +6,8 @@ from os.path import exists
 
 script, db_connection_string = argv
 
-db_themesTableName = "Themes"
-db_cardsTableName = "Cards"
-db_accountsTableName = "Accounts"
-db_answersTableName = "Answers"
-db_themeCardsTableName = "ThemeCards"
-db_accountCardsTableName = "AccountCards"
-db_tableNames = (db_themesTableName, db_cardsTableName, db_accountsTableName, db_themeCardsTableName, db_accountCardsTableName, db_answersTableName)
-db_cardColumnNames = ('Primary_Side', 'Secondary_Side', 'Card_Level', 'Theme_Desc', 'Theme_Level', 'Acccount_Name')
-
-sql_createThemesColumns = "Theme_Id integer not null default 1 primary key, Theme_Desc text, Theme_Level integer"
-sql_createCardsColumns = "Card_Id integer not null default 1 primary key, Primary_Side text, Secondary_Side text, Card_Level integer"
-sql_createAccountsColumns = "Account_Id integer not null default 1 primary key, Account_Name text"
-sql_createAnswersColumns = "Answer_Id integer not null default 1 primary key, BeginDateTime DateTime, EndDateTime DateTime, Card_Id integer, AnswerResult integer"
-sql_createThemeCardsColumns = "Theme_Id integer not null, Card_Id integer not null"
-sql_createAccountCardsColumns = "Account_Id integer not null, Card_Id integer not null"
-
-sql_getTableNames = "select table_name from information_schema.tables where table_name != 'sysdiagrams'"
-sql_getTableColumnNames = "select column_name from information_schema.columns where table_name like '{}'"
-sql_getColumnCount = "select COUNT(*) from information_schema.columns where table_name = '{}'"
-
 localization_stars = "======================================"
-localization_pressAnyKey = "Нажмите Enter..."
+
 localization_createAllTables = "Создаем все новые таблицы : "
 localization_dropAllTables = "Удаляем все существующие таблицы : "
 localization_deleteAllTables = "Очищаем все существующие таблицы : "
@@ -51,11 +31,17 @@ localization_addedCard = "Карточка (id = {}, PrimarySide = {}, Secondary
 localization_addedThemeCard = "Связь (theme_id = {}, card_id = {}) добавлена."
 localization_addedAccountCard = "Связь (account_id = {}, card_id = {}) добавлена."
 
+localization_invalidAllTables = "Не все таблицы присутствуют в базе данных."
+localization_cantShowCards = "Показать карточки не могу."
+localization_cantImportCards = "Импортировать карточки не могу."
+localization_cantExportCards = "Эскпортировать карточки не могу."
+
+localization_input_pressAnyKey = "Нажмите Enter..."
 localization_input_createAccount = "Создать пользователя (1 - да)?"
 localization_input_createTheme = "Создать тему (1 - да)?"
 localization_input_createCard = "Создать карточку (1 - да)?"
 
-localization_except_main = "Не могу связаться к базой данных. Работа с приложением невозможна."
+localization_except_main = "Не могу связаться к базой данных. \nРабота с приложением невозможна."
 
 localization_menu_header = "Начинаем работу по заполнению карточек"
 localization_menu_createNewTables = "Создать все новые таблицы"
@@ -81,33 +67,37 @@ def GetCurrentRow(script, cursor):
     cursor.execute(script)
     return cursor.fetchone()
 
+def GetTableNames():
+    return ('Themes', 'Cards', 'Accounts', 'ThemeCards', 'AccountCards', 'Answers')
+
+def GetCardColumnNames():
+    return ('Primary_Side', 'Secondary_Side', 'Card_Level', 'Theme_Desc', 'Theme_Level', 'Acccount_Name')
+
+def GetCreateTableScriptTuples():
+    result = ()
+    result += (('Themes', 'Theme_Id integer not null default 1 primary key, Theme_Desc text, Theme_Level text'), )
+    result += (('Cards', 'Card_Id integer not null default 1 primary key, Primary_Side text, Secondary_Side text, Card_Level text'), )
+    result += (('Accounts', 'Account_Id integer not null default 1 primary key, Account_Name text'), )
+    result += (('ThemeCards', 'Theme_Id integer not null, Card_Id integer not null'), )
+    result += (('AccountCards', 'Account_Id integer not null, Card_Id integer not null'), )
+    result += (('Answers', 'Answer_Id integer not null default 1 primary key, BeginDateTime DateTime, EndDateTime DateTime, Card_Id integer, AnswerResult integer'), )
+    return result
+
 #------------------------------------------------------------------------------
 
-def CreateTables(cursor):
+def CreateTables(tableScriptTuples, cursor):
     output = ()
     output += (localization_createAllTables, )
-    lines = CreateTable(db_themesTableName, sql_createThemesColumns, cursor)
-    for line in lines:
-        output += (line, )
-    lines = CreateTable(db_cardsTableName, sql_createCardsColumns, cursor)
-    for line in lines:
-        output += (line, )
-    lines = CreateTable(db_accountsTableName, sql_createAccountsColumns, cursor)
-    for line in lines:
-        output += (line, )
-    lines = CreateTable(db_themeCardsTableName, sql_createThemeCardsColumns, cursor)
-    for line in lines:
-        output += (line, )
-    lines = CreateTable(db_accountCardsTableName, sql_createAccountCardsColumns, cursor)
-    for line in lines:
-        output += (line, )
-    lines = CreateTable(db_answersTableName, sql_createAnswersColumns, cursor)
-    for line in lines:
-        output += (line, )
+    for tableScriptTuple in tableScriptTuples:
+        lines = CreateTable(tableScriptTuple, cursor)
+        for line in lines:
+            output += (line, )
     return output
 
-def CreateTable(tableName, createColumns, cursor):
+def CreateTable(tableScriptTuple, cursor):
     output = ()
+    tableName = tableScriptTuple[0]
+    createColumns = tableScriptTuple[1]
     sql_getTableName = "select table_name from information_schema.tables where table_name = '{}'"
     if GetCurrentRow(sql_getTableName.format(tableName), cursor):
         output += (localization_existTable.format(tableName), )
@@ -122,10 +112,10 @@ def CreateTable(tableName, createColumns, cursor):
     output += (localization_stars, )
     return output
 
-def DropTables(cursor):
+def DropTables(tableNames, cursor):
     output = ()
     output += (localization_dropAllTables, )
-    for tableName in db_tableNames:
+    for tableName in tableNames:
         lines = DropTable(tableName, cursor)
         for line in lines:
             output += (line, )
@@ -143,10 +133,10 @@ def DropTable(tableName, cursor):
         output += (localization_nothingTable.format(tableName), )
     return output
 
-def ClearTables(cursor):
+def ClearTables(tableNames, cursor):
     output = ()
     output += (localization_deleteAllTables, )
-    for tableName in db_tableNames:
+    for tableName in tableNames:
         lines = ClearTable(tableName, cursor)
         for line in lines:
             output += (line, )
@@ -164,10 +154,10 @@ def ClearTable(tableName, cursor):
         output += (localization_nothingTable.format(tableName), )
     return output
 
-def ShowTables(cursor):
+def ShowTables(tableNames, cursor):
     output = ()
     output += (localization_showTables, )
-    for tableName in db_tableNames:
+    for tableName in tableNames:
         lines = ShowTable(tableName, cursor)
         for line in lines:
             output += (line, )
@@ -175,33 +165,154 @@ def ShowTables(cursor):
 
 def ShowTable(tableName, cursor):
     output = ()
-    sql_select = "select * from {}"
-    rows = GetRowsFromTable(sql_select.format(tableName), cursor)
-    if rows:
-        output += (localization_showTable.format(tableName), )
-        sql_getColumns = "select column_name from information_schema.columns where table_name like '{}' order by ordinal_position"
-        columnsRows = GetRowsFromTable(sql_getColumns.format(tableName), cursor)
-        output += (tuple([columnsRow[0] for columnsRow in columnsRows]), )
-        for row in rows:
-            output += (row, )
+    sql_getTableName = "select table_name from information_schema.tables where table_name = '{}'"
+    if not GetCurrentRow(sql_getTableName.format(tableName), cursor):
+        output += (localization_nothingTable.format(tableName), )
     else:
-        output += (localization_emptyTable.format(tableName), )
+        sql_select = "select * from {}"
+        rows = GetRowsFromTable(sql_select.format(tableName), cursor)
+        if rows:
+            output += (localization_showTable.format(tableName), )
+            sql_getColumns = "select column_name from information_schema.columns where table_name like '{}' order by ordinal_position"
+            columnsRows = GetRowsFromTable(sql_getColumns.format(tableName), cursor)
+            output += (tuple([columnsRow[0] for columnsRow in columnsRows]), )
+            for row in rows:
+                output += (row, )
+        else:
+            output += (localization_emptyTable.format(tableName), )
     output += (localization_stars, )
     return output
 
+#------------------------------------------------------------------------------
+
 def ShowCards(cursor):
     output = ()
-    sql_getAllCards = "Select Primary_side, Secondary_side, Card_Level, Theme_desc, Theme_Level, Account_Name from Cards left join ThemeCards on ThemeCards.Card_Id = Cards.Card_Id left join Themes on ThemeCards.Theme_Id = Themes.Theme_Id left join AccountCards on AccountCards.Card_Id = Cards.Card_Id left join Accounts on ThemeCards.Card_Id = AccountCards.Card_Id"
-    rows = GetRowsFromTable(sql_getAllCards, cursor)
-    if rows:
-        output += (localization_cardTable, )
-        output += (db_cardColumnNames, )
-        for row in rows:
-            output += (row, )
+    if not HasAllTables():
+        lines = ShowInvalidAllTables(localization_cantShowCards)
+        for line in lines:
+            output += (line, )
     else:
-        output += (localization_nothingCardTable, )
+        sql_getAllCards = "Select Primary_side, Secondary_side, Card_Level, Theme_desc, Theme_Level, Account_Name from Cards left join ThemeCards on ThemeCards.Card_Id = Cards.Card_Id left join Themes on ThemeCards.Theme_Id = Themes.Theme_Id left join AccountCards on AccountCards.Card_Id = Cards.Card_Id left join Accounts on ThemeCards.Card_Id = AccountCards.Card_Id"
+        rows = GetRowsFromTable(sql_getAllCards, cursor)
+        if rows:
+            output += (localization_cardTable, )
+            output += (GetCardColumnNames(), )
+            for row in rows:
+                output += (row, )
+        else:
+            output += (localization_nothingCardTable, )
     output += (localization_stars, )
     return output
+
+def ShowInvalidAllTables(cant):
+    output = ()
+    output += (localization_invalidAllTables, )
+    output += (cant, )
+    return output
+
+def HasAllTables(tableNames, cursor):
+    for tableName in tableNames:
+        sql_getTableName = "select table_name from information_schema.tables where table_name = '{}'"
+        if not GetCurrentRow(sql_getTableName.format(tableName), cursor):
+            return False
+    return True
+
+#------------------------------------------------------------------------------
+
+def HeaderAddCards():
+    output = ()
+    output += (localization_addCards, )
+    output += (localization_inputAccountAndTheme, )
+    return output
+
+def InputAddCards():
+    result = ()
+    while True:
+        switch = input(localization_input_createCard)
+        if switch == "1":
+            primary_side = input("Primary Side : ")
+            secondary_side = input("Secondary Side : ")
+            card_level = input("Card Level : ")
+            theme_desc = ""
+            theme_level = ""
+            account_name = ""
+            if input(localization_input_createTheme) == "1":
+                theme_desc = input("Theme : ")
+                theme_level = input("Theme Level : ")
+            if input(localization_input_createAccount) == "1":
+                account_name = input("Account : ")
+            result += ((primary_side, secondary_side, card_level, theme_desc, theme_level, account_name), )
+        else:
+            break
+    return result
+
+def OutputAddCards(inputArgs, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, cursor):
+    output = ()
+    for inputArg in inputArgs:
+        primary_side = arg[0].strip()
+        secondary_side = arg[1].strip()
+        card_level = arg[2].strip()
+        theme_desc = arg[3].strip()
+        theme_level = arg[4].strip()
+        account_name = arg[5].strip()
+        if primary_side == "":
+            output += ("Поле {} не заполнено. Добавление невозможно.".format("primary_side"))
+            break;
+        sql_where = "cards.primary_side like \'{}\'".format(primary_side)
+        card_id_row = GetIdRow('card_id', 'cards', sql_where, cursor)
+        if card_id_row:
+            card_id = card_id_row[0]
+            output += ("Карточка с id = {} primary_side = {} имеется.".format(card_id, primary_side))
+            if hasUpdateCard:
+                update_set = "primary_side = \'{}\', secondary_side = \'{}\', card_level = \'{}\'".format(primary_side, secondary_side, card_level)
+                update_where = "card_id = \'{}\'".format(card_id)
+                UpdateRow('cards', update_set, update_where, cursor)
+                output += ("Карточка с id = {} обновлена.".format(card_id))
+                if not (theme_desc == "" and theme_level == ""):
+                    sql_where = "themes.theme_desc = \'{}\' or themes.theme_level = \'{}\'".format(theme_desc, theme_level)
+                    theme_id_row = GetIdRow('theme_id', 'themes', sql_where, cursor)
+                    if theme_id_row:
+                        theme_id = theme_id_row[0]
+                        output += ("Тема с id = {} theme_desc = \'{}\' или theme_level = \'{}\' имеется.".format(theme_id, theme_desc, theme_level))
+                        if hasUpdateTheme:
+                            update_set = ""
+                            if theme_desc == "":
+                                update_set = "theme_level = \'{}\'".format(theme_level)
+                            elif theme_level == "":
+                                update_set = "theme_desc = \'{}\'".format(theme_desc)
+                            else:
+                                update_set = "theme_desc = \'{}\', theme_level = \'{}\'".format(theme_desc, theme_level)
+                            update_where = "theme_id = \'{}\'".format(theme_id)
+                            UpdateRow('themes', update_set, update_where, cursor)
+                            output += ("Тема с id = {} обновлена.".format(card_id))
+                        else:
+#-----------------------------------------------TODO---------------------------
+            else:
+                output += ("Карточка пропущена.")
+        else:
+            card_id = CreateId('cards', cursor)
+            values = "{}, \'{}\', \'{}\', \'{}\'".format(card_id, primary_side, secondary_side, card_level)
+            AddRow('cards', values, cursor)
+            output += (localization_addedCard.format(card_id, primary_side, secondary_side, card_level), )
+    else:
+        output += ("Не введено ни одной карточки", )
+    return output
+
+def GetIdRow(select, from, where, cursor):
+    sql_getId = "Select {} from {} where {}"
+    return GetCurrentRow(sql_getId.format(select, from, where, like), cursor)
+
+def CreateId(tableName, cursor):
+    sql_getRowCount = "select COUNT(*) from {}"
+    return GetCurrentRow(sql_getRowCount.format(tableName), cursor)[0]
+
+def UpdateRow(tableName, set, where, cursor):
+    sql_updateRow = "update {} set {} where {}"
+    cursor.execute(sql_updateRow.format(tableName, set, where))
+
+def AddRow(tableName, values, cursor):
+    sql_insertRow = "insert into {} values({})"
+    cursor.execute(sql_insertRow.format(tableName, values))
 
 #------------------------------------------------------------------------------
 
@@ -272,15 +383,7 @@ def AddToCardsTable(primary_side, secondary_side, card_level, cursor):
     row = GetCardIdRowByPrimarySide(primary_side, cursor)
     return row[0] if row else AddNewCardRow(primary_side, secondary_side, card_level, cursor)
 
-def GetCardIdRowByPrimarySide(primary_side, cursor):
-    sql_getCardId = "Select Card_Id from Cards where Cards.Primary_Side like '{}'"
-    return GetCurrentRow(sql_getCardId.format(primary_side), cursor)
 
-def AddNewCardRow(primary_side, secondary_side, card_level, cursor):
-    sql_getRowCount = "select COUNT(*) from {}"
-    card_id = GetFirstCurrentRowValue(sql_getRowCount.format(db_cardsTableName), cursor)
-    AddRowToTable(db_cardsTableName, f"{card_id}, \'{primary_side}\', \'{secondary_side}\', {card_level}", cursor)
-    return card_id
 
 def AddToThemeCardsTable(theme_id, card_id, cursor):
     AddRowToTable(db_themeCardsTableName, f"{theme_id}, {card_id}", cursor)
@@ -288,9 +391,7 @@ def AddToThemeCardsTable(theme_id, card_id, cursor):
 def AddToAccountCardsTable(account_id, card_id, cursor):
     AddRowToTable(db_accountCardsTableName, f"{account_id}, {card_id}", cursor)
 
-def AddRowToTable(tableName, valuesString, cursor):
-    sql_insertRow = "insert into {} values({})"
-    cursor.execute(sql_insertRow.format(tableName, valuesString))
+
 
 #------------------------------------------------------------------------------
 
@@ -438,7 +539,7 @@ def ClearScreen():
     os.system('cls' if os.name=='nt' else 'clear')
 
 def PressAnyKey():
-    input(localization_pressAnyKey)
+    input(localization_input_pressAnyKey)
 
 def PrintLines(lines):
     [print(line) for line in lines]
@@ -468,19 +569,19 @@ def MainMenu(cursor):
         showMainMenuSwitch = input("\> ")
         if showMainMenuSwitch == "1":
             ClearScreen()
-            PrintLines(CreateTables(cursor))
+            PrintLines(CreateTables(GetCreateTableScriptTuples(), cursor))
             PressAnyKey()
         if showMainMenuSwitch == "2":
             ClearScreen()
-            PrintLines(DropTables(cursor))
+            PrintLines(DropTables(GetTableNames(), cursor))
             PressAnyKey()
         if showMainMenuSwitch == "3":
             ClearScreen()
-            PrintLines(ClearTables(cursor))
+            PrintLines(ClearTables(GetTableNames(), cursor))
             PressAnyKey()
         if showMainMenuSwitch == "4":
             ClearScreen()
-            PrintLines(ShowTables(cursor))
+            PrintLines(ShowTables(GetTableNames(), cursor))
             PressAnyKey()
         if showMainMenuSwitch == '5':
             ClearScreen()
