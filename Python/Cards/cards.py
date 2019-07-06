@@ -255,20 +255,188 @@ def OutputAddCards(inputArgs, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, c
         theme_desc = arg[3].strip()
         theme_level = arg[4].strip()
         account_name = arg[5].strip()
+        output += ("Добавляю текущую карточку.")
         if primary_side == "":
-            output += ("Поле {} не заполнено. Добавление невозможно.".format("primary_side"))
-            break;
-        sql_where = "cards.primary_side like \'{}\'".format(primary_side)
-        card_id_row = GetIdRow('card_id', 'cards', sql_where, cursor)
-        if card_id_row:
-            card_id = card_id_row[0]
-            output += ("Карточка с id = {} primary_side = {} имеется.".format(card_id, primary_side))
-            if hasUpdateCard:
-                update_set = "primary_side = \'{}\', secondary_side = \'{}\', card_level = \'{}\'".format(primary_side, secondary_side, card_level)
-                update_where = "card_id = \'{}\'".format(card_id)
-                UpdateRow('cards', update_set, update_where, cursor)
-                output += ("Карточка с id = {} обновлена.".format(card_id))
-                if not (theme_desc == "" and theme_level == ""):
+            output += ("Поле {} не заполнено. Добавление карточки невозможно.".format("primary_side"), )
+            output += ("Добавляю текущую тему.", )
+            if theme_desc == "" and theme_level == "":
+                output += ("Поля \'{}\' и \'{}\' не заполнены. Добавление темы невозможно.".format("theme_desc", "theme_level"), )
+            else:
+                sql_where = "themes.theme_desc = \'{}\' or themes.theme_level = \'{}\'".format(theme_desc, theme_level)
+                theme_id_row = GetIdRow('theme_id', 'themes', sql_where, cursor)
+                if theme_id_row:
+                    theme_id = theme_id_row[0]
+                    output += ("Тема с id = {} theme_desc = \'{}\' или theme_level = \'{}\' имеется.".format(theme_id, theme_desc, theme_level), )
+                    if hasUpdateTheme:
+                        update_set = ""
+                        if theme_desc == "":
+                            update_set = "theme_level = \'{}\'".format(theme_level)
+                        elif theme_level == "":
+                            update_set = "theme_desc = \'{}\'".format(theme_desc)
+                        else:
+                            update_set = "theme_desc = \'{}\', theme_level = \'{}\'".format(theme_desc, theme_level)
+                        update_where = "theme_id = \'{}\'".format(theme_id)
+                        UpdateRow('themes', update_set, update_where, cursor)
+                        output += ("Тема обновлена.", )
+                    else:
+                        output += ("Тема пропущена.", )
+            output += ("Добавляю текущего пользователя.", )
+            if account_name == "":
+                output += ("Поле {} не заполнено. Добавление пользователя невозможно.".format("account_name"), )
+            else:
+                sql_where = "accounts.account_name = \'{}\'".format(account_name)
+                account_id_row = GetIdRow('account_id', 'accounts', sql_where, cursor)
+                if account_id_row:
+                    account_id = account_id_row[0]
+                    output += ("Пользователь с id = {} name = {} имеется.".format(account_id, account_name), )
+                    if hasUpdateAccount:
+                        update_set = "account_name = \'{}\'".format(account_name)
+                        update_where = "account_id = \'{}\'".format(account_id)
+                        UpdateRow('accounts', update_set, update_where, cursor)
+                        output += ("Пользователь обновлен.", )
+                    else:
+                        output += ("Пользователь пропущен.", )
+                else:
+                    account_id = CreateId('accounts', cursor)
+                    values = "{}, \'{}\', \'{}\', \'{}\'".format(account_id, account_name)
+                    AddRow('accounts', values, cursor)
+                    output += (localization_addedAccount.format(account_id, account_name), )
+        else :
+            sql_where = "cards.primary_side like \'{}\'".format(primary_side)
+            card_id_row = GetIdRow('card_id', 'cards', sql_where, cursor)
+            if card_id_row:
+                card_id = card_id_row[0]
+                output += ("Карточка с id = {} primary_side = {} имеется.".format(card_id, primary_side), )
+                if hasUpdateCard:
+                    update_set = "primary_side = \'{}\', secondary_side = \'{}\', card_level = \'{}\'".format(primary_side, secondary_side, card_level)
+                    update_where = "card_id = \'{}\'".format(card_id)
+                    UpdateRow('cards', update_set, update_where, cursor)
+                    output += ("Карточка обновлена.", )
+                    output += ("Добавляю текущую тему.", )
+                    if theme_desc == "" and theme_level == "":
+                        output += ("Поля \'{}\' и \'{}\' не заполнены. Добавление темы невозможно.".format("theme_desc", "theme_level"), )
+                    else:
+                        sql_where = "themes.theme_desc = \'{}\' or themes.theme_level = \'{}\'".format(theme_desc, theme_level)
+                        theme_id_row = GetIdRow('theme_id', 'themes', sql_where, cursor)
+                        if theme_id_row:
+                            theme_id = theme_id_row[0]
+                            output += ("Тема с id = {} theme_desc = \'{}\' или theme_level = \'{}\' имеется.".format(theme_id, theme_desc, theme_level), )
+                            if hasUpdateTheme:
+                                update_set = ""
+                                if theme_desc == "":
+                                    update_set = "theme_level = \'{}\'".format(theme_level)
+                                elif theme_level == "":
+                                    update_set = "theme_desc = \'{}\'".format(theme_desc)
+                                else:
+                                    update_set = "theme_desc = \'{}\', theme_level = \'{}\'".format(theme_desc, theme_level)
+                                update_where = "theme_id = \'{}\'".format(theme_id)
+                                UpdateRow('themes', update_set, update_where, cursor)
+                                output += ("Тема обновлена.", )
+                            else:
+                                output += ("Тема пропущена.", )
+                        else:
+                            theme_id = CreateId('theme_id', cursor)
+                            values = ""
+                            if theme_desc == "":
+                                values = "{}, \'{}\'".format(theme_id, theme_level)
+                            elif theme_level == "":
+                                values = "{}, \'{}\'".format(theme_id, theme_desc)
+                            else:
+                                values = "{}, \'{}\', \'{}\'".format(theme_id, theme_desc, theme_level)
+                            AddRow('themes', values, cursor)
+                            output += (localization_addedTheme.format(theme_id, theme_desc, theme_level), )
+                            values = "{}, {}".format(theme_id, card_id)
+                            AddRow('themeCards', values, cursor)
+                            output += (localization_addedThemeCard.format(theme_id, card_id), )
+                    output += ("Добавляю текущего пользователя.", )
+                    if account_name == "":
+                        output += ("Поле {} не заполнено. Добавление пользователя невозможно.".format("account_name"), )
+                    else:
+                        sql_where = "accounts.account_name = \'{}\'".format(account_name)
+                        account_id_row = GetIdRow('account_id', 'accounts', sql_where, cursor)
+                        if account_id_row:
+                            account_id = account_id_row[0]
+                            output += ("Пользователь с id = {} name = {} имеется.".format(account_id, account_name), )
+                            if hasUpdateAccount:
+                                update_set = "account_name = \'{}\'".format(account_name)
+                                update_where = "account_id = \'{}\'".format(account_id)
+                                UpdateRow('accounts', update_set, update_where, cursor)
+                                output += ("Пользователь обновлен.", )
+                            else:
+                                output += ("Пользователь пропущен.", )
+                        else:
+                            account_id = CreateId('accounts', cursor)
+                            values = "{}, \'{}\', \'{}\', \'{}\'".format(account_id, account_name)
+                            AddRow('accounts', values, cursor)
+                            output += (localization_addedAccount.format(account_id, account_name), )
+                            values = "{}, {}".format(account_id, card_id)
+                            AddRow('AccountCards', values, cursor)
+                            output += (localization_addedAccountCard.format(account_id, card_id), )
+                else:
+                    output += ("Карточка пропущена.")
+                    output += ("Добавляю текущую тему.")
+                    if theme_desc == "" and theme_level == "":
+                        output += ("Поля \'{}\' и \'{}\' не заполнены. Добавление темы невозможно.".format("theme_desc", "theme_level"))
+                    else:
+                        sql_where = "themes.theme_desc = \'{}\' or themes.theme_level = \'{}\'".format(theme_desc, theme_level)
+                        theme_id_row = GetIdRow('theme_id', 'themes', sql_where, cursor)
+                        if theme_id_row:
+                            theme_id = theme_id_row[0]
+                            output += ("Тема с id = {} theme_desc = \'{}\' или theme_level = \'{}\' имеется.".format(theme_id, theme_desc, theme_level))
+                            if hasUpdateTheme:
+                                update_set = ""
+                                if theme_desc == "":
+                                    update_set = "theme_level = \'{}\'".format(theme_level)
+                                elif theme_level == "":
+                                    update_set = "theme_desc = \'{}\'".format(theme_desc)
+                                else:
+                                    update_set = "theme_desc = \'{}\', theme_level = \'{}\'".format(theme_desc, theme_level)
+                                update_where = "theme_id = \'{}\'".format(theme_id)
+                                UpdateRow('themes', update_set, update_where, cursor)
+                                output += ("Тема обновлена.".format(theme_id))
+                            else:
+                                output += ("Тема пропущена.")
+                        else:
+                            theme_id = CreateId('theme_id', cursor)
+                            values = ""
+                            if theme_desc == "":
+                                values = "{}, \'{}\'".format(theme_id, theme_level)
+                            elif theme_level == "":
+                                values = "{}, \'{}\'".format(theme_id, theme_desc)
+                            else:
+                                values = "{}, \'{}\', \'{}\'".format(theme_id, theme_desc, theme_level)
+                            AddRow('themes', values, cursor)
+                            output += (localization_addedTheme.format(theme_id, theme_desc, theme_level), )
+                    output += ("Добавляю текущего пользователя.", )
+                    if account_name == "":
+                        output += ("Поле {} не заполнено. Добавление пользователя невозможно.".format("account_name"), )
+                    else:
+                        sql_where = "accounts.account_name = \'{}\'".format(account_name)
+                        account_id_row = GetIdRow('theme_id', 'themes', sql_where, cursor)
+                        if account_id_row:
+                            account_id = account_id_row[0]
+                            output += ("Пользователь с id = {} name = {} имеется.".format(account_id, account_name), )
+                            if hasUpdateAccount:
+                                update_set = "account_name = \'{}\'".format(account_name)
+                                update_where = "account_id = \'{}\'".format(account_id)
+                                UpdateRow('accounts', update_set, update_where, cursor)
+                                output += ("Пользователь обновлен.", )
+                            else:
+                                output += ("Пользователь пропущен.", )
+                        else:
+                            account_id = CreateId('accounts', cursor)
+                            values = "{}, \'{}\', \'{}\', \'{}\'".format(account_id, account_name)
+                            AddRow('accounts', values, cursor)
+                            output += (localization_addedAccount.format(account_id, account_name), )
+            else:
+                card_id = CreateId('cards', cursor)
+                values = "{}, \'{}\', \'{}\', \'{}\'".format(card_id, primary_side, secondary_side, card_level)
+                AddRow('cards', values, cursor)
+                output += (localization_addedCard.format(card_id, primary_side, secondary_side, card_level), )
+                output += ("Добавляю текущую тему.")
+                if theme_desc == "" and theme_level == "":
+                    output += ("Поля \'{}\' и \'{}\' не заполнены. Добавление темы невозможно.".format("theme_desc", "theme_level"))
+                else:
                     sql_where = "themes.theme_desc = \'{}\' or themes.theme_level = \'{}\'".format(theme_desc, theme_level)
                     theme_id_row = GetIdRow('theme_id', 'themes', sql_where, cursor)
                     if theme_id_row:
@@ -284,16 +452,50 @@ def OutputAddCards(inputArgs, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, c
                                 update_set = "theme_desc = \'{}\', theme_level = \'{}\'".format(theme_desc, theme_level)
                             update_where = "theme_id = \'{}\'".format(theme_id)
                             UpdateRow('themes', update_set, update_where, cursor)
-                            output += ("Тема с id = {} обновлена.".format(card_id))
+                            output += ("Тема с id = {} обновлена.".format(theme_id))
+                            values = "{}, {}".format(theme_id, card_id)
+                            AddRow('themeCards', values, cursor)
+                            output += (localization_addedThemeCard.format(theme_id, card_id), )
                         else:
-#-----------------------------------------------TODO---------------------------
-            else:
-                output += ("Карточка пропущена.")
-        else:
-            card_id = CreateId('cards', cursor)
-            values = "{}, \'{}\', \'{}\', \'{}\'".format(card_id, primary_side, secondary_side, card_level)
-            AddRow('cards', values, cursor)
-            output += (localization_addedCard.format(card_id, primary_side, secondary_side, card_level), )
+                            output += ("Тема пропущена.")
+                    else:
+                        theme_id = CreateId('theme_id', cursor)
+                        values = ""
+                        if theme_desc == "":
+                            values = "{}, \'{}\'".format(theme_id, theme_level)
+                        elif theme_level == "":
+                            values = "{}, \'{}\'".format(theme_id, theme_desc)
+                        else:
+                            values = "{}, \'{}\', \'{}\'".format(theme_id, theme_desc, theme_level)
+                        AddRow('themes', values, cursor)
+                        output += (localization_addedTheme.format(theme_id, theme_desc, theme_level), )
+                        values = "{}, {}".format(theme_id, card_id)
+                        AddRow('themeCards', values, cursor)
+                        output += (localization_addedThemeCard.format(theme_id, card_id), )
+                output += ("Добавляю текущего пользователя.", )
+                if account_name == "":
+                    output += ("Поле {} не заполнено. Добавление пользователя невозможно.".format("account_name"), )
+                else:
+                    sql_where = "accounts.account_name = \'{}\'".format(account_name)
+                    account_id_row = GetIdRow('theme_id', 'themes', sql_where, cursor)
+                    if account_id_row:
+                        account_id = account_id_row[0]
+                        output += ("Пользователь с id = {} name = {} имеется.".format(account_id, account_name), )
+                        if hasUpdateAccount:
+                            update_set = "account_name = \'{}\'".format(account_name)
+                            update_where = "account_id = \'{}\'".format(account_id)
+                            UpdateRow('accounts', update_set, update_where, cursor)
+                            output += ("Пользователь обновлен.", )
+                        else:
+                            output += ("Пользователь пропущен.", )
+                    else:
+                        account_id = CreateId('accounts', cursor)
+                        values = "{}, \'{}\', \'{}\', \'{}\'".format(account_id, account_name)
+                        AddRow('accounts', values, cursor)
+                        output += (localization_addedAccount.format(account_id, account_name), )
+                        values = "{}, {}".format(account_id, card_id)
+                        AddRow('AccountCards', values, cursor)
+                        output += (localization_addedAccountCard.format(account_id, card_id), )
     else:
         output += ("Не введено ни одной карточки", )
     return output
@@ -314,86 +516,7 @@ def AddRow(tableName, values, cursor):
     sql_insertRow = "insert into {} values({})"
     cursor.execute(sql_insertRow.format(tableName, values))
 
-#------------------------------------------------------------------------------
-
-def AddCards(cursor):
-    output = ()
-    output += (localization_addCards, )
-    output += (localization_inputAccountAndTheme, )
-    shouldCreateAccount = input(localization_input_createAccount)
-    accountId = -1
-    if shouldCreateAccount == "1":
-        account_name = input("Account : ")
-        account_id = AddToAccountsTable(account_name, cursor)
-        output += (localization_addedAccount.format(account_id, account_name), )
-    shouldCreateTheme = input(localization_input_createTheme)
-    themeId = -1
-    if shouldCreateTheme == "1":
-        theme_desc = input("Theme : ")
-        theme_level = input("Theme Level : ")
-        theme_id = AddToThemesTable(theme_desc, theme_level, cursor)
-        output += (localization_addedTheme.format(theme_id, theme_desc, theme_level), )
-    while True:
-        switch = input(localization_input_createCard)
-        if switch == "1":
-            primary_side = input("Primary Side : ");
-            secondary_side = input("Secondary Side : ");
-            card_level = input("Card Level : ");
-            card_id = AddToCardsTable(primary_side, secondary_side, card_level, cursor)
-            output += (localization_addedCard.format(card_id, primary_side, secondary_side, card_level), )
-            if theme_id != -1:
-                AddToThemeCardsTable(theme_id, card_id, cursor)
-                output += (localization_addedThemeCard.format(theme_id, card_id), )
-            if account_id != -1:
-                AddToAccountCardsTable(account_id, card_id, cursor)
-                output += (localization_addedAccountCard.format(account_id, card_id), )
-        else:
-            break
-    return output
-
-def AddToAccountsTable(account_name, cursor):
-    row = GetAccountIdRowByName(account_name, cursor)
-    return row[0] if row else AddNewAccountRow(account_name, cursor)
-
-def GetAccountIdRowByName(account_name, cursor):
-    sql_getAccountId = "Select Account_Id from Accounts where Accounts.Account_Name like '{}'"
-    return GetCurrentRow(sql_getAccountId.format(account_name), cursor)
-
-def AddNewAccountRow(account_name, cursor):
-    sql_getRowCount = "select COUNT(*) from {}"
-    account_id = GetFirstCurrentRowValue(sql_getRowCount.format(db_accountsTableName), cursor)
-    AddRowToTable(db_accountsTableName, f"{account_id}, \'{account_name}\'", cursor)
-    return account_id
-
-def AddToThemesTable(theme_desc, theme_level, cursor):
-    row = GetThemeIdRowByName(theme_desc, cursor)
-    return row[0] if row else AddNewThemeRow(theme_desc, theme_level, cursor)
-
-def GetThemeIdRowByName(theme_desc, cursor):
-    sql_getThemeId = "Select Theme_Id from Themes where Themes.Theme_desc like '{}'"
-    return GetCurrentRow(sql_getThemeId.format(theme_desc), cursor)
-
-def AddNewThemeRow(theme_desc, theme_level, cursor):
-    sql_getRowCount = "select COUNT(*) from {}"
-    theme_id = GetFirstCurrentRowValue(sql_getRowCount.format(db_themesTableName), cursor)
-    AddRowToTable(db_themesTableName, f"{theme_id}, \'{theme_desc}\', {theme_level}", cursor)
-    return theme_id
-
-def AddToCardsTable(primary_side, secondary_side, card_level, cursor):
-    row = GetCardIdRowByPrimarySide(primary_side, cursor)
-    return row[0] if row else AddNewCardRow(primary_side, secondary_side, card_level, cursor)
-
-
-
-def AddToThemeCardsTable(theme_id, card_id, cursor):
-    AddRowToTable(db_themeCardsTableName, f"{theme_id}, {card_id}", cursor)
-
-def AddToAccountCardsTable(account_id, card_id, cursor):
-    AddRowToTable(db_accountCardsTableName, f"{account_id}, {card_id}", cursor)
-
-
-
-#------------------------------------------------------------------------------
+#-----------------------------TODO---------------------------------------------
 
 def ImportCards(cursor):
     print("Импорт карточек из текстового файла.")
