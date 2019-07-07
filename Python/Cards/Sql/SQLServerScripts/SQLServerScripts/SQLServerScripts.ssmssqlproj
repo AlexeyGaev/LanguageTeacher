@@ -55,12 +55,6 @@
           <AssociatedConnUserName />
           <FullPath>06 - Delete data.sql</FullPath>
         </FileNode>
-        <FileNode Name="07 - Insert Python cards.sql">
-          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:HOME\SQLEXPRESS:True</AssociatedConnectionMoniker>
-          <AssociatedConnSrvName>HOME\SQLEXPRESS</AssociatedConnSrvName>
-          <AssociatedConnUserName />
-          <FullPath>07 - Insert Python cards.sql</FullPath>
-        </FileNode>
       </Items>
     </LogicalFolder>
     <LogicalFolder Name="Разное" Type="3" Sorted="true">
