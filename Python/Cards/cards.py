@@ -2,24 +2,23 @@ import pyodbc
 import os
 import msvcrt
 
-from sys import argv
+from sys import argv, exc_info
 from os.path import exists
 from msvcrt import getch
 
 script, db_connection_string = argv
 
 localization_stars = "======================================"
-
-localization_testing_header = "Тестирование:"
 localization_tempImposible = "Временно не поддерживается"
 
 localization_createAllTables = "Создаем все новые таблицы."
 localization_dropAllTables = "Удаляем все существующие таблицы."
 localization_deleteAllTables = "Очищаем все существующие таблицы."
-localization_showTables = "Содержимое таблиц : "
+localization_showTables = "Содержимое таблиц :"
 localization_cardTable = "Таблица карточек :"
 localization_header_importCards = "Импорт карточек из текстового файла."
 localization_dataBaseBeginChanges = "Отправляем изменения в базу данных."
+localization_header_testing = "Тестирование:"
 
 localization_existTable = "Таблица {} существует."
 localization_creatingTable = "Создаем таблицу {}."
@@ -88,6 +87,7 @@ localization_input_createTheme = "Создать тему (1 - да)?"
 localization_input_createCard = "Создать карточку (1 - да)?"
 
 localization_except_main = "Не могу связаться к базой данных. \nРабота с приложением невозможна."
+localization_except_invalidTable = "Проблема с доступом к таблице."
 
 localization_menu_header = "Начинаем работу по заполнению карточек"
 localization_menu_createNewTables = "Создать все новые таблицы"
@@ -104,14 +104,35 @@ localization_menu_exit = "Выход"
 
 currentLog = []
 
+def ExceptError(cursor, e):
+    if e.args[0] == '42S01':
+        tableName = GetTableNameString(GetTableNames(), e.args[1])
+        if tableName:
+            AppendCurrentLog(localization_existTable.format(tableName))
+            ShowTable(tableName, cursor)
+        else:
+            AppendCurrentLog(localization_except_invalidTable)
+    elif e.args[0] == '42S02':
+        tableName = GetTableNameString(GetTableNames(), e.args[1])
+        if tableName:
+            AppendCurrentLog(localization_nothingTable.format(tableName))
+        else:
+            AppendCurrentLog(localization_except_invalidTable)
+    else:
+        AppendCurrentLog(e.args[0])
+
+def GetTableNameString(tableNames, errorDecription):
+    for tableName in tableNames:
+        position = errorDecription.find(tableName)
+        if position > 0 and errorDecription[position - 1] == "\'" and errorDecription[position + len(tableName)] == "\'":
+            return tableName
+    return ""
+
 def InitCurrentLog():
     currentLog.clear()
 
 def AppendCurrentLog(line):
     currentLog.append(line)
-
-def GetFirstCurrentRowValue(script, cursor):
-    return GetCurrentRow(script, cursor)[0]
 
 def GetLinesFromRows(rows, columnCount, delimeter):
     return [GetRowString(row, columnCount, delimeter) for row in rows]
@@ -130,16 +151,8 @@ def GetRowString(row, columnCount, delimeter):
             result += delimeter
     return result
 
-def GetRowsFromTable(script, cursor):
-    cursor.execute(script)
-    return cursor.fetchall()
-
-def GetCurrentRow(script, cursor):
-    cursor.execute(script)
-    return cursor.fetchone()
-
 def GetColumnNames(cursor):
-    return [i[0] for i in cursor.description]
+    return [f"{i[0]} ({i[1].__name__})" for i in cursor.description]
 
 def GetTableHeader(columnNames):
     result = ""
@@ -152,13 +165,13 @@ def GetTableHeader(columnNames):
 
 def HasAllTables(tableNames, cursor):
     for tableName in tableNames:
-        sql_getTableName = "select table_name from information_schema.tables where table_name = '{}'"
-        if not GetCurrentRow(sql_getTableName.format(tableName), cursor):
+        cursor.execute("select table_name from information_schema.tables where table_name = '{}'".format(tableName))
+        if not cursor.fetchone():
             return False
     return True
 
 def GetTableNames():
-    return ('Themes', 'Cards', 'Accounts', 'ThemeCards', 'AccountCards', 'Answers')
+    return ['Themes', 'Cards', 'Accounts', 'ThemeCards', 'AccountCards', 'Answers']
 
 def GetCardColumnNames():
     return "Primary_Side, Secondary_Side, Card_Level, Theme_Desc, Theme_Level, Account_Name"
@@ -171,71 +184,60 @@ def GetSqlAllCards():
     left outer join Accounts on ThemeCards.Card_Id = AccountCards.Card_Id
                     and AccountCards.Account_Id = Accounts.Account_Id"""
 
-#---------------------------- Create Tables -----------------------------------
+def GetCreateTableColumns():
+    return ['Theme_Id integer not null default 1 primary key, Theme_Desc text, Theme_Level text',
+     'Card_Id integer not null default 1 primary key, Primary_Side text, Secondary_Side text, Card_Level text',
+     'Account_Id integer not null default 1 primary key, Account_Name text',
+     'Theme_Id integer not null, Card_Id integer not null',
+     'Account_Id integer not null, Card_Id integer not null',
+     'Answer_Id integer not null default 1 primary key, BeginDateTime DateTime, EndDateTime DateTime, Card_Id integer, AnswerResult integer']
 
-def GetCreateTableScriptTuples():
-    result = ()
-    result += (('Themes', 'Theme_Id integer not null default 1 primary key, Theme_Desc text, Theme_Level text'), )
-    result += (('Cards', 'Card_Id integer not null default 1 primary key, Primary_Side text, Secondary_Side text, Card_Level text'), )
-    result += (('Accounts', 'Account_Id integer not null default 1 primary key, Account_Name text'), )
-    result += (('ThemeCards', 'Theme_Id integer not null, Card_Id integer not null'), )
-    result += (('AccountCards', 'Account_Id integer not null, Card_Id integer not null'), )
-    result += (('Answers', 'Answer_Id integer not null default 1 primary key, BeginDateTime DateTime, EndDateTime DateTime, Card_Id integer, AnswerResult integer'), )
+def GetCreateTableScripts(tableNames, tableColumnsNames):
+    result = []
+    for i in range(len(tableNames)):
+        result.append((tableNames[i], tableColumnsNames[i]))
     return result
 
-def CreateTables(tableScriptTuples, cursor):
-    AppendCurrentLog(localization_createAllTables)
-    for tableScriptTuple in tableScriptTuples:
-        CreateTable(tableScriptTuple, cursor)
+#---------------------------- Create Tables -----------------------------------
 
-def CreateTable(tableScriptTuple, cursor):
-    tableName = tableScriptTuple[0]
-    createColumns = tableScriptTuple[1]
-    sql_getTableName = "select table_name from information_schema.tables where table_name = '{}'"
-    if GetCurrentRow(sql_getTableName.format(tableName), cursor):
-        AppendCurrentLog(localization_existTable.format(tableName))
-    else:
-        AppendCurrentLog(localization_creatingTable.format(tableName))
-        sql_createTable = "Create table {}({})"
-        cursor.execute(sql_createTable.format(tableName, createColumns))
-    sql_getTableColumnDescriptions = "select column_name, data_type from information_schema.columns where table_name like '{}' order by ordinal_position"
-    AppendCurrentLog(localization_headerTableColumnDescriptions)
-    for line in GetLinesFromRows(GetRowsFromTable(sql_getTableColumnDescriptions.format(tableName), cursor), 2, ", "):
-        AppendCurrentLog(line)
-    ShowTableCore(tableName, cursor)
-    AppendCurrentLog(localization_stars)
+def CreateTables(tableScripts, cursor):
+    AppendCurrentLog(localization_createAllTables)
+    for tableScript in tableScripts:
+        tableName = tableScript[0]
+        try:
+            cursor.execute("Create table {}({})".format(tableName, tableScript[1]))
+        except Exception as e:
+            ExceptError(cursor, e)
+        else:
+            AppendCurrentLog(localization_creatingTable.format(tableName))
+            ShowTable(tableName, cursor)
+        AppendCurrentLog(localization_stars)
 
 #-------------------------------- DropTables ----------------------------------
 
 def DropTables(tableNames, cursor):
     AppendCurrentLog(localization_dropAllTables)
     for tableName in tableNames:
-        DropTable(tableName, cursor)
+        try:
+            cursor.execute("drop table {}".format(tableName))
+        except Exception as e:
+            ExceptError(cursor, e)
+        else:
+            AppendCurrentLog(localization_dropTable.format(tableName))
     AppendCurrentLog(localization_stars)
-
-def DropTable(tableName, cursor):
-    sql_getTableName = "select table_name from information_schema.tables where table_name = '{}'"
-    if not GetCurrentRow(sql_getTableName.format(tableName), cursor):
-        AppendCurrentLog(localization_nothingTable.format(tableName))
-        return
-    AppendCurrentLog(localization_dropTable.format(tableName))
-    cursor.execute("drop table {}".format(tableName))
 
 #------------------------------- Clear Tables ---------------------------------
 
 def ClearTables(tableNames, cursor):
     AppendCurrentLog(localization_deleteAllTables)
     for tableName in tableNames:
-        ClearTable(tableName, cursor)
+        try:
+            cursor.execute("delete from {}".format(tableName))
+        except Exception as e:
+            ExceptError(cursor, e)
+        else:
+            AppendCurrentLog(localization_deleteTable.format(tableName))
     AppendCurrentLog(localization_stars)
-
-def ClearTable(tableName, cursor):
-    sql_getTableName = "select table_name from information_schema.tables where table_name = '{}'"
-    if not GetCurrentRow(sql_getTableName.format(tableName), cursor):
-        AppendCurrentLog(localization_nothingTable.format(tableName))
-        return
-    AppendCurrentLog(localization_deleteTable.format(tableName))
-    cursor.execute("delete from {}".format(tableName))
 
 #------------------------------- Show Tables ----------------------------------
 
@@ -246,61 +248,53 @@ def ShowTables(tableNames, cursor):
         AppendCurrentLog(localization_stars)
 
 def ShowTable(tableName, cursor):
-    sql_getTableName = "select table_name from information_schema.tables where table_name = '{}'"
-    if not GetCurrentRow(sql_getTableName.format(tableName), cursor):
-        AppendCurrentLog(localization_nothingTable.format(tableName))
-        return
-    ShowTableCore(tableName, cursor)
+    try:
+        cursor.execute("select * from {}".format(tableName))
+    except Exception as e:
+        ExceptError(cursor, e)
+    else:
+        rows = cursor.fetchall()
+        if not rows:
+            AppendCurrentLog(GetTableHeader(GetColumnNames(cursor)))
+            AppendCurrentLog(localization_emptyTable.format(tableName))
+            return
+        AppendCurrentLog(localization_showTable.format(tableName))
+        ShowQueryTable(rows, cursor)
 
-def ShowTableCore(tableName, cursor):
-    sql_select = "select * from {}"
-    rows = GetRowsFromTable(sql_select.format(tableName), cursor)
-    if not rows:
-        AppendCurrentLog(localization_emptyTable.format(tableName))
-        return
-    AppendCurrentLog(localization_showTable.format(tableName))
+def ShowQueryTable(rows, cursor):
     columnNames = GetColumnNames(cursor)
     AppendCurrentLog(GetTableHeader(columnNames))
-    lines = GetLinesFromRows(rows, len(columnNames), ", ")
-    for line in lines:
+    for line in GetLinesFromRows(rows, len(columnNames), ", "):
         AppendCurrentLog(line)
 
 #------------------------------ Show Cards ------------------------------------
 
 def ShowCards(tableNames, cursor):
-    if not HasAllTables(tableNames, cursor):
-        AppendCurrentLog(localization_invalidAllTables)
-        AppendCurrentLog(localization_cantShowCards)
-        AppendCurrentLog(localization_stars)
-        return
-    rows = GetRowsFromTable(GetSqlAllCards(), cursor)
-    if not rows:
-        AppendCurrentLog(localization_nothingCardTable)
-        AppendCurrentLog(localization_stars)
-        return
     AppendCurrentLog(localization_cardTable)
-    columnNames = GetColumnNames(cursor)
-    AppendCurrentLog(GetTableHeader(columnNames))
-    lines = GetLinesFromRows(rows, len(columnNames), ", ")
-    for line in lines:
-        AppendCurrentLog(line)
+    try:
+        cursor.execute(GetSqlAllCards())
+    except Exception as e:
+        ExceptError(cursor, e)
+    else:
+        rows = cursor.fetchall()
+        if not rows:
+            AppendCurrentLog(localization_nothingCardTable)
+            AppendCurrentLog(localization_stars)
+            return
+        ShowQueryTable(rows, cursor)
     AppendCurrentLog(localization_stars)
 
 #------------------------------ Add Cards -------------------------------------
 
 def AddCards(tableNames, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, cursor):
-    if not HasAllTables(tableNames, cursor):
-        AppendCurrentLog(localization_invalidAllTables)
-        AppendCurrentLog(localization_cantAddCards)
-        AppendCurrentLog(localization_stars)
-        return
     AppendCurrentLog(localization_addCards)
     AppendCurrentLog(localization_inputAccountAndTheme)
     for inputArg in InputAddCards():
         AddCard(inputArg, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, cursor)
+        AppendCurrentLog(localization_stars)
 
 def InputAddCards():
-    result = ()
+    result = []
     while True:
         if input(localization_input_createCard) == "1":
             primary_side = input("Primary Side : ")
@@ -314,7 +308,7 @@ def InputAddCards():
                 theme_level = input("Theme Level : ")
             if input(localization_input_createAccount) == "1":
                 account_name = input("Account : ")
-            result += ((primary_side, secondary_side, card_level, theme_desc, theme_level, account_name), )
+            result.append((primary_side, secondary_side, card_level, theme_desc, theme_level, account_name))
         else:
             break
     return result
@@ -332,36 +326,57 @@ def AddCard(inputArg, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, cursor):
         AppendCurrentLog(localization_cantAddCard)
         AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
         AddAccount(account_name, hasUpdateAccount, cursor)
-        AppendCurrentLog(localization_stars)
         return
-    sql_where = "cards.primary_side like \'{}\'".format(primary_side)
-    card_id_row = GetIdRow('card_id', 'cards', sql_where, cursor)
-    if card_id_row:
-        card_id = card_id_row[0]
-        AppendCurrentLog(localization_existCard.format(card_id, primary_side))
-        if hasUpdateCard:
-            update_set = "primary_side = \'{}\', secondary_side = \'{}\', card_level = \'{}\'".format(primary_side, secondary_side, card_level)
-            update_where = "card_id = {}".format(card_id)
-            UpdateRow('cards', update_set, update_where, cursor)
-            AppendCurrentLog(localization_updateSuccessCard)
-            theme_id = AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
-            account_id = AddAccount(account_name, hasUpdateAccount, cursor)
-            AddThemeCard(theme_id, card_id, cursor)
-            AddAccountCard(account_id, card_id, cursor)
-        else:
-            AppendCurrentLog(localization_ignoreAddCard)
-            AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
-            AddAccount(account_name, hasUpdateAccount, cursor)
+    try:
+        cursor.execute("Select Card_Id from Cards where Cards.Primary_Side like \'{}\'".format(primary_side))
+    except Exception as e:
+        ExceptError(cursor, e)
+        AppendCurrentLog(localization_cantAddCard)
+        AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
+        AddAccount(account_name, hasUpdateAccount, cursor)
     else:
-        card_id = CreateId('cards', cursor)
-        values = "{}, \'{}\', \'{}\', \'{}\'".format(card_id, primary_side, secondary_side, card_level)
-        AddRow('cards', values, cursor)
-        AppendCurrentLog(localization_addedCard.format(card_id, primary_side, secondary_side, card_level))
-        theme_id = AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
-        account_id = AddAccount(account_name, hasUpdateAccount, cursor)
-        AddThemeCard(theme_id, card_id, cursor)
-        AddAccountCard(account_id, card_id, cursor)
-    AppendCurrentLog(localization_stars)
+        card_id_row = cursor.fetchone()
+        if card_id_row:
+            card_id = card_id_row[0]
+            AppendCurrentLog(localization_existCard.format(card_id, primary_side))
+            if hasUpdateCard:
+                try:
+                    cursor.execute("update Cards set Primary_Side = \'{}\', Secondary_Side = \'{}\', Card_Level = \'{}\' where card_id = {}".format(primary_side, secondary_side, card_level, card_id))
+                except Exception as e:
+                    ExceptError(cursor, e)
+                    AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
+                    AddAccount(account_name, hasUpdateAccount, cursor)
+                else:
+                    AppendCurrentLog(localization_updateSuccessCard)
+                    theme_id = AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
+                    account_id = AddAccount(account_name, hasUpdateAccount, cursor)
+                    AddThemeCard(theme_id, card_id, cursor)
+                    AddAccountCard(account_id, card_id, cursor)
+            else:
+                AppendCurrentLog(localization_ignoreAddCard)
+                AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
+                AddAccount(account_name, hasUpdateAccount, cursor)
+        else:
+            try:
+                cursor.execute("select COUNT(*) from Cards")
+            except Exception as e:
+                ExceptError(cursor, e)
+                AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
+                AddAccount(account_name, hasUpdateAccount, cursor)
+            else:
+                card_id = cursor.fetchone()[0]
+                try:
+                    cursor.execute("Insert into Cards values({}, \'{}\', \'{}\', \'{}\')".format(card_id, primary_side, secondary_side, card_level))
+                except Exception as e:
+                    ExceptError(cursor, e)
+                    AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
+                    AddAccount(account_name, hasUpdateAccount, cursor)
+                else:
+                    AppendCurrentLog(localization_addedCard.format(card_id, primary_side, secondary_side, card_level))
+                    theme_id = AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor)
+                    account_id = AddAccount(account_name, hasUpdateAccount, cursor)
+                    AddThemeCard(theme_id, card_id, cursor)
+                    AddAccountCard(account_id, card_id, cursor)
 
 def AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor):
     AppendCurrentLog(localization_addCurrentTheme)
@@ -369,20 +384,42 @@ def AddTheme(theme_desc, theme_level, hasUpdateTheme, cursor):
         AppendCurrentLog(localization_emptyTwoFields.format("theme_desc", "theme_level"))
         AppendCurrentLog(localization_cantAddTheme)
         return -1
-    theme_id_row = GetIdRow('theme_id', 'themes', GetThemeIdWhere(theme_desc, theme_level), cursor)
-    if not theme_id_row:
-        theme_id = CreateId('theme_id', cursor)
-        AddRow('themes', GetThemeAddValues(theme_id, theme_desc, theme_level), cursor)
-        AppendCurrentLog(localization_addedTheme.format(theme_id, theme_desc, theme_level))
-        return theme_id
-    theme_id = theme_id_row[0]
-    AppendCurrentLog(localization_existThemeCard.format(theme_id, theme_desc, theme_level))
-    if hasUpdateTheme:
-        UpdateRow('themes', GetThemeUpdateSet(theme_desc, theme_level), "theme_id = {}".format(theme_id), cursor)
-        AppendCurrentLog(localization_updateSuccessTheme)
+    try:
+        cursor.execute("Select Theme_Id from Themes where {}".format(GetThemeIdWhere(theme_desc, theme_level)))
+    except Exception as e:
+        ExceptError(cursor, e)
+        return -1
     else:
-        AppendCurrentLog(localization_ignoreAddTheme)
-    return theme_id
+        theme_id_row = cursor.fetchone()
+        if not theme_id_row:
+            try:
+                cursor.execute("Select COUNT(*) from Themes")
+            except Exception as e:
+                ExceptError(cursor, e)
+                return -1
+            else:
+                theme_id = cursor.fetchone()[0]
+                try:
+                    cursor.execute("Insert into Themes values({})".format(GetThemeAddValues(theme_id, theme_desc, theme_level)))
+                except Exception as e:
+                    ExceptError(cursor, e)
+                    return -1
+                else:
+                    AppendCurrentLog(localization_addedTheme.format(theme_id, theme_desc, theme_level))
+                    return theme_id
+        theme_id = theme_id_row[0]
+        AppendCurrentLog(localization_existThemeCard.format(theme_id, theme_desc, theme_level))
+        if hasUpdateTheme:
+            try:
+                cursor.execute("Update Themes set {} where Theme_Id = {}".format(GetThemeUpdateSet(theme_desc, theme_level), theme_id))
+            except Exception as e:
+                ExceptError(cursor, e)
+                return -1
+            else:
+                AppendCurrentLog(localization_updateSuccessTheme)
+        else:
+            AppendCurrentLog(localization_ignoreAddTheme)
+        return theme_id
 
 def GetThemeAddValues(theme_id, theme_desc, theme_level):
     if not theme_desc:
@@ -406,55 +443,66 @@ def AddAccount(account_name, hasUpdateAccount, cursor):
         AppendCurrentLog(localization_emptyOneField.format("account_name"))
         AppendCurrentLog(localization_cantAddAccount)
         return -1
-    sql_where = "accounts.account_name = \'{}\'".format(account_name)
-    account_id_row = GetIdRow('account_id', 'accounts', sql_where, cursor)
-    if not account_id_row:
-        account_id = CreateId('accounts', cursor)
-        values = "{}, \'{}\', \'{}\', \'{}\'".format(account_id, account_name)
-        AddRow('accounts', values, cursor)
-        AppendCurrentLog(localization_addedAccount.format(account_id, account_name))
-        return account_id
-    account_id = account_id_row[0]
-    AppendCurrentLog(localization_existAccount.format(account_id, account_name))
-    if hasUpdateAccount:
-        UpdateRow('accounts', "account_name = \'{}\'".format(account_name), "account_id = {}".format(account_id), cursor)
-        AppendCurrentLog(localization_updateSuccessAccount)
+    try:
+        cursor.execute("Select Account_Id from Accounts where Accounts.Account_Name = \'{}\'".format(account_name))
+    except Exception as e:
+        ExceptError(cursor, e)
+        return -1
     else:
-        AppendCurrentLog(localization_ignoreAddAccount)
-    return account_id
+        account_id_row = cursor.fetchone()
+        if not account_id_row:
+            try:
+                cursor.execute("select COUNT(*) from Accounts")
+            except Exception as e:
+                ExceptError(cursor, e)
+                return -1
+            else:
+                account_id = cursor.fetchone()[0]
+                try:
+                    cursor.execute("Insert into Accounts values({}, \'{}\')".format(account_id, account_name))
+                except Exception as e:
+                    ExceptError(cursor, e)
+                    return -1
+                else:
+                    AppendCurrentLog(localization_addedAccount.format(account_id, account_name))
+                    return account_id
+        account_id = account_id_row[0]
+        AppendCurrentLog(localization_existAccount.format(account_id, account_name))
+        if hasUpdateAccount:
+            try:
+                cursor.execute("Update Accounts set Account_Name = \'{}\' where account_id = {}".format(account_name, account_id))
+            except Exception as e:
+                ExceptError(cursor, e)
+                return -1
+            else:
+                AppendCurrentLog(localization_updateSuccessAccount)
+        else:
+            AppendCurrentLog(localization_ignoreAddAccount)
+        return account_id
 
 def AddThemeCard(theme_id, card_id, cursor):
-    if theme_id == -1:
+    if theme_id == -1 or card_id == -1:
         return
-    AddRow('ThemeCards', "{}, {}".format(theme_id, card_id), cursor)
-    AppendCurrentLog(localization_addedThemeCard.format(theme_id, card_id))
+    try:
+        cursor.execute("insert into ThemeCards values({}, {})".format(theme_id, card_id))
+    except Exception as e:
+        ExceptError(cursor, e)
+    else:
+        AppendCurrentLog(localization_addedThemeCard.format(theme_id, card_id))
 
 def AddAccountCard(account_id, card_id, cursor):
-    if account_id == -1:
+    if account_id == -1 or card_id == -1:
         return
-    AddRow('AccountCards', "{}, {}".format(account_id, card_id), cursor)
-    AppendCurrentLog(localization_addedAccountCard.format(account_id, card_id))
-
-def GetIdRow(sql_select, sql_from, sql_where, cursor):
-    return GetCurrentRow("Select {} from {} where {}".format(sql_select, sql_from, sql_where), cursor)
-
-def CreateId(tableName, cursor):
-    return GetCurrentRow("select COUNT(*) from {}".format(tableName), cursor)[0]
-
-def UpdateRow(tableName, set, where, cursor):
-    cursor.execute("update {} set {} where {}".format(tableName, set, where))
-
-def AddRow(tableName, values, cursor):
-    cursor.execute("insert into {} values({})".format(tableName, values))
+    try:
+        cursor.execute("Insert into AccountCards values({}, {})".format(account_id, card_id))
+    except Exception as e:
+        ExceptError(cursor, e)
+    else:
+        AppendCurrentLog(localization_addedAccountCard.format(account_id, card_id))
 
 #----------------------------- Import Cards -----------------------------------
 
-def InputCards(fileName, tableNames, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, cursor):
-    if not HasAllTables(tableNames, cursor):
-        AppendCurrentLog(localization_invalidAllTables)
-        AppendCurrentLog(localization_cantImportCards)
-        AppendCurrentLog(localization_stars)
-        return
+def ImportCards(fileName, tableNames, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, cursor):
     AppendCurrentLog(localization_header_importCards)
     fileName = fileName.strip()
     if not fileName:
@@ -463,11 +511,17 @@ def InputCards(fileName, tableNames, hasUpdateCard, hasUpdateTheme, hasUpdateAcc
         AppendCurrentLog(localization_stars)
         return
     if not exists(fileName):
-        AppendCurrentLog(localization_import_invalidFileName.format(file_name))
+        AppendCurrentLog(localization_import_invalidFileName.format(fileName))
         AppendCurrentLog(localization_cantImportCards)
         AppendCurrentLog(localization_stars)
         return
-    inputArgs = InputImportCards(fileName)
+    linesFromFile = GetLinesFromFile(fileName)
+    if not linesFromFile:
+        AppendCurrentLog(localization_import_nothingLinesCards)
+        AppendCurrentLog(localization_cantImportCards)
+        AppendCurrentLog(localization_stars)
+        return
+    inputArgs = InputImportCards(linesFromFile)
     if not inputArgs:
         AppendCurrentLog(localization_import_nothingLinesCards)
         AppendCurrentLog(localization_cantImportCards)
@@ -475,13 +529,11 @@ def InputCards(fileName, tableNames, hasUpdateCard, hasUpdateTheme, hasUpdateAcc
         return
     for inputArg in inputArgs:
         AddCard(inputArg, hasUpdateCard, hasUpdateTheme, hasUpdateAccount, cursor)
+        AppendCurrentLog(localization_stars)
 
-def InputImportCards(file_name):
-    result = ()
-    lines = GetLinesFromFile(file_name)
-    if not lines:
-        return result
-    for line in lines:
+def InputImportCards(linesFromFile):
+    result = []
+    for line in linesFromFile:
         lineItems = line.split(',')
         primary_side = lineItems[0].strip()
         secondary_side = lineItems[1].strip()
@@ -489,7 +541,7 @@ def InputImportCards(file_name):
         theme_desc = lineItems[3].strip()
         theme_level = lineItems[4].strip()
         account_name = lineItems[5].strip()
-        result += ((primary_side, secondary_side, card_level, theme_desc, theme_level, account_name), )
+        result.append((primary_side, secondary_side, card_level, theme_desc, theme_level, account_name))
     return result
 
 def GetLinesFromFile(file_name):
@@ -501,48 +553,50 @@ def GetLinesFromFile(file_name):
 #----------------------------- Export Cards -----------------------------------
 
 def ExportCards(fileName, tableNames, exportType, cursor):
-    if not HasAllTables(tableNames, cursor):
-        AppendCurrentLog(localization_invalidAllTables)
-        AppendCurrentLog(localization_cantExportCards)
-        AppendCurrentLog(localization_stars)
-        return
     AppendCurrentLog(localization_export_header)
-    rows = GetRowsFromTable(GetSqlAllCards(), cursor)
-    if not rows:
-        AppendCurrentLog(localization_nothingCardTable)
+    try:
+        cursor.execute(GetSqlAllCards())
+    except Exception as e:
+        ExceptError(cursor, e)
         AppendCurrentLog(localization_cantExportCards)
         AppendCurrentLog(localization_stars)
-        return
-    AppendCurrentLog(localization_export_allCards)
-    AppendCurrentLog(GetCardColumnNames())
-    linesFromRows = GetLinesFromRows(rows, 6, ", ")
-    for line in linesFromRows:
-        AppendCurrentLog(line)
-    fileName = fileName.strip()
-    if not fileName:
-        AppendCurrentLog(localization_export_emptyFileName)
-        AppendCurrentLog(localization_cantExportCards)
-        AppendCurrentLog(localization_stars)
-        return
-    if not exists(fileName):
-        AppendCurrentLog(localization_export_createNewFile.format(fileName))
-        ExportToNewTxtFile(fileName, linesFromRows)
+    else:
+        rows = cursor.fetchall()
+        if not rows:
+            AppendCurrentLog(localization_nothingCardTable)
+            AppendCurrentLog(localization_cantExportCards)
+            AppendCurrentLog(localization_stars)
+            return
+        AppendCurrentLog(localization_export_allCards)
+        AppendCurrentLog(GetCardColumnNames())
+        linesFromRows = GetLinesFromRows(rows, 6, ", ")
+        for line in linesFromRows:
+            AppendCurrentLog(line)
+        fileName = fileName.strip()
+        if not fileName:
+            AppendCurrentLog(localization_export_emptyFileName)
+            AppendCurrentLog(localization_cantExportCards)
+            AppendCurrentLog(localization_stars)
+            return
+        if not exists(fileName):
+            AppendCurrentLog(localization_export_createNewFile.format(fileName))
+            ExportToNewTxtFile(fileName, linesFromRows)
+            ShowTextFile(fileName);
+            AppendCurrentLog(localization_stars)
+            return
+        AppendCurrentLog(localization_export_contentFile.format(fileName))
+        linesFromFile = GetLinesFromFile(fileName)
+        if exportType == 1:
+            AppendCurrentLog(localization_export_rewriteFile.format(fileName))
+            ExportToNewTxtFile(fileName, linesFromRows)
+        if exportType == 2:
+            AppendCurrentLog(localization_export_addToFile.format(fileName))
+            ExportToEndTxtFile(fileName, linesFromRows)
+        if exportType == 3:
+            AppendCurrentLog(localization_export_updateFile.format(fileName))
+            ExportToNewTxtFile(fileName, JoinLines(linesFromFile, linesFromRows, 6, ','))
         ShowTextFile(fileName);
         AppendCurrentLog(localization_stars)
-        return
-    AppendCurrentLog(localization_export_contentFile.format(fileName))
-    linesFromFile = GetLinesFromFile(fileName)
-    if exportType == 1:
-        AppendCurrentLog(localization_export_rewriteFile.format(fileName))
-        ExportToNewTxtFile(fileName, linesFromRows)
-    if exportType == 2:
-        AppendCurrentLog(localization_export_addToFile.format(fileName))
-        ExportToEndTxtFile(fileName, linesFromRows)
-    if exportType == 3:
-        AppendCurrentLog(localization_export_updateFile.format(fileName))
-        ExportToNewTxtFile(fileName, JoinLines(linesFromFile, linesFromRows, 6, ','))
-    ShowTextFile(fileName);
-    AppendCurrentLog(localization_stars)
 
 def ExportToNewTxtFile(file_name, lines):
     txt_file = open(file_name, 'w')
@@ -596,7 +650,7 @@ def CommitChanges(cursor):
 #----------------------------- Run Testing ------------------------------------
 
 def RunTesting(cursor):
-    AppendCurrentLog(localization_testing_header)
+    AppendCurrentLog(localization_header_testing)
     AppendCurrentLog(localization_tempImposible)
     AppendCurrentLog(localization_stars)
 
@@ -668,7 +722,7 @@ def GetExportType(key):
 def MainMenu(cursor):
     mainMenu = CreateMainMenu()
     tableNames = GetTableNames()
-    createTablesScriptTuples = GetCreateTableScriptTuples()
+    createTablesScripts = GetCreateTableScripts(tableNames, GetCreateTableColumns())
     exportMenu = CreateExportMenu()
     while True:
         ClearScreen()
@@ -679,7 +733,7 @@ def MainMenu(cursor):
         if actionType == 1:
             ClearScreen()
             InitCurrentLog()
-            CreateTables(createTablesScriptTuples, cursor)
+            CreateTables(createTablesScripts, cursor)
             AppendCurrentLog(localization_input_pressAnyKey)
             PrintLines(currentLog)
             getch()
