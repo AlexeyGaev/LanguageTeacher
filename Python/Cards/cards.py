@@ -27,25 +27,19 @@ localization_except_existTable = "Таблица {} существует."
 localization_except_nothingTable = "Таблица {} не существует."
 localization_except_invalidTable = "Проблема с доступом к таблице."
 
-localization_header_createAllTables = "Создаем все новые таблицы."
-localization_header_dropAllTables = "Удаляем все существующие таблицы."
-localization_header_deleteAllTables = "Очищаем все существующие таблицы."
 localization_header_showTables = "Вывод содержимого таблиц."
 localization_header_cardTable = "Вывод базы карточек."
+
 localization_header_addCards = "Добавляем карточки в таблицы."
 localization_header_importCards = "Импорт карточек из текстового файла."
 localization_header_exportCards = "Экспорт карточек в текстовый файл."
 localization_header_applyChanges = "Отправляем изменения в базу данных."
 localization_header_testing = "Тестирование."
 
-localization_createAllTables_creatingTable = "Создаем таблицу {}."
-
-localization_dropAllTables_dropTable = "Удаляем таблицу {}."
-
-localization_deleteAllTables_deleteTable = "Очищаем таблицу {}."
-
-localization_showTables_showTable = "Содержимое таблицы {}:"
-localization_showCards_emptyTable = "Таблица {} пустая."
+localization_showTables_notEmptyTable = "Содержимое таблицы {}:"
+localization_showTables_emptyTable = "Таблица {} пустая."
+localization_showCards_emptyTable = "Таблица карточек пустая."
+localization_showCards_notEmptyTable = "Таблица карточек :"
 
 localization_addCards_input_createAccount = "Создать пользователя (1 - да)?"
 localization_addCards_input_createTheme = "Создать тему (1 - да)?"
@@ -105,28 +99,29 @@ localization_tempImposible = "Временно не поддерживается
 currentLog = []
 
 def ExceptError(cursor, e):
+
+    def GetTableName(errorDecription):
+        for tableName in GetTableNames():
+            position = errorDecription.find(tableName)
+            if position > 0 and errorDecription[position - 1] == "\'" and errorDecription[position + len(tableName)] == "\'":
+                return tableName
+        return ""
+
     if e.args[0] == '42S01':
-        tableName = GetTableNameString(GetTableNames(), e.args[1])
+        tableName = GetTableName(e.args[1])
         if tableName:
             AppendCurrentLog(localization_except_existTable.format(tableName))
             ShowTable(tableName, cursor)
         else:
             AppendCurrentLog(localization_except_invalidTable)
     elif e.args[0] == '42S02':
-        tableName = GetTableNameString(GetTableNames(), e.args[1])
+        tableName = GetTableName(e.args[1])
         if tableName:
             AppendCurrentLog(localization_except_nothingTable.format(tableName))
         else:
             AppendCurrentLog(localization_except_invalidTable)
     else:
-        AppendCurrentLog(e.args[0])
-
-def GetTableNameString(tableNames, errorDecription):
-    for tableName in tableNames:
-        position = errorDecription.find(tableName)
-        if position > 0 and errorDecription[position - 1] == "\'" and errorDecription[position + len(tableName)] == "\'":
-            return tableName
-    return ""
+        AppendCurrentLog(e.args[1])
 
 def InitCurrentLog():
     currentLog.clear()
@@ -163,80 +158,113 @@ def GetTableHeader(columnNames):
             result += ", "
     return result
 
-def HasAllTables(tableNames, cursor):
-    for tableName in tableNames:
-        cursor.execute("select table_name from information_schema.tables where table_name = '{}'".format(tableName))
-        if not cursor.fetchone():
-            return False
-    return True
+# -------------------- SQL Scripts (TODO : move to txt file) ------------------
 
 def GetTableNames():
-    return ['Themes', 'Cards', 'Accounts', 'ThemeCards', 'AccountCards', 'Answers']
+    return [
+    'Themes',
+    'Cards',
+    'Accounts',
+    'ThemeCards',
+    'AccountCards',
+    'Answers'
+    ]
 
-def GetCardColumnNames():
-    return "Primary_Side, Secondary_Side, Card_Level, Theme_Desc, Theme_Level, Account_Name"
+def GetCreateTableScripts():
+    return {
+    'Themes': 'Create table Themes(Theme_Id integer not null default 1 primary key, Theme_Desc text, Theme_Level text)',
+    'Cards': 'Create table Cards(Card_Id integer not null default 1 primary key, Primary_Side text, Secondary_Side text, Card_Level text)',
+    'Accounts': 'Create table Accounts(Account_Id integer not null default 1 primary key, Account_Name text)',
+    'ThemeCards': 'Create table ThemeCards(Theme_Id integer not null, Card_Id integer not null)',
+    'AccountCards': 'Create table AccountCards(Account_Id integer not null, Card_Id integer not null)',
+    'Answers': 'Create table Answers(Answer_Id integer not null default 1 primary key, BeginDateTime DateTime, EndDateTime DateTime, Card_Id integer, AnswerResult integer)'
+    }
 
-def GetSqlAllCards():
-    return """Select Primary_side, Secondary_side, Card_Level, Theme_desc, Theme_Level, Account_Name from Cards
+def GetDropTableScripts():
+    return {
+    'Themes': 'Drop table Themes',
+    'Cards': 'Drop table Cards',
+    'Accounts': 'Drop table Accounts',
+    'ThemeCards': 'Drop table ThemeCards',
+    'AccountCards': 'Drop table AccountCards',
+    'Answers': 'Drop table Answers'
+    }
+
+def GetDeleteFromTableScripts():
+    return {
+    'Themes': 'Delete from Themes',
+    'Cards': 'Delete from Cards',
+    'Accounts': 'Delete from Accounts',
+    'ThemeCards': 'Delete from ThemeCards',
+    'AccountCards': 'Delete from AccountCards',
+    'Answers': 'Delete from Answers'
+    }
+
+def GetSelectAllFromTableScripts():
+    return {
+    'Themes': 'Select * from Themes',
+    'Cards': 'Select * from Cards',
+    'Accounts': 'Select * from Accounts',
+    'ThemeCards': 'Select * from ThemeCards',
+    'AccountCards': 'Select * from AccountCards',
+    'Answers': 'Select * from Answers'
+    }
+
+def GetAllCardsScript():
+    return """
+    Select Primary_side, Secondary_side, Card_Level, Theme_desc, Theme_Level, Account_Name from Cards
     left outer join ThemeCards on ThemeCards.Card_Id = Cards.Card_Id
     left outer join Themes on ThemeCards.Theme_Id = Themes.Theme_Id
     left outer join AccountCards on AccountCards.Card_Id = Cards.Card_Id
-    left outer join Accounts on ThemeCards.Card_Id = AccountCards.Card_Id
-                    and AccountCards.Account_Id = Accounts.Account_Id"""
+    left outer join Accounts on ThemeCards.Card_Id = AccountCards.Card_Id and AccountCards.Account_Id = Accounts.Account_Id
+    """
 
-def GetCreateTableColumns():
-    return ['Theme_Id integer not null default 1 primary key, Theme_Desc text, Theme_Level text',
-     'Card_Id integer not null default 1 primary key, Primary_Side text, Secondary_Side text, Card_Level text',
-     'Account_Id integer not null default 1 primary key, Account_Name text',
-     'Theme_Id integer not null, Card_Id integer not null',
-     'Account_Id integer not null, Card_Id integer not null',
-     'Answer_Id integer not null default 1 primary key, BeginDateTime DateTime, EndDateTime DateTime, Card_Id integer, AnswerResult integer']
+#------------------- Lacalization (TODO : move to txt file) -------------------
 
-def GetCreateTableScripts(tableNames, tableColumnsNames):
-    result = []
-    for i in range(len(tableNames)):
-        result.append((tableNames[i], tableColumnsNames[i]))
-    return result
+def GetSimpleTablesOperations():
+    return [
+    'Create',
+    'Drop',
+    'Delete'
+    ]
 
-#---------------------------- Create Tables -----------------------------------
+def GetSimpleTablesOperationHeaders():
+    return {
+    'Create': 'Создаем все новые таблицы.',
+    'Drop': 'Удаляем все существующие таблицы.',
+    'Delete': 'Очищаем все существующие таблицы.'
+    }
 
-def CreateTables(tableScripts, cursor):
-    AppendCurrentLog(localization_header_createAllTables)
-    for tableScript in tableScripts:
-        tableName = tableScript[0]
-        try:
-            cursor.execute("Create table {}({})".format(tableName, tableScript[1]))
-        except Exception as e:
-            ExceptError(cursor, e)
-        else:
-            AppendCurrentLog(localization_createAllTables_creatingTable.format(tableName))
-            ShowTable(tableName, cursor)
+def GetSimpleTableOperationsSuccessMessages():
+    return {
+    'Create': "Создаем таблицу {}.",
+    'Drop': "Удаляем таблицу {}.",
+    'Delete': "Очищаем таблицу {}."
+    }
 
-#-------------------------------- DropTables ----------------------------------
+def GetSimpleTableOperationsScripts():
+    return {
+    'Create': GetCreateTableScripts(),
+    'Drop': GetDropTableScripts(),
+    'Delete': GetDeleteFromTableScripts()
+    }
 
-def DropTables(tableNames, cursor):
-    AppendCurrentLog(localization_header_dropAllTables)
+#---------------------------- Create/Drop/Delete Tables -----------------------
+
+def RunSimpleTableOperation(tableNames, operation, cursor):
+    header = GetSimpleTablesOperationHeaders()[operation]
+    scripts = GetSimpleTableOperationsScripts()[operation]
+    successTableMessage = GetSimpleTableOperationsSuccessMessages()[operation]
+    AppendCurrentLog(header)
     for tableName in tableNames:
         try:
-            cursor.execute("drop table {}".format(tableName))
+            cursor.execute(scripts[tableName])
         except Exception as e:
             ExceptError(cursor, e)
         else:
-            AppendCurrentLog(localization_dropAllTables_dropTable.format(tableName))
+            AppendCurrentLog(successTableMessage.format(tableName))
 
-#------------------------------- Clear Tables ---------------------------------
-
-def ClearTables(tableNames, cursor):
-    AppendCurrentLog(localization_header_deleteAllTables)
-    for tableName in tableNames:
-        try:
-            cursor.execute("delete from {}".format(tableName))
-        except Exception as e:
-            ExceptError(cursor, e)
-        else:
-            AppendCurrentLog(localization_deleteAllTables_deleteTable.format(tableName))
-
-#------------------------------- Show Tables ----------------------------------
+#------------------------------- Show Tables/Cards ----------------------------
 
 def ShowTables(tableNames, cursor):
     AppendCurrentLog(localization_header_showTables)
@@ -244,39 +272,36 @@ def ShowTables(tableNames, cursor):
         ShowTable(tableName, cursor)
 
 def ShowTable(tableName, cursor):
+    ShowTableQuery("",
+    "select * from {}".format(tableName),
+    localization_showTables_notEmptyTable.format(tableName),
+    localization_showTables_emptyTable.format(tableName),
+    cursor)
+
+def ShowCardsQuery(cursor):
+    ShowTableQuery(localization_header_cardTable,
+    GetAllCardsScript(),
+    localization_showCards_notEmptyTable,
+    localization_showCards_emptyTable, cursor)
+
+def ShowTableQuery(header, script, notEmptyTableHeader, emptyTableHeader, cursor):
+    if header:
+        AppendCurrentLog(header)
     try:
-        cursor.execute("select * from {}".format(tableName))
+        cursor.execute(script)
     except Exception as e:
         ExceptError(cursor, e)
     else:
         rows = cursor.fetchall()
-        if not rows:
-            AppendCurrentLog(GetTableHeader(GetColumnNames(cursor)))
-            AppendCurrentLog(localization_showCards_emptyTable.format(tableName))
-            return
-        AppendCurrentLog(localization_showTables_showTable.format(tableName))
-        ShowQueryTable(rows, cursor)
-
-def ShowQueryTable(rows, cursor):
-    columnNames = GetColumnNames(cursor)
-    AppendCurrentLog(GetTableHeader(columnNames))
-    for line in GetLinesFromRows(rows, len(columnNames), ", "):
-        AppendCurrentLog(line)
-
-#------------------------------ Show Cards ------------------------------------
-
-def ShowCards(tableNames, cursor):
-    AppendCurrentLog(localization_header_cardTable)
-    try:
-        cursor.execute(GetSqlAllCards())
-    except Exception as e:
-        ExceptError(cursor, e)
-    else:
-        rows = cursor.fetchall()
-        if not rows:
-            AppendCurrentLog(localization_nothingCardTable)
+        if rows:
+            AppendCurrentLog(notEmptyTableHeader)
+            columnNames = GetColumnNames(cursor)
+            AppendCurrentLog(GetTableHeader(columnNames))
+            for line in GetLinesFromRows(rows, len(columnNames), ", "):
+                AppendCurrentLog(line)
         else:
-            ShowQueryTable(rows, cursor)
+            AppendCurrentLog(emptyTableHeader)
+            AppendCurrentLog(GetTableHeader(GetColumnNames(cursor)))
 
 #------------------------------ Add Cards -------------------------------------
 
@@ -549,7 +574,7 @@ def GetLinesFromFile(file_name):
 def ExportCards(fileName, tableNames, exportType, cursor):
     AppendCurrentLog(localization_header_exportCards)
     try:
-        cursor.execute(GetSqlAllCards())
+        cursor.execute(GetAllCardsScript())
     except Exception as e:
         ExceptError(cursor, e)
     else:
@@ -558,8 +583,9 @@ def ExportCards(fileName, tableNames, exportType, cursor):
             AppendCurrentLog(localization_nothingCardTable)
             return
         AppendCurrentLog(localization_export_allCards)
-        AppendCurrentLog(GetCardColumnNames())
-        linesFromRows = GetLinesFromRows(rows, 6, ", ")
+        columnNames = GetColumnNames(cursor)
+        AppendCurrentLog(GetTableHeader(columnNames))
+        linesFromRows = GetLinesFromRows(rows, len(columnNames), ", ")
         for line in linesFromRows:
             AppendCurrentLog(line)
         fileName = fileName.strip()
@@ -581,7 +607,7 @@ def ExportCards(fileName, tableNames, exportType, cursor):
             ExportToEndTxtFile(fileName, linesFromRows)
         if exportType == 3:
             AppendCurrentLog(localization_export_updateFile.format(fileName))
-            ExportToNewTxtFile(fileName, JoinLines(linesFromFile, linesFromRows, 6, ','))
+            ExportToNewTxtFile(fileName, JoinLines(linesFromFile, linesFromRows, len(columnNames), ", "))
         ShowTextFile(fileName);
 
 def ExportToNewTxtFile(file_name, lines):
@@ -706,7 +732,6 @@ def GetExportType(key):
 def MainMenu(cursor):
     mainMenu = CreateMainMenu()
     tableNames = GetTableNames()
-    createTablesScripts = GetCreateTableScripts(tableNames, GetCreateTableColumns())
     exportMenu = CreateExportMenu()
     while True:
         ClearScreen()
@@ -717,21 +742,21 @@ def MainMenu(cursor):
         if actionType == 1:
             ClearScreen()
             InitCurrentLog()
-            CreateTables(createTablesScripts, cursor)
+            RunSimpleTableOperation(tableNames, 'Create', cursor)
             AppendCurrentLog(localization_input_pressAnyKey)
             PrintLines(currentLog)
             getch()
         if actionType == 2:
             ClearScreen()
             InitCurrentLog()
-            DropTables(tableNames, cursor)
+            RunSimpleTableOperation(tableNames, 'Drop', cursor)
             AppendCurrentLog(localization_input_pressAnyKey)
             PrintLines(currentLog)
             getch()
         if actionType == 3:
             ClearScreen()
             InitCurrentLog()
-            ClearTables(tableNames, cursor)
+            RunSimpleTableOperation(tableNames, 'Delete', cursor)
             AppendCurrentLog(localization_input_pressAnyKey)
             PrintLines(currentLog)
             getch()
@@ -745,7 +770,7 @@ def MainMenu(cursor):
         if actionType == 5:
             ClearScreen()
             InitCurrentLog()
-            ShowCards(tableNames, cursor)
+            ShowCardsQuery(cursor)
             AppendCurrentLog(localization_input_pressAnyKey)
             PrintLines(currentLog)
             getch()
