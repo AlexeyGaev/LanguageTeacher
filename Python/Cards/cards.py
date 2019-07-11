@@ -316,50 +316,25 @@ def ShowTableRows(tableRowsDescription, notEmptyTableHeader, emptyTableHeader):
         AppendCurrentLog(tableRowsDescription['Header'])
 
 #-------------------------------- Add Cards -----------------------------------
-# (TODO : переделать AddCard:
-# 1) сделать один большой запрос по всей таблице и сделать текстовые строки
-# 2) калькуляцию вставляемых или обновляемых строк сделать на основе полученных текстовых строк
-# 3) показать в логе сформированные sql-запросы для этого
-# 4) запросы по базе по вставке/обновлению строк проводить в самом конце.
-# Сейчас жесть - строки по одной вставляются в таблицы по запросам, которые вызываются сразу.
 
-# test code-----------
-#r = []
-#r.append([3, 2, 1, 4, 5, 1])
-#r.append([3, 2, 2, 3, 4, 2])
-#r.append([2, 3, 3, 2, 3, 3])
-#r.append([2, 3, 1, 4, 4, 2])
-#r.append([3, 3, 1, 1, 5, 3])
-#r.append([1, 2, 2, 4, 1, 2])
-#r.append([1, 1, 3, 2, 4, 2])
-#r.append([1, 1, 1, 3, 3, 2])
-#r.append([2, 2, 2, 3, 5, 1])
-#print("Input: ")
-#print(r)
-#sorted_r = sorted(r, key=itemgetter(5, 3, 4, 0, 1, 2))
-#print("Sorted: ")
-#print(sorted_r)
-#group = {}
-#for key, items in groupby(sorted_r, itemgetter(5)):
-    #groupItems = GetGroupItems(key, 5, 1, items)
-    #group_1 = {}
-    #for key_1, items_1 in groupby(groupItems, itemgetter(3, 4)):
-        #group_1[key_1] = GetGroupItems(key_1, 3, 2, items_1)
-    #group[key] = group_1
-#print("Group: ")
-#print(group)
-# ---------------
+def AddCards(cursor):
+    ClearScreen()
+    InitCurrentLog()
+    AddCardsCore(InputAddCards(), True, cursor)
+    AppendCurrentLog(localization_input_pressAnyKey)
+    PrintLines(currentLog)
+    getch()
 
-def AddCards(inputRows, hasUpdate, cursor):
+def AddCardsCore(inputRows, hasUpdate, cursor):
     if not inputRows:
         AppendCurrentLog(localization_nothingCardTable)
         return
 
-    inputCardInfos = CreateInputInfos(inputRows, 0)
-    inputThemeInfos = CreateInputInfos(inputRows, 1)
-    inputAccountInfos = CreateInputInfos(inputRows, 2)
-    inputThemeCardInfos = CreateInputRelationInfos(inputRows, 1, 0)
-    inputAccountCardInfos = CreateInputRelationInfos(inputRows, 2, 0)
+    inputCardInfos = CreateInputInfos(inputRows, 0, 3)
+    inputThemeInfos = CreateInputInfos(inputRows, 1, 2)
+    inputAccountInfos = CreateInputInfos(inputRows, 2, 1)
+    inputThemeCardInfos = CreateInputRelationInfos(inputRows, 1, 0, 2, 3)
+    inputAccountCardInfos = CreateInputRelationInfos(inputRows, 2, 0, 1, 3)
 
     existingCardInfos = CreateExistingInfos('Cards', [1, 2, 3], cursor)
     existingThemeInfos = CreateExistingInfos('Themes', [1, 2], cursor)
@@ -398,7 +373,7 @@ def AddCards(inputRows, hasUpdate, cursor):
     ShowInfos(existingAccountCardInfos, "Имеются связи (account, card): ")
 
     ShowInfos(addedCardsInfos, 'AddedCardsInfos:')
-    ShowInfos(addedThemeInfos, 'addedThemeInfos:')
+    ShowInfos(addedThemeInfos, 'AddedThemeInfos:')
     ShowInfos(addedAccountInfos, 'AddedAccountInfos:')
     ShowInfos(addedThemeCardInfos, 'AddedThemeCardInfos:')
     ShowInfos(addedAccountCardInfos, 'AddedAccountCardInfos:')
@@ -407,15 +382,15 @@ def AddCards(inputRows, hasUpdate, cursor):
 
     ExecuteAddedScripts(addedScripts, cursor)
 
-def CreateInputInfos(rows, index):
+def CreateInputInfos(rows, index, columnCount):
     result = []
     for row in rows:
         info = row[index]
-        if result.count(info) == 0:
+        if not IsEmpty(info, columnCount) and result.count(info) == 0:
             result.append(info)
     return result
 
-def CreateInputRelationInfos(rows, primaryIndex, groupItemIndex):
+def CreateInputRelationInfos(rows, primaryIndex, groupItemIndex, primaryColumnCount, groupItemColumnCount):
     def GetGroupItems(items, itemIndex):
         result = []
         for item in items:
@@ -424,12 +399,18 @@ def CreateInputRelationInfos(rows, primaryIndex, groupItemIndex):
 
     result = []
     for key, items in groupby(rows, itemgetter(primaryIndex)):
-        groupItems = GetGroupItems(items, groupItemIndex)
-        for item in groupItems:
-            info = (key, item)
-            if result.count(info) == 0:
-                result.append(info)
+        for item in GetGroupItems(items, groupItemIndex):
+            if not IsEmpty(key, primaryColumnCount) and not IsEmpty(item, groupItemColumnCount):
+                info = (key, item)
+                if result.count(info) == 0:
+                    result.append(info)
     return result
+
+def IsEmpty(item, columnCount):
+    for i in range(columnCount):
+        if item[i] != '':
+            return False
+    return True
 
 def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
     infos = []
@@ -485,7 +466,13 @@ def CreateAddedInfos(inputInfos, existingInfos, hasUpdate, columnCount):
             startId += 1
         elif hasUpdate:
             existingInfo = existingInfos[existingIndex]
-            result.append(CreateTuple(existingInfo[0], inputInfo, columnCount, ('Update', existingInfo)))
+            hasDifferences = False
+            for i in range(columnCount):
+                if existingInfo[1][i] != inputInfo[i]:
+                    hasDifferences = True
+                    break
+            if hasDifferences:
+                result.append(CreateTuple(existingInfo[0], inputInfo, columnCount, ('Update', existingInfo)))
     return result
 
 def CreateAddedRelationInfos(inputRelationInfos, existingRelationInfos, addedKeyInfos, addedValueInfos):
@@ -633,6 +620,16 @@ def InputAddCards():
             break
     return result
 
+#----------------------------- Import Cards -----------------------------------
+
+def ImportCards(cursor):
+    ClearScreen()
+    InitCurrentLog()
+    AddCardsCore(InputImportCards(), True, cursor)
+    AppendCurrentLog(localization_input_pressAnyKey)
+    PrintLines(currentLog)
+    getch()
+
 #-------------------- Import cards from file dialog ---------------------------
 
 def InputImportCards():
@@ -658,61 +655,64 @@ def InputImportCards():
 
 #---------------------------- Export Cards ------------------------------------
 
-def ExportCards(fileName, exportType, cursor):
+def ExportCards(cursor):
+    def GetExportedRows(cursor):
+        if not ExecuteScript(GetSqlScripts()['Query']['AllCards'], cursor):
+            return None
+        return cursor.fetchall()
+
+    def GetLinesFromRows(rows, columnCount, delimeter):
+        def GetFormatColumn(column):
+            if column == 0:
+                return f'{column}'
+            elif column == '0':
+                return f'{column}'
+            elif column:
+                return f'{column}'
+            else:
+                return ''
+
+        def GetRowString(row, columnCount, delimeter):
+            result = ""
+            for i in range(columnCount):
+                result += GetFormatColumn(row[i])
+                if i < columnCount - 1:
+                    result += delimeter
+            return result
+
+        return [GetRowString(row, columnCount, delimeter) for row in rows]
+
+    def ShowTextFile(file_name):
+        AppendCurrentLog(localization_export_contentFile.format(file_name))
+        for line in GetLinesFromFile(file_name):
+            AppendCurrentLog(line)
+
+    ClearScreen()
+    InitCurrentLog()
     AppendCurrentLog(localization_header_exportCards)
+    file_name = input(localization_export_input_fileName)
+    file_name = file_name.strip()
+    if not file_name:
+        AppendCurrentLog(localization_emptyFileName)
+        return
+    if not exists(file_name):
+        AppendCurrentLog(localization_export_createNewFile.format(file_name))
+    else:
+        AppendCurrentLog(localization_export_rewriteFile.format(file_name))
+    linesFromRows = GetLinesFromRows(GetExportedRows(cursor), 6, ", ")
     try:
-        cursor.execute(GetSqlScripts()['Query']['AllCards'])
+        txt_file = open(file_name, 'w')
+        [txt_file.write(line + "\n") for line in linesFromRows]
     except Exception as e:
+        txt_file.close()
         ExceptError(cursor, e)
     else:
-        rows = cursor.fetchall()
-        if not rows:
-            AppendCurrentLog(localization_nothingCardTable)
-            return
-        AppendCurrentLog(localization_export_allCards)
-        columnNames = GetColumnNames(cursor)
-        AppendCurrentLog(GetTableHeader(columnNames))
-        linesFromRows = GetLinesFromRows(rows, len(columnNames), ", ", [0])
-        for line in linesFromRows:
-            AppendCurrentLog(line)
-        fileName = fileName.strip()
-        if not fileName:
-            AppendCurrentLog(localization_emptyFileName)
-            return
-        if not exists(fileName):
-            AppendCurrentLog(localization_export_createNewFile.format(fileName))
-            ExportToNewTxtFile(fileName, linesFromRows)
-            ShowTextFile(fileName);
-            return
-        AppendCurrentLog(localization_export_contentFile.format(fileName))
-        linesFromFile = GetLinesFromFile(fileName)
-        if exportType == 1:
-            AppendCurrentLog(localization_export_rewriteFile.format(fileName))
-            ExportToNewTxtFile(fileName, linesFromRows)
-        if exportType == 2:
-            AppendCurrentLog(localization_export_addToFile.format(fileName))
-            ExportToEndTxtFile(fileName, linesFromRows)
-        if exportType == 3:
-            AppendCurrentLog(localization_export_updateFile.format(fileName))
-            ExportToNewTxtFile(fileName, JoinLines(linesFromFile, linesFromRows, len(GetColumnNames(cursor)), ", "))
-        ShowTextFile(fileName);
+        txt_file.close()
+        ShowTextFile(file_name)
 
-def ExportToNewTxtFile(file_name, lines):
-    txt_file = open(file_name, 'w')
-    for line in lines:
-        txt_file.write(line + "\n")
-    txt_file.close()
-
-def ExportToEndTxtFile(file_name, lines):
-    txt_file = open(file_name, 'a')
-    for line in lines:
-        txt_file.write(line + "\n")
-    txt_file.close()
-
-def ShowTextFile(file_name):
-    AppendCurrentLog(localization_export_contentFile.format(file_name))
-    for line in GetLinesFromFile(file_name):
-        AppendCurrentLog(line)
+    AppendCurrentLog(localization_input_pressAnyKey)
+    PrintLines(currentLog)
+    getch()
 
 #----------------------------- Commit Changes ---------------------------------
 
@@ -738,9 +738,15 @@ def RunTesting(cursor):
     getch()
 
 #----------------------------- Utils ------------------------------------------
-# TODO : надо исправить JoinLines
-# Сейчас мы добавляем только новые строки, оставляя старые,
-# но не удаляем существующие, если они отличаются некоторыми колонками.
+
+def GetLinesFromFile(file_name):
+    try:
+        txt_file = open(file_name, 'r')
+        lines = [line.strip() for line in txt_file]
+    except:
+        txt_file.close()
+        return None
+    return lines
 
 def ExecuteScript(script, cursor):
     if not script:
@@ -753,39 +759,7 @@ def ExecuteScript(script, cursor):
     else:
         return True
 
-def GetLinesFromFile(file_name):
-    txt_file = open(file_name, 'r')
-    lines = [line.strip() for line in txt_file]
-    txt_file.close()
-    return lines
-
-def GetLineColumns(line, delimeter):
-    return [column.strip() for column in line.split(delimeter)]
-
-def JoinLines(targetLines, addedLines, columnCount, delimeter):
-    def ContainsLine(targetLines, line, columnCount, delimeter):
-        lineItems = GetLineColumns(line, delimeter)
-        for targetLine in targetLines:
-            targetLineItems = GetLineColumns(targetLine, delimeter)
-            hasDifferences = False
-            for i in range(columnCount):
-                if targetLineItems[i] != lineItems[i]:
-                    hasDifferences = True
-                    break;
-            if not hasDifferences:
-                return True
-        return False
-
-    result = []
-    for targetLine in targetLines:
-        result.append(targetLine)
-    for addedLine in addedLines:
-        if not ContainsLine(targetLines, addedLine, columnCount, delimeter):
-            result.append(addedLine)
-    return result
-
 def ExceptError(cursor, e):
-
     def GetTableName(errorDecription):
         for tableName in GetTableNames():
             position = errorDecription.find(tableName)
@@ -815,37 +789,6 @@ def InitCurrentLog():
 def AppendCurrentLog(line):
     currentLog.append(line)
 
-def GetLinesFromRows(rows, columnCount, delimeter, ignoreStrings):
-    return [GetRowString(row, columnCount, delimeter, ignoreStrings) for row in rows]
-
-def GetRowString(row, columnCount, delimeter, ignoreStrings):
-    result = ""
-    for i in range(columnCount):
-        column = row[i]
-        if ignoreStrings.count(i):
-            result += GetFormatColumn(column, True)
-        else:
-            result += GetFormatColumn(column, False)
-        if i < columnCount - 1:
-            result += delimeter
-    return result
-
-def GetFormatColumn(column, ignoreFirstString):
-    if ignoreFirstString:
-        if column == 0:
-            return f"{column}"
-        elif column == "0":
-            return f"{column}"
-        elif column:
-            return f"{column}"
-    else:
-        if column == 0:
-            return f"\'{column}\'"
-        elif column == "0":
-            return f"\'{column}\'"
-        elif column:
-            return f"\'{column}\'"
-
 def GetColumnNames(cursor):
     return [f"{i[0]} ({i[1].__name__})" for i in cursor.description]
 
@@ -863,21 +806,6 @@ def ClearScreen():
 
 def PrintLines(lines):
     [print(line) for line in lines]
-
-def CreateExportMenu():
-    result = []
-    result.append(localization_export_menu_header)
-    result.append("1 - " + localization_export_menu_rewrite)
-    result.append("2 - " + localization_export_menu_add)
-    result.append("3 - " + localization_export_menu_update)
-    return result
-
-def GetExportType(key):
-    if key == b'1':
-        return 1
-    if key == b'2':
-        return 2
-    return 3
 
 def CreateMenu(headers, items):
     result = []
@@ -977,29 +905,11 @@ def CardsMenu(cursor):
         if actionType == 1:
             ShowCardsQuery(cursor)
         if actionType == 2:
-            ClearScreen()
-            InitCurrentLog()
-            AddCards(InputAddCards(), True, cursor)
-            AppendCurrentLog(localization_input_pressAnyKey)
-            PrintLines(currentLog)
-            getch()
+            AddCards(cursor)
         if actionType == 3:
-            ClearScreen()
-            InitCurrentLog()
-            AddCards(InputImportCards(), True, cursor)
-            AppendCurrentLog(localization_input_pressAnyKey)
-            PrintLines(currentLog)
-            getch()
+            ImportCards(cursor)
         if actionType == 4:
-            ClearScreen()
-            InitCurrentLog()
-            fileName = input(localization_export_input_fileName)
-            PrintLines(exportMenu)
-            exportType = GetExportType(getch())
-            ExportCards(fileName, tableNames, exportType, cursor)
-            AppendCurrentLog(localization_input_pressAnyKey)
-            PrintLines(currentLog)
-            getch()
+            ExportCards(cursor)
 
 #-------------------------------- Main ----------------------------------------
 
