@@ -1,2 +1,2 @@
-python cards.py "DRIVER={SQL Server};SERVER=HOME\SQLEXPRESS;DATABASE=Cards"
+python cards.py 
 pause

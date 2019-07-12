@@ -68,12 +68,4 @@ def InputImportCards():
 def InputExportCards():
     print(localization.headers['ExportCards'])
     file_name = input(localization.dialogs['InputFileName'])
-    file_name = file_name.strip()
-    if not file_name:
-        print(localization.files['EmptyFileName'])
-        return
-    if not exists(file_name):
-        print(localization.files['CreateFile'].format(file_name))
-    else:
-        print(localization.files['ReWriteFile'].format(file_name))
-    return file_name
+    return file_name.strip()

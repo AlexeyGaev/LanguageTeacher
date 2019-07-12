@@ -1,11 +1,13 @@
 import os
+
 from msvcrt import getch
 
 import dialogs
 import localization
 import operations
 
-def MainMenu(cursor):
+def MainMenu(isServerMode, hasUpdate, connection):
+    cursor = connection.cursor()
     while True:
         ClearScreen()
         PrintLines(CreateMenu('Main'))
@@ -18,15 +20,16 @@ def MainMenu(cursor):
             TablesMenu(cursor)
         if actionType == 2:
             ClearScreen()
-            CardsMenu(cursor)
+            CardsMenu(hasUpdate, cursor)
         if actionType == 3:
             ClearScreen()
-            operations.CommitChanges(cursor)
+            operations.CommitChanges(cursor if isServerMode else connection)
             EndMenuAction()
         if actionType == 4:
             ClearScreen()
             operations.RunTesting(cursor)
             EndMenuAction()
+    cursor.close()
 
 #---------------------------- Tables Menu -------------------------------------
 
@@ -57,7 +60,7 @@ def TablesMenu(cursor):
 
 # --------------------------- Cards menu --------------------------------------
 
-def CardsMenu(cursor):
+def CardsMenu(hasUpdate, cursor):
     menu = CreateMenu('Cards')
     while True:
         ClearScreen()
@@ -72,11 +75,11 @@ def CardsMenu(cursor):
             EndMenuAction()
         if actionType == 2:
             ClearScreen()
-            operations.AddCards(dialogs.InputAddCards(), True, cursor)
+            operations.AddCards(dialogs.InputAddCards(), hasUpdate, cursor)
             EndMenuAction()
         if actionType == 3:
             ClearScreen()
-            operations.AddCards(dialogs.InputImportCards(), True, cursor)
+            operations.AddCards(dialogs.InputImportCards(), hasUpdate, cursor)
             EndMenuAction()
         if actionType == 4:
             ClearScreen()

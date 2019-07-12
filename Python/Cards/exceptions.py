@@ -1,17 +1,21 @@
 import localization
+import sql
 
 from operations import ShowTable
 
 def Error(cursor, e):
     if e.args[0] == '42S01':
-        TableError(e, True, localization.messages['HasTable'], cursor)
+        TableError(GetTableName(e.args[1]), True, localization.messages['HasTable'], cursor)
     elif e.args[0] == '42S02':
-        TableError(e, False, localization.messages['MissingTable'], cursor)
+        TableError(GetTableName(e.args[1]), False, localization.messages['MissingTable'], cursor)
     else:
-        print(e.args[0], localization.messages['Error'])
+        tableName = GetTableName(e.args[0])
+        if tableName:
+            print(localization.messages['MissingTable'][tableName])
+        else:
+            print(localization.messages['Error'], e.args[0])
 
-def TableError(e, shouldShowTable, message, cursor):
-    tableName = GetTableName(e.args[1])
+def TableError(tableName, shouldShowTable, message, cursor):
     if tableName:
         print(message[tableName])
         if shouldShowTable:
@@ -22,6 +26,14 @@ def TableError(e, shouldShowTable, message, cursor):
 def GetTableName(errorDecription):
     for tableName in sql.tables:
         position = errorDecription.find(tableName)
-        if position > 0 and errorDecription[position - 1] == "\'" and errorDecription[position + len(tableName)] == "\'":
+        if (position <= 0):
+            continue
+        beforePosition = position - 1
+        if errorDecription[beforePosition] != "\'" and errorDecription[beforePosition] != ' ':
+            continue
+        nextPosition = position + len(tableName)
+        if nextPosition >= len(errorDecription):
             return tableName
-    return ""
+        if errorDecription[nextPosition] == "\'" or errorDecription[nextPosition] == ' ':
+            return tableName
+    return None

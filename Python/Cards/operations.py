@@ -27,7 +27,7 @@ def GetTableRowsDescription(operation, tableName, cursor):
     header = ""
     if sql.Execute(script, cursor):
         rows = cursor.fetchall()
-        columnNames = [f'{i[0]} ({i[1].__name__})' for i in cursor.description]
+        columnNames = [f'{i[0]}' for i in cursor.description]
         columnCount = len(columnNames)
         for i in range(columnCount):
             header += columnNames[i]
@@ -65,34 +65,15 @@ def AddCards(inputRows, hasUpdate, cursor):
         print(localization.messages['MissingTable']['QueryAllCards'])
         return
 
+    print(localization.headers['AddCards'])
+    print(localization.add_cards['PrepareSqlScripts'])
+    ShowInfos(inputRows, 'HasInputRows', 'MissingInputRows', None)
+
     inputCardInfos = CreateInputInfos(inputRows, 0, 3)
     inputThemeInfos = CreateInputInfos(inputRows, 1, 2)
     inputAccountInfos = CreateInputInfos(inputRows, 2, 1)
     inputThemeCardInfos = CreateInputRelationInfos(inputRows, 1, 0, 2, 3)
     inputAccountCardInfos = CreateInputRelationInfos(inputRows, 2, 0, 1, 3)
-
-    existingCardInfos = CreateExistingInfos('Cards', [1, 2, 3], cursor)
-    existingThemeInfos = CreateExistingInfos('Themes', [1, 2], cursor)
-    existingAccountInfos = CreateExistingInfos('Accounts', [1], cursor)
-    existingThemeCardInfos = CreateExistingRelationInfos('ThemeCards', existingThemeInfos, existingCardInfos, cursor)
-    existingAccountCardInfos = CreateExistingRelationInfos('AccountCards', existingAccountInfos, existingCardInfos, cursor)
-
-    addedCardsInfos = CreateAddedInfos(inputCardInfos, existingCardInfos, hasUpdate, 3)
-    addedThemeInfos = CreateAddedInfos(inputThemeInfos, existingThemeInfos, hasUpdate, 2)
-    addedAccountInfos = CreateAddedInfos(inputAccountInfos, existingAccountInfos, hasUpdate, 1)
-    addedThemeCardInfos = CreateAddedRelationInfos(inputThemeCardInfos, existingThemeCardInfos, addedThemeInfos, addedCardsInfos)
-    addedAccountCardInfos = CreateAddedRelationInfos(inputAccountCardInfos, existingAccountCardInfos, addedAccountInfos, addedCardsInfos)
-
-    addedScripts = []
-    addedScripts.extend(CreateAddedCardScripts(addedCardsInfos))
-    addedScripts.extend(CreateAddedThemeScripts(addedThemeInfos))
-    addedScripts.extend(CreateAddedAccountScripts(addedAccountInfos))
-    addedScripts.extend(CreateAddedRelationScripts(addedThemeCardInfos, 'ThemeCards'))
-    addedScripts.extend(CreateAddedRelationScripts(addedAccountCardInfos, 'AccountCards'))
-
-    print(localization.headers['AddCards'])
-    print(localization.add_cards['PrepareSqlScripts'])
-    ShowInfos(inputRows, 'HasInputRows', 'MissingInputRows', None)
 
     ShowInfos(inputCardInfos, 'HasInput', 'MissingInput', 'Cards')
     ShowInfos(inputThemeInfos, 'HasInput', 'MissingInput', 'Themes')
@@ -100,17 +81,36 @@ def AddCards(inputRows, hasUpdate, cursor):
     ShowInfos(inputThemeCardInfos, 'HasInput', 'MissingInput', 'ThemeCards')
     ShowInfos(inputAccountCardInfos, 'HasInput', 'MissingInput', 'AccountCards')
 
+    existingCardInfos = CreateExistingInfos('Cards', [1, 2, 3], cursor)
+    existingThemeInfos = CreateExistingInfos('Themes', [1, 2], cursor)
+    existingAccountInfos = CreateExistingInfos('Accounts', [1], cursor)
+    existingThemeCardInfos = CreateExistingRelationInfos('ThemeCards', existingThemeInfos, existingCardInfos, cursor)
+    existingAccountCardInfos = CreateExistingRelationInfos('AccountCards', existingAccountInfos, existingCardInfos, cursor)
+
     ShowInfos(existingCardInfos, 'HasExisting', 'MissingExisting', 'Cards')
     ShowInfos(existingThemeInfos, 'HasExisting', 'MissingExisting', 'Themes')
     ShowInfos(existingAccountInfos, 'HasExisting', 'MissingExisting', 'Accounts')
     ShowInfos(existingThemeCardInfos, 'HasExisting', 'MissingExisting', 'ThemeCards')
     ShowInfos(existingAccountCardInfos, 'HasExisting', 'MissingExisting', 'AccountCards')
 
+    addedCardsInfos = CreateAddedInfos(inputCardInfos, existingCardInfos, hasUpdate, 3)
+    addedThemeInfos = CreateAddedInfos(inputThemeInfos, existingThemeInfos, hasUpdate, 2)
+    addedAccountInfos = CreateAddedInfos(inputAccountInfos, existingAccountInfos, hasUpdate, 1)
+    addedThemeCardInfos = CreateAddedRelationInfos(inputThemeCardInfos, existingThemeCardInfos, addedThemeInfos, addedCardsInfos)
+    addedAccountCardInfos = CreateAddedRelationInfos(inputAccountCardInfos, existingAccountCardInfos, addedAccountInfos, addedCardsInfos)
+
     ShowInfos(addedCardsInfos, 'HasAdded', 'MissingAdded', 'Cards')
     ShowInfos(addedThemeInfos, 'HasAdded', 'MissingAdded', 'Themes')
     ShowInfos(addedAccountInfos, 'HasAdded', 'MissingAdded', 'Accounts')
     ShowInfos(addedThemeCardInfos, 'HasAdded', 'MissingAdded', 'ThemeCards')
     ShowInfos(addedAccountCardInfos, 'HasAdded', 'MissingAdded', 'AccountCards')
+
+    addedScripts = []
+    addedScripts.extend(CreateAddedCardScripts(addedCardsInfos))
+    addedScripts.extend(CreateAddedThemeScripts(addedThemeInfos))
+    addedScripts.extend(CreateAddedAccountScripts(addedAccountInfos))
+    addedScripts.extend(CreateAddedRelationScripts(addedThemeCardInfos, 'ThemeCards'))
+    addedScripts.extend(CreateAddedRelationScripts(addedAccountCardInfos, 'AccountCards'))
 
     ExecuteAddedScripts(addedScripts, cursor)
 
@@ -147,6 +147,8 @@ def IsEmpty(item, columnCount):
 def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
     result = []
     rows = GetTableRowsDescription('SelectAllFrom', tableName, cursor)['Rows']
+    if not rows:
+        return result
     for row in rows:
         secondaryColumns = ()
         for index in secondaryColumnIndexes:
@@ -157,15 +159,26 @@ def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
 def CreateExistingRelationInfos(tableName, keyInfos, valueInfos, cursor):
     result = []
     rows = GetTableRowsDescription('SelectAllFrom', tableName, cursor)['Rows']
+    if not rows:
+        return result
     for row in rows:
-        keyValue = keyInfos[row[0]][1]
-        valueValue =  valueInfos[row[1]][1]
-        result.append((keyValue, valueValue))
+        keyValue = FindInfoById(keyInfos, row[0])
+        valueValue = FindInfoById(valueInfos, row[1])
+        if keyValue and valueValue:
+            result.append((keyValue, valueValue))
     return result
+
+def FindInfoById(infos, id):
+    for info in infos:
+        if info[0] == id:
+            return info[1]
+    return None
 
 def CreateAddedInfos(inputInfos, existingInfos, hasUpdate, columnCount):
     def GetMaxId(rows):
         result = 0
+        if not rows:
+            return result
         for row in rows:
             id = row[0]
             if (id > result):
@@ -321,7 +334,19 @@ def ExecuteAddedScripts(addedScripts, cursor):
 #---------------------------- Export Cards ------------------------------------
 
 def ExportCards(file_name, cursor):
-    rows = cursor.fetchall() if sql.Execute(sql.scripts['Query']['AllCards'], cursor) else None
+    if not file_name:
+        print(localization.files['EmptyFileName'])
+        return
+    if not sql.Execute(sql.scripts['Query']['AllCards'], cursor):
+        return
+    rows = cursor.fetchall()
+    if not rows:
+        print(localization.messages['EmptyTable']['QueryAllCards'])
+        return
+    if not exists(file_name):
+        print(localization.files['CreateFile'].format(file_name))
+    else:
+        print(localization.files['ReWriteFile'].format(file_name))
     if files.WriteFile(file_name, GetLinesFromRows(rows, 6, ", ")):
         print(localization.files['FileContent'].format(file_name))
         for line in files.ReadFile(file_name):
