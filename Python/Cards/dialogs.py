@@ -1,4 +1,4 @@
-import os
+#import os
 from os.path import exists
 
 import localization
@@ -10,10 +10,9 @@ def InputAddCards():
     result = []
     InputAddCard(result)
     while True:
-        if input("Ввести еще карточки (1 - да)?") == '1':
-            InputAddCard(result)
-        else:
+        if input(localization.dialogs['InputContinueCreateCard']) != '1':
             break
+        InputAddCard(result)
     return result
 
 def InputAccount():
@@ -45,13 +44,13 @@ def InputAddCard(cardsList):
 
 def InputImportCards():
     print(localization.headers['ImportCards'])
-    file_name = input(localization.messages['InputFileName'])
-    file_name = fileName.strip()
+    file_name = input(localization.dialogs['InputFileName'])
+    file_name = file_name.strip()
     if not file_name:
-        print(localization.messages['EmptyFileName'])
+        print(localization.files['EmptyFileName'])
         return None
     if not exists(file_name):
-        print(localization.messages['InvalidFile'].format(file_name))
+        print(localization.files['InvalidFile'].format(file_name))
         return None
     linesFromFile = files.ReadFile(file_name)
     result = []
@@ -68,13 +67,13 @@ def InputImportCards():
 
 def InputExportCards():
     print(localization.headers['ExportCards'])
-    file_name = input(localization.messages['InputFileName'])
+    file_name = input(localization.dialogs['InputFileName'])
     file_name = file_name.strip()
     if not file_name:
-        print(localization.messages['EmptyFileName'])
+        print(localization.files['EmptyFileName'])
         return
     if not exists(file_name):
-        print(localization.messages['CreateFile'].format(file_name))
+        print(localization.files['CreateFile'].format(file_name))
     else:
-        print(localization.messages['ReWriteFile'].format(file_name))
+        print(localization.files['ReWriteFile'].format(file_name))
     return file_name

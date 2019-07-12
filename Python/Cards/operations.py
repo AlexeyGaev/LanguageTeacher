@@ -23,14 +23,16 @@ def ShowAllTables(cursor):
 
 def GetTableRowsDescription(operation, tableName, cursor):
     script = sql.scripts[operation][tableName]
-    rows = cursor.fetchall() if sql.Execute(script, cursor) else None
-    columnNames = [f"{i[0]} ({i[1].__name__})" for i in cursor.description]
+    rows = None
     header = ""
-    columnCount = len(columnNames)
-    for i in range(columnCount):
-        header += f"{columnNames[i]}"
-        if i < columnCount - 1:
-            header += ", "
+    if sql.Execute(script, cursor):
+        rows = cursor.fetchall()
+        columnNames = [f'{i[0]} ({i[1].__name__})' for i in cursor.description]
+        columnCount = len(columnNames)
+        for i in range(columnCount):
+            header += columnNames[i]
+            if i < columnCount - 1:
+                header += ", "
     return { 'Script' : script, 'Rows' : rows, 'Header' : header }
 
 def ShowTable(tableName, cursor):
@@ -89,29 +91,26 @@ def AddCards(inputRows, hasUpdate, cursor):
     addedScripts.extend(CreateAddedRelationScripts(addedAccountCardInfos, 'AccountCards'))
 
     print(localization.headers['AddCards'])
+    print(localization.add_cards['PrepareSqlScripts'])
+    ShowInfos(inputRows, 'HasInputRows', 'MissingInputRows', None)
 
-    print("Подготовка скриптов: ")
+    ShowInfos(inputCardInfos, 'HasInput', 'MissingInput', 'Cards')
+    ShowInfos(inputThemeInfos, 'HasInput', 'MissingInput', 'Themes')
+    ShowInfos(inputAccountInfos, 'HasInput', 'MissingInput', 'Accounts')
+    ShowInfos(inputThemeCardInfos, 'HasInput', 'MissingInput', 'ThemeCards')
+    ShowInfos(inputAccountCardInfos, 'HasInput', 'MissingInput', 'AccountCards')
 
-    ShowInfos(inputRows, 'Введены строки:')
-    ShowInfos(inputCardInfos, 'Введены карточки:')
-    ShowInfos(inputThemeInfos, "Введены темы:")
-    ShowInfos(inputAccountInfos, "Введены пользователи:")
-    ShowInfos(inputThemeCardInfos, "Введены связи (theme, card): ")
-    ShowInfos(inputAccountCardInfos, "Введены связи (account, card): ")
+    ShowInfos(existingCardInfos, 'HasExisting', 'MissingExisting', 'Cards')
+    ShowInfos(existingThemeInfos, 'HasExisting', 'MissingExisting', 'Themes')
+    ShowInfos(existingAccountInfos, 'HasExisting', 'MissingExisting', 'Accounts')
+    ShowInfos(existingThemeCardInfos, 'HasExisting', 'MissingExisting', 'ThemeCards')
+    ShowInfos(existingAccountCardInfos, 'HasExisting', 'MissingExisting', 'AccountCards')
 
-    ShowInfos(existingCardInfos, "Имеются Cards infos:")
-    ShowInfos(existingThemeInfos, "Имеются Themes infos:")
-    ShowInfos(existingAccountInfos, "Имеются Accounts infos:")
-    ShowInfos(existingThemeCardInfos, "Имеются связи (theme, card): ")
-    ShowInfos(existingAccountCardInfos, "Имеются связи (account, card): ")
-
-    ShowInfos(addedCardsInfos, 'AddedCardsInfos:')
-    ShowInfos(addedThemeInfos, 'AddedThemeInfos:')
-    ShowInfos(addedAccountInfos, 'AddedAccountInfos:')
-    ShowInfos(addedThemeCardInfos, 'AddedThemeCardInfos:')
-    ShowInfos(addedAccountCardInfos, 'AddedAccountCardInfos:')
-
-    ShowInfos(addedScripts, "Получены скрипты:")
+    ShowInfos(addedCardsInfos, 'HasAdded', 'MissingAdded', 'Cards')
+    ShowInfos(addedThemeInfos, 'HasAdded', 'MissingAdded', 'Themes')
+    ShowInfos(addedAccountInfos, 'HasAdded', 'MissingAdded', 'Accounts')
+    ShowInfos(addedThemeCardInfos, 'HasAdded', 'MissingAdded', 'ThemeCards')
+    ShowInfos(addedAccountCardInfos, 'HasAdded', 'MissingAdded', 'AccountCards')
 
     ExecuteAddedScripts(addedScripts, cursor)
 
@@ -303,45 +302,51 @@ def CreateThemeUpdateScript(id, inputInfo, existingInfo):
 def CreateAddedRelationScripts(infos, tableName):
     return [sql.scripts['InsertInto'][tableName][0].format(info[0], info[1]) for info in infos]
 
-def ShowInfos(rows, header):
-    print(header)
-    [print(row) for row in rows]
+def ShowInfos(rows, description_has, descrition_missing, tableName):
+    locStr = localization.add_cards[description_has] if rows else localization.add_cards[descrition_missing]
+    print(locStr[tableName] if tableName else locStr)
+    if rows:
+        [print(row) for row in rows]
 
 def ExecuteAddedScripts(addedScripts, cursor):
+    if not addedScripts:
+        print(localization.add_cards['MissingSqlScripts'])
+        return
     resultExecuteScripts = [(script, sql.Execute(script, cursor)) for script in addedScripts]
-    print("Результаты выполнения скриптов: ")
+    print(localization.add_cards['HeaderRunSqlScripts'])
     for script, result in resultExecuteScripts:
-        print(script + " " + "Выполнен." if result else "Не выполнен.")
+        scriptResult = localization.add_cards['SuccessRunSqlScript'] if result else localization.add_cards['FailRunSqlScript']
+        print(script, scriptResult)
 
 #---------------------------- Export Cards ------------------------------------
 
 def ExportCards(file_name, cursor):
     rows = cursor.fetchall() if sql.Execute(sql.scripts['Query']['AllCards'], cursor) else None
     if files.WriteFile(file_name, GetLinesFromRows(rows, 6, ", ")):
-        print(localization.messages['FileContent'].format(file_name))
-        for line in GetLinesFromFile(file_name):
+        print(localization.files['FileContent'].format(file_name))
+        for line in files.ReadFile(file_name):
             print(line)
 
 def GetLinesFromRows(rows, columnCount, delimeter):
-    def GetFormatColumn(column):
-        if column == 0:
-            return f'{column}'
-        elif column == '0':
-            return f'{column}'
-        elif column:
-            return f'{column}'
-        else:
-            return ''
-
-    def GetRowString(row, columnCount, delimeter):
-        result = ""
-        for i in range(columnCount):
-            result += GetFormatColumn(row[i])
-            if i < columnCount - 1:
-                result += delimeter
-        return result
-
     return [GetRowString(row, columnCount, delimeter) for row in rows]
+
+def GetFormatColumn(column):
+    if column == 0:
+        return f'{column}'
+    elif column == '0':
+        return f'{column}'
+    elif column:
+        return f'{column}'
+    else:
+        return ''
+
+def GetRowString(row, columnCount, delimeter):
+    result = ""
+    for i in range(columnCount):
+        result += GetFormatColumn(row[i])
+        if i < columnCount - 1:
+            result += delimeter
+    return result
 
 #----------------------------- Commit Changes ---------------------------------
 

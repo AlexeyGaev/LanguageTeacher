@@ -1,5 +1,4 @@
 import localization
-import sql
 
 from operations import ShowTable
 
@@ -14,8 +13,9 @@ def Error(cursor, e):
 def TableError(e, shouldShowTable, message, cursor):
     tableName = GetTableName(e.args[1])
     if tableName:
-        print(localization.messages['HasTable'][tableName])
-        ShowTable(tableName, cursor)
+        print(message[tableName])
+        if shouldShowTable:
+            ShowTable(tableName, cursor)
     else:
         print(localization.messages['InvalidTable'])
 
