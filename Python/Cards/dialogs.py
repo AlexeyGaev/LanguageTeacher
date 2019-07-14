@@ -23,14 +23,14 @@ def InputAccount():
 def InputTheme():
     result = ()
     result += (input("Theme : ").strip(), )
-    result += (input("Theme Level : "), )
+    result += (StringToInt(input("Theme Level : ")), )
     return result
 
 def InputCard():
     result = ()
     result += (input("Primary Side : ").strip(), )
     result += (input("Secondary Side : ").strip(), )
-    result += (input("Card Level : ").strip(), )
+    result += (StringToInt(input("Card Level : ")), )
     return result
 
 def InputAddCard(cardsList):
@@ -56,12 +56,20 @@ def InputImportCards():
     result = []
     for line in linesFromFile:
         lineItems = line.split(',')
-        cardInfo = (lineItems[0].strip(), lineItems[1].strip(), lineItems[2].strip())
-        themeInfo = (lineItems[3].strip(), lineItems[4].strip())
+        cardInfo = (lineItems[0].strip(), lineItems[1].strip(), StringToInt(lineItems[2].strip()))
+        themeInfo = (lineItems[3].strip(), StringToInt(lineItems[4].strip()))
         accountInfo = ()
         accountInfo += (lineItems[5].strip(), )
         result.append((cardInfo, themeInfo, accountInfo))
     return result
+
+def StringToInt(value):
+    if not value:
+        return None
+    elif value == '':
+        return 0
+    else:
+        return int(value)
 
 #--------------------- Export to file dialog ----------------------------------
 

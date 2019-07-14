@@ -31,29 +31,41 @@
           <AssociatedConnUserName />
           <FullPath>02 - Drop tables.sql</FullPath>
         </FileNode>
-        <FileNode Name="03 - Alter table.sql">
+        <FileNode Name="03 - Delete from.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:HOME\SQLEXPRESS:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>HOME\SQLEXPRESS</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>03 - Alter table.sql</FullPath>
+          <FullPath>03 - Delete from.sql</FullPath>
         </FileNode>
-        <FileNode Name="04 - Insert data.sql">
+        <FileNode Name="04 - Insert info.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:HOME\SQLEXPRESS:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>HOME\SQLEXPRESS</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>04 - Insert data.sql</FullPath>
+          <FullPath>04 - Insert info.sql</FullPath>
         </FileNode>
-        <FileNode Name="05 - Select data.sql">
+        <FileNode Name="05 - Select from tables.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:HOME\SQLEXPRESS:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>HOME\SQLEXPRESS</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>05 - Select data.sql</FullPath>
+          <FullPath>05 - Select from tables.sql</FullPath>
         </FileNode>
-        <FileNode Name="06 - Delete data.sql">
+        <FileNode Name="06 - Create views.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:HOME\SQLEXPRESS:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>HOME\SQLEXPRESS</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>06 - Delete data.sql</FullPath>
+          <FullPath>06 - Create views.sql</FullPath>
+        </FileNode>
+        <FileNode Name="07 - Select from views.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:HOME\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>HOME\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>07 - Select from views.sql</FullPath>
+        </FileNode>
+        <FileNode Name="08 - Drop views.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:HOME\SQLEXPRESS:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>HOME\SQLEXPRESS</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>08 - Drop views.sql</FullPath>
         </FileNode>
       </Items>
     </LogicalFolder>

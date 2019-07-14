@@ -20,14 +20,17 @@ def MainMenu(isServerMode, hasUpdate, connection):
             TablesMenu(cursor)
         if actionType == 2:
             ClearScreen()
-            CardsMenu(hasUpdate, cursor)
+            ViewsMenu(cursor)
         if actionType == 3:
             ClearScreen()
-            operations.CommitChanges(cursor if isServerMode else connection)
-            EndMenuAction()
+            CardsMenu(hasUpdate, cursor)
         if actionType == 4:
             ClearScreen()
             operations.RunTesting(cursor)
+            EndMenuAction()
+        if actionType == 5:
+            ClearScreen()
+            operations.CommitChanges(cursor if isServerMode else connection)
             EndMenuAction()
     cursor.close()
 
@@ -58,6 +61,30 @@ def TablesMenu(cursor):
             operations.ShowAllTables(cursor)
             EndMenuAction()
 
+
+#---------------------------- Views menu --------------------------------------
+
+def ViewsMenu(cursor):
+    while True:
+        ClearScreen()
+        PrintLines(CreateMenu('Views'))
+        key = getch()
+        if key == b'\x1b':
+            break
+        actionType = GetActionType('Views', key)
+        if actionType == 1:
+            ClearScreen()
+            operations.RunSimpleViewOperation('CreateView', cursor)
+            EndMenuAction()
+        if actionType == 2:
+            ClearScreen()
+            operations.RunSimpleViewOperation('DropView', cursor)
+            EndMenuAction()
+        if actionType == 3:
+            ClearScreen()
+            operations.ShowAllViews(cursor)
+            EndMenuAction()
+
 # --------------------------- Cards menu --------------------------------------
 
 def CardsMenu(hasUpdate, cursor):
@@ -71,7 +98,7 @@ def CardsMenu(hasUpdate, cursor):
         actionType = GetActionType('Cards', key)
         if actionType == 1:
             ClearScreen()
-            operations.QueryAllCards(cursor)
+            operations.ShowAllCards(cursor)
             EndMenuAction()
         if actionType == 2:
             ClearScreen()

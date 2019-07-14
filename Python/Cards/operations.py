@@ -8,18 +8,33 @@ import sql
 import exceptions
 import files
 
+#-------------------- Create, drop, delete table operations -------------------
+
 def RunSimpleTableOperation(operation, cursor):
     print(localization.headers[operation])
     for tableName in sql.tables:
         if sql.Execute(sql.scripts[operation][tableName], cursor):
             print(localization.messages[operation][tableName])
 
-#------------------------------- Show Tables/Cards ----------------------------
+#-------------------- Create, drop view operations ----------------------------
+
+def RunSimpleViewOperation(operation, cursor):
+    print(localization.headers[operation])
+    for viewName in sql.views:
+        if sql.Execute(sql.scripts[operation][viewName], cursor):
+            print(localization.messages[operation][viewName])
+
+#----------------------- Show Tables, Views, Cards ----------------------------
 
 def ShowAllTables(cursor):
     print(localization.headers['ShowTables'])
     for tableName in sql.tables:
         ShowTable(tableName, cursor)
+
+def ShowAllViews(cursor):
+    print(localization.headers['ShowViews'])
+    for viewName in sql.views:
+        ShowView(viewName, cursor)
 
 def GetTableRowsDescription(operation, tableName, cursor):
     script = sql.scripts[operation][tableName]
@@ -36,15 +51,20 @@ def GetTableRowsDescription(operation, tableName, cursor):
     return { 'Script' : script, 'Rows' : rows, 'Header' : header }
 
 def ShowTable(tableName, cursor):
-    ShowTableQuery(GetTableRowsDescription('SelectAllFrom', tableName, cursor), "",
+    ShowTableQuery(GetTableRowsDescription('SelectAllFromTable', tableName, cursor), "",
     localization.messages['ContentTable'][tableName],
     localization.messages['EmptyTable'][tableName])
 
-def QueryAllCards(cursor):
-    ShowTableQuery(GetTableRowsDescription('Query', 'AllCards', cursor),
+def ShowView(viewName, cursor):
+    ShowTableQuery(GetTableRowsDescription('SelectAllFromView', viewName, cursor), "",
+    localization.messages['ContentView'][viewName],
+    localization.messages['EmptyView'][viewName])
+
+def ShowAllCards(cursor):
+    ShowTableQuery(GetTableRowsDescription('SelectAllFromView', 'AllCards', cursor),
     localization.headers['ShowCards'],
-    localization.messages['ContentTable']['QueryAllCards'],
-    localization.messages['EmptyTable']['QueryAllCards'])
+    localization.messages['ContentView']['AllCards'],
+    localization.messages['EmptyView']['AllCards'])
 
 def ShowTableQuery(tableRowsDescription, header, notEmptyTableHeader, emptyTableHeader):
     if header:
@@ -62,7 +82,7 @@ def ShowTableQuery(tableRowsDescription, header, notEmptyTableHeader, emptyTable
 
 def AddCards(inputRows, hasUpdate, cursor):
     if not inputRows:
-        print(localization.messages['MissingTable']['QueryAllCards'])
+        print(localization.messages['MissingView']['AllCards'])
         return
 
     print(localization.headers['AddCards'])
@@ -114,10 +134,10 @@ def AddCards(inputRows, hasUpdate, cursor):
 
     ExecuteAddedScripts(addedScripts, cursor)
 
-def CreateInputInfos(rows, index, columnCount):
+def CreateInputInfos(rows, firstColumnIndex, columnCount):
     result = []
     for row in rows:
-        info = row[index]
+        info = row[firstColumnIndex]
         if not IsEmpty(info, columnCount) and result.count(info) == 0:
             result.append(info)
     return result
@@ -140,13 +160,14 @@ def CreateInputRelationInfos(rows, primaryIndex, groupItemIndex, primaryColumnCo
 
 def IsEmpty(item, columnCount):
     for i in range(columnCount):
-        if item[i] != '':
+        column = item[i]
+        if column and column != '':
             return False
     return True
 
 def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
     result = []
-    rows = GetTableRowsDescription('SelectAllFrom', tableName, cursor)['Rows']
+    rows = GetTableRowsDescription('SelectAllFromTable', tableName, cursor)['Rows']
     if not rows:
         return result
     for row in rows:
@@ -158,7 +179,7 @@ def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
 
 def CreateExistingRelationInfos(tableName, keyInfos, valueInfos, cursor):
     result = []
-    rows = GetTableRowsDescription('SelectAllFrom', tableName, cursor)['Rows']
+    rows = GetTableRowsDescription('SelectAllFromTable', tableName, cursor)['Rows']
     if not rows:
         return result
     for row in rows:
@@ -337,11 +358,11 @@ def ExportCards(file_name, cursor):
     if not file_name:
         print(localization.files['EmptyFileName'])
         return
-    if not sql.Execute(sql.scripts['Query']['AllCards'], cursor):
+    if not sql.Execute(sql.scripts['SelectAllFromView']['AllCards'], cursor):
         return
     rows = cursor.fetchall()
     if not rows:
-        print(localization.messages['EmptyTable']['QueryAllCards'])
+        print(localization.messages['EmptyView']['AllCards'])
         return
     if not exists(file_name):
         print(localization.files['CreateFile'].format(file_name))
@@ -384,4 +405,14 @@ def CommitChanges(cursor):
 
 def RunTesting(cursor):
     print(localization.headers['Testing'])
+    account = input(localization.dialogs['InputExistingAccount'])
+    if not account:
+        print('Не введен пользователь.')
+        if input('Хотите выбрать вопросы без пользователя (1 - да)?') != '1':
+            return
+    theme = input(localization.dialogs['InputExistingTheme'])
+    if not account:
+        print('Не введена тема.')
+        if input('Хотите выбрать вопросы без темы (1 - да)?') != '1':
+            return
     print(localization.messages['TempImposible'])

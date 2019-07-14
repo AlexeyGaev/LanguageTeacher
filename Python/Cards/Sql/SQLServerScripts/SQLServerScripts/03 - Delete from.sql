@@ -4,3 +4,4 @@ delete from Accounts;
 delete from AccountCards;
 delete from ThemeCards;
 delete from Answers;
+
