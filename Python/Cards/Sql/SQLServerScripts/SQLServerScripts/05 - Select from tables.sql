@@ -5,8 +5,8 @@ Select * from ThemeCards;
 Select * from AccountCards;
 Select * from Answers;
 
-SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES where TABLE_NAME != 'sysdiagrams';
+Select table_name FROM information_schema.tables where table_name != 'sysdiagrams';
 
-SELECT table_name, column_name, data_type, character_maximum_length, ordinal_position, is_nullable 
-FROM information_schema.COLUMNS
+Select table_name, column_name, data_type, character_maximum_length, ordinal_position, is_nullable 
+from information_schema.columns
 where table_name != 'sysdiagrams'

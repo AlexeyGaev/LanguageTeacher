@@ -411,7 +411,7 @@ def RunTesting(cursor):
         if input('Хотите выбрать вопросы без пользователя (1 - да)?') != '1':
             return
     theme = input(localization.dialogs['InputExistingTheme'])
-    if not account:
+    if not theme:
         print('Не введена тема.')
         if input('Хотите выбрать вопросы без темы (1 - да)?') != '1':
             return

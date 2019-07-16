@@ -1,7 +1,57 @@
 tables = [ 'Themes', 'Cards', 'Accounts', 'ThemeCards', 'AccountCards', 'Answers' ]
 views = ['AllCards' ] #'AllAnswers' ]
+table_columns = {
+    'Themes': [
+        'Id, int, , 1, NO',
+        'Name, char, 255, 2, YES',
+        'Level, int, , 3, YES'
+    ],
+    'Cards': [
+        'Id, int, ,1, NO',
+        'Primary_Side, text, 2147483647, 2, YES',
+        'Secondary_Side, text, 2147483647, 3, YES',
+        'Level, int, , 4, YES'
+        ],
+    'Accounts': [
+        'Id, int, ,1, NO',
+        'Name, char, 255, 2, YES'
+        ],
+    'ThemeCards': [
+        'Theme_Id, int, , 1, NO',
+        'Card_Id, int, , 2, NO'
+        ],
+    'AccountCards': [
+        'Account_Id, int, , 1, NO',
+        'Card_Id, int, , 2, NO'
+        ],
+    'Answers': [
+        'Card_Id, int, , 1, NO',
+        'Side_Order, bit, ,2, NO'
+        'Result, int, , 3, NO'
+        'Level, int, , 4, YES'
+        ],
+    }
+view_columns = {
+    'AllCards': [
+        'Primary_Side',
+        'Secondary_Side',
+        'Card_Level',
+        'Theme_Name',
+        'Theme_Level',
+        'Account_Name'
+        ]
+    }
 
 scripts = {
+    'GetAllTableNames': "Select Table_Name from information_schema.tables where Table_Name != 'sysdiagrams'",
+    'GetTableColumns': {
+        'Themes': "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Themes'",
+        'Cards' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Cards'",
+        'Accounts' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Accounts'",
+        'ThemeCards' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'ThemeCards'",
+        'AccountCards' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'AccountCards'",
+        'Answers' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Answers'"
+        },
     'CreateTable': {
         'Themes': 'Create table Themes(Id integer not null primary key, Name char(255), Level integer)',
         'Cards': 'Create table Cards(Id integer not null primary key, Primary_Side text, Secondary_Side text, Level integer)',
@@ -70,6 +120,9 @@ scripts = {
                 "Update Cards set Secondary_Side = '{}', Level = '{}' where Id = {}"
                 ],
             'Answers': [ "Update Answers set Level = {} where Card_Id = {} and Side_Order = {} and Result = {}" ]
+        },
+    'GetViewColumns': {
+        'AllCards': "Select column_name from information_schema.columns where table_name = 'AllCards'"
         },
     'CreateView' : {
         'AllCards': """

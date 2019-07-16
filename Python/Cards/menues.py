@@ -6,8 +6,7 @@ import dialogs
 import localization
 import operations
 
-def MainMenu(isServerMode, hasUpdate, connection):
-    cursor = connection.cursor()
+def MainMenu(hasUpdate, cursor):
     while True:
         ClearScreen()
         PrintLines(CreateMenu('Main'))
@@ -28,11 +27,6 @@ def MainMenu(isServerMode, hasUpdate, connection):
             ClearScreen()
             operations.RunTesting(cursor)
             EndMenuAction()
-        if actionType == 5:
-            ClearScreen()
-            operations.CommitChanges(cursor if isServerMode else connection)
-            EndMenuAction()
-    cursor.close()
 
 #---------------------------- Tables Menu -------------------------------------
 
