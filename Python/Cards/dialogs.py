@@ -12,36 +12,54 @@ import sql
 def StartDialog(connect, hasUpdate):
     print("Установлена связь с базой данных.")
     serverMode, connection, database = connect
-    print(localization.messages['ShowOptions'])
-    print('HasUpdate:', hasUpdate)
-    if serverMode:
-        print('Connection string :', database)
-        print('ServerMode:', True)
-    else:
-        print('Local database :', database)
-        print('ServerMode:', False)
+    ShowOptionsLog(CreateOptionsLog(database, hasUpdate))
     cursor = connection.cursor()
     print("Проверка содержимого базы данных.")
     print(localization.messages['PressAnyKey'])
     msvcrt.getch()
-    if not sql.Execute(sql.scripts['GetAllTableNames'], cursor):
+    ShowAllTables(serverMode, hasUpdate, cursor, connection)
+    cursor.close()
+    connection.close()
+
+def ShowOptionsLog(log):
+    print(localization.messages['ShowOptions'])
+    [print(row) for row in log]
+
+def ShowTableInfos(log):
+    [print(row) for row in log]
+
+def CreateOptionsLog(database, hasUpdate):
+    result = []
+    result.append('DataBase: {}'.format(database))
+    result.append('HasUpdate: {}'.format(hasUpdate))
+    return result
+
+def CreateTableInfosLog(tablesInfo):
+    result = []
+    for tableName in tablesInfo.keys():
+        result.append(tableName)
+        columnsRows = tablesInfo[tableName]
+        result.append('Column count: {}'.format(len(columnsRows['Columns'])))
+        for column in columnsRows['Columns']:
+            result.append(column)
+        result.append('Row count: {}'.format(len(columnsRows['Rows'])))
+        for row in columnsRows['Rows']:
+            result.append(row)
+    return result;
+
+#----------------------- Show All Tables dialog -------------------------------
+
+def ShowAllTables(serverMode, hasUpdate, cursor, connection):
+    tablesInfo = operations.GetTablesInfo(cursor)
+    if not tablesInfo:
         print('Не могу сделать запрос на проверку таблиц.')
         print('Работа с приложением невозможна.')
     else:
-        rows = cursor.fetchall()
-        if rows:
-            print("В базе данных существуют следующие таблицы и представления:")
-            tableColumns = operations.GetTableColumns([row[0] for row in rows], cursor)
-            [print(tableColumn) for tableColumn in tableColumns]
-            print(localization.messages['PressAnyKey'])
-            msvcrt.getch()
+        ShowTableInfos(CreateTableInfosLog(tablesInfo))
+        print(localization.messages['PressAnyKey'])
+        msvcrt.getch()
         menues.MainMenu(hasUpdate, cursor)
-        print("Вы закончили работать с базой данных.")
-        print("Отправить изменения в базу данных (0 - нет)?")
-        if msvcrt.getch() != b'0':
-            operations.CommitChanges(cursor if serverMode else connection)
-    cursor.close()
-    connection.close()
+        CommitChanges(serverMode, cursor, connection)
 
 #------------------------- Add cards dialog -----------------------------------
 
@@ -116,3 +134,11 @@ def InputExportCards():
     print(localization.headers['ExportCards'])
     file_name = input(localization.dialogs['InputFileName'])
     return file_name.strip()
+
+#-------------------- Commit dialog -------------------------------------------
+
+def CommitChanges(serverMode, cursor, connection):
+    print("Вы закончили работать с базой данных.")
+    print("Отправить изменения в базу данных (0 - нет)?")
+    if msvcrt.getch() != b'0':
+        operations.CommitChanges(cursor if serverMode else connection)

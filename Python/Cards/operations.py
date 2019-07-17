@@ -15,11 +15,8 @@ def Connect():
     serverMode = True
     try:
         if serverMode:
-            driver = 'SQL Server'
-            server = 'HOME\SQLEXPRESS'
-            database = 'Cards'
-            connection_string = 'DRIVER={};SERVER={};DATABASE={}'.format(driver, server, database)
-            return (True, pyodbc.connect(connection_string), connection_string)
+            database = 'DRIVER=SQL Server;SERVER=HOME\SQLEXPRESS;DATABASE=Cards'
+            return (True, pyodbc.connect(database), database)
         else:
             database = 'Cards.db'
             return (False, sqlite3.connect(database), database)
@@ -72,15 +69,19 @@ def ShowTableQuery(tableRowsDescription, header, notEmptyTableHeader, emptyTable
         print(emptyTableHeader)
         print(tableRowsDescription['Header'])
 
-def GetTableColumns(tableNames, cursor):
-    result = []
-    for tableName in tableNames:
-        if sql.Execute(sql.scripts['CountRows'][tableName], cursor):
-            row = cursor.fetchone()
-            result.append('Таблица {} (всего строк:  {})'.format(tableName, row[0]))
-            if sql.Execute(sql.scripts['GetTableColumns'][tableName], cursor):
-                rows = cursor.fetchall()
-                [result.append(row) for row in format.GetLinesFromRows(rows, 5, ', ')]
+def GetTablesInfo(cursor):
+    if not sql.Execute(sql.scripts['GetAllTableNames'], cursor):
+        return None
+    result = {}
+    for tableNameRow in cursor.fetchall():
+        tableName = tableNameRow[0]
+        columns = None
+        rows = None
+        if sql.Execute(sql.scripts['GetTableColumns'][tableName], cursor):
+            columns = [row for row in cursor.fetchall()]
+        if sql.Execute(sql.scripts['Select'][tableName], cursor):
+            rows = [row for row in cursor.fetchall()]
+        result[tableName] = {'Columns' : columns, 'Rows' : rows }
     return result
 
 def GetTableRowsDescription(script, cursor):
