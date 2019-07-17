@@ -1,8 +1,47 @@
-#import os
-from os.path import exists
+import os.path
+import msvcrt
 
 import localization
 import files
+import menues
+import operations
+import sql
+
+#---------------------- Starting dialog ---------------------------------------
+
+def StartDialog(connect, hasUpdate):
+    print("Установлена связь с базой данных.")
+    serverMode, connection, database = connect
+    print(localization.messages['ShowOptions'])
+    print('HasUpdate:', hasUpdate)
+    if serverMode:
+        print('Connection string :', database)
+        print('ServerMode:', True)
+    else:
+        print('Local database :', database)
+        print('ServerMode:', False)
+    cursor = connection.cursor()
+    print("Проверка содержимого базы данных.")
+    print(localization.messages['PressAnyKey'])
+    msvcrt.getch()
+    if not sql.Execute(sql.scripts['GetAllTableNames'], cursor):
+        print('Не могу сделать запрос на проверку таблиц.')
+        print('Работа с приложением невозможна.')
+    else:
+        rows = cursor.fetchall()
+        if rows:
+            print("В базе данных существуют следующие таблицы и представления:")
+            tableColumns = operations.GetTableColumns([row[0] for row in rows], cursor)
+            [print(tableColumn) for tableColumn in tableColumns]
+            print(localization.messages['PressAnyKey'])
+            msvcrt.getch()
+        menues.MainMenu(hasUpdate, cursor)
+        print("Вы закончили работать с базой данных.")
+        print("Отправить изменения в базу данных (0 - нет)?")
+        if msvcrt.getch() != b'0':
+            operations.CommitChanges(cursor if serverMode else connection)
+    cursor.close()
+    connection.close()
 
 #------------------------- Add cards dialog -----------------------------------
 
@@ -49,7 +88,7 @@ def InputImportCards():
     if not file_name:
         print(localization.files['EmptyFileName'])
         return None
-    if not exists(file_name):
+    if not os.path.exists(file_name):
         print(localization.files['InvalidFile'].format(file_name))
         return None
     linesFromFile = files.ReadFile(file_name)

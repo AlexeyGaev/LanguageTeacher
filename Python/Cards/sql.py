@@ -1,5 +1,5 @@
-tables = [ 'Themes', 'Cards', 'Accounts', 'ThemeCards', 'AccountCards', 'Answers' ]
-views = ['AllCards' ] #'AllAnswers' ]
+tables = [ 'Themes', 'Cards', 'Accounts', 'ThemeCards', 'AccountCards', 'Answers', 'AllCards' ]
+views = ['AllCards']
 table_columns = {
     'Themes': [
         'Id, int, , 1, NO',
@@ -30,15 +30,13 @@ table_columns = {
         'Result, int, , 3, NO'
         'Level, int, , 4, YES'
         ],
-    }
-view_columns = {
     'AllCards': [
-        'Primary_Side',
-        'Secondary_Side',
-        'Card_Level',
-        'Theme_Name',
-        'Theme_Level',
-        'Account_Name'
+        'Primary_Side, text, 2147483647, 1, YES',
+        'Secondary_Side, text, 2147483647, 2, YES',
+        'Card_Level, int, , 3, YES',
+        'Theme_Name, varchar, , 4, YES',
+        'Theme_Level, int, , 5, YES',
+        'Account_Name, varchar, , 6, YES'
         ]
     }
 
@@ -50,7 +48,17 @@ scripts = {
         'Accounts' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Accounts'",
         'ThemeCards' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'ThemeCards'",
         'AccountCards' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'AccountCards'",
-        'Answers' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Answers'"
+        'Answers' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Answers'",
+        'AllCards': "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'AllCards'"
+        },
+    'CountRows': {
+        'Themes': 'Select Count(*) from Themes',
+        'Cards': 'Select Count(*) from Cards',
+        'Accounts': 'Select Count(*) from Accounts',
+        'ThemeCards': 'Select Count(*) from ThemeCards',
+        'AccountCards': 'Select Count(*) from AccountCards',
+        'Answers': 'Select Count(*) from Answers',
+        'AllCards': 'Select Count(*) from AllCards'
         },
     'CreateTable': {
         'Themes': 'Create table Themes(Id integer not null primary key, Name char(255), Level integer)',
@@ -58,7 +66,18 @@ scripts = {
         'Accounts': 'Create table Accounts(Id integer not null primary key, Name text)',
         'ThemeCards': 'Create table ThemeCards(Theme_Id integer not null, Card_Id integer not null)',
         'AccountCards': 'Create table AccountCards(Account_Id integer not null, Card_Id integer not null)',
-        'Answers': 'Create table Answers(Card_Id integer not null, Side_Order bit not null, Result integer not null, Level integer)'
+        'Answers': 'Create table Answers(Card_Id integer not null, Side_Order bit not null, Result integer not null, Level integer)',
+        'AllCards': """
+            Create view AllCards as
+            Select Primary_Side, Secondary_Side, Cards.Level as Card_Level,
+            RTRIM(Themes.Name) as Theme_Name, Themes.Level as Theme_Level,
+            RTRIM(Accounts.Name) as Account_Name
+            from Cards
+            left join ThemeCards on ThemeCards.Card_Id = Cards.Id
+            left join Themes on ThemeCards.Theme_Id = Themes.Id
+            left join AccountCards on AccountCards.Card_Id = Cards.Id
+            left join Accounts on AccountCards.Account_Id = Accounts.Id
+            """
         },
     'DropTable': {
         'Themes': 'Drop table Themes',
@@ -66,7 +85,8 @@ scripts = {
         'Accounts': 'Drop table Accounts',
         'ThemeCards': 'Drop table ThemeCards',
         'AccountCards': 'Drop table AccountCards',
-        'Answers': 'Drop table Answers'
+        'Answers': 'Drop table Answers',
+        'AllCards': 'Drop view AllCards'
         },
     'DeleteFrom': {
         'Themes': 'Delete from Themes',
@@ -76,13 +96,14 @@ scripts = {
         'AccountCards': 'Delete from AccountCards',
         'Answers': 'Delete from Answers'
         },
-    'SelectAllFromTable': {
+    'Select': {
         'Themes': 'Select Id, RTRIM(Themes.Name) as Name from Themes',
         'Cards': 'Select * from Cards',
         'Accounts': 'Select Id, RTRIM(Accounts.Name) as Name from Accounts',
         'ThemeCards': 'Select * from ThemeCards',
         'AccountCards': 'Select * from AccountCards',
-        'Answers': 'Select * from Answers'
+        'Answers': 'Select * from Answers',
+        'AllCards': 'Select * from AllCards'
         },
     'InsertInto': {
         'Themes': [
@@ -112,36 +133,14 @@ scripts = {
             "Insert into Answers values({}, {}, {}, {})"
             ]
         },
-        'Update': {
-            'Themes': [ "Update Themes set Level = {} where Id = {}" ],
-            'Cards': [
-                "Update Cards set Level = '{}' where Id = {}",
-                "Update Cards set Secondary_Side = '{}' where Id = {}",
-                "Update Cards set Secondary_Side = '{}', Level = '{}' where Id = {}"
-                ],
-            'Answers': [ "Update Answers set Level = {} where Card_Id = {} and Side_Order = {} and Result = {}" ]
-        },
-    'GetViewColumns': {
-        'AllCards': "Select column_name from information_schema.columns where table_name = 'AllCards'"
-        },
-    'CreateView' : {
-        'AllCards': """
-            Create view AllCards as
-            Select Primary_Side, Secondary_Side, Cards.Level as Card_Level,
-            RTRIM(Themes.Name) as Theme_Name, Themes.Level as Theme_Level,
-            RTRIM(Accounts.Name) as Account_Name
-            from Cards
-            left join ThemeCards on ThemeCards.Card_Id = Cards.Id
-            left join Themes on ThemeCards.Theme_Id = Themes.Id
-            left join AccountCards on AccountCards.Card_Id = Cards.Id
-            left join Accounts on AccountCards.Account_Id = Accounts.Id
-            """
-            },
-    'DropView': {
-         'AllCards': 'Drop view AllCards'
-         },
-    'SelectAllFromView': {
-        'AllCards': 'Select * from AllCards',
+    'Update': {
+        'Themes': [ "Update Themes set Level = {} where Id = {}" ],
+        'Cards': [
+            "Update Cards set Level = '{}' where Id = {}",
+            "Update Cards set Secondary_Side = '{}' where Id = {}",
+            "Update Cards set Secondary_Side = '{}', Level = '{}' where Id = {}"
+            ],
+        'Answers': [ "Update Answers set Level = {} where Card_Id = {} and Side_Order = {} and Result = {}" ]
         },
     }
 

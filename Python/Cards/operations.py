@@ -1,70 +1,64 @@
-from os.path import exists
-from operator import itemgetter
-from itertools import groupby
-
-#my files
+import sqlite3
+import pyodbc
+import os.path
+import operator
+import itertools
 import localization
 import sql
 import exceptions
 import files
+import format
 
-#-------------------- Create, drop, delete table operations -------------------
+#-------------------------------- Table operations ----------------------------
 
-def RunSimpleTableOperation(operation, cursor):
-    print(localization.headers[operation])
+def Connect():
+    serverMode = True
+    try:
+        if serverMode:
+            driver = 'SQL Server'
+            server = 'HOME\SQLEXPRESS'
+            database = 'Cards'
+            connection_string = 'DRIVER={};SERVER={};DATABASE={}'.format(driver, server, database)
+            return (True, pyodbc.connect(connection_string), connection_string)
+        else:
+            database = 'Cards.db'
+            return (False, sqlite3.connect(database), database)
+    except:
+        return None
+
+def CreateTables(cursor):
+    print(localization.headers['CreateTable'])
     for tableName in sql.tables:
-        if sql.Execute(sql.scripts[operation][tableName], cursor):
-            print(localization.messages[operation][tableName])
+        if sql.Execute(sql.scripts['CreateTable'][tableName], cursor):
+            print(localization.messages['CreateTable'][tableName])
 
-#-------------------- Create, drop view operations ----------------------------
+def DropTables(cursor):
+    print(localization.headers['DropTable'])
+    for tableName in sql.tables:
+        if sql.Execute(sql.scripts['DropTable'][tableName], cursor):
+            print(localization.messages['DropTable'][tableName])
 
-def RunSimpleViewOperation(operation, cursor):
-    print(localization.headers[operation])
-    for viewName in sql.views:
-        if sql.Execute(sql.scripts[operation][viewName], cursor):
-            print(localization.messages[operation][viewName])
-
-#----------------------- Show Tables, Views, Cards ----------------------------
+def DeleteTables(cursor):
+    print(localization.headers['DeleteFrom'])
+    for tableName in sql.tables:
+        if sql.views.count(tableName) == 0 and sql.Execute(sql.scripts['DeleteFrom'][tableName], cursor):
+            print(localization.messages['DeleteFrom'][tableName])
 
 def ShowAllTables(cursor):
     print(localization.headers['ShowTables'])
     for tableName in sql.tables:
         ShowTable(tableName, cursor)
 
-def ShowAllViews(cursor):
-    print(localization.headers['ShowViews'])
-    for viewName in sql.views:
-        ShowView(viewName, cursor)
-
-def GetTableRowsDescription(operation, tableName, cursor):
-    script = sql.scripts[operation][tableName]
-    rows = None
-    header = ""
-    if sql.Execute(script, cursor):
-        rows = cursor.fetchall()
-        columnNames = [f'{i[0]}' for i in cursor.description]
-        columnCount = len(columnNames)
-        for i in range(columnCount):
-            header += columnNames[i]
-            if i < columnCount - 1:
-                header += ", "
-    return { 'Script' : script, 'Rows' : rows, 'Header' : header }
-
 def ShowTable(tableName, cursor):
-    ShowTableQuery(GetTableRowsDescription('SelectAllFromTable', tableName, cursor), "",
+    ShowTableQuery(GetTableRowsDescription(sql.scripts['Select'][tableName], cursor), "",
     localization.messages['ContentTable'][tableName],
     localization.messages['EmptyTable'][tableName])
 
-def ShowView(viewName, cursor):
-    ShowTableQuery(GetTableRowsDescription('SelectAllFromView', viewName, cursor), "",
-    localization.messages['ContentView'][viewName],
-    localization.messages['EmptyView'][viewName])
-
 def ShowAllCards(cursor):
-    ShowTableQuery(GetTableRowsDescription('SelectAllFromView', 'AllCards', cursor),
+    ShowTableQuery(GetTableRowsDescription(sql.scripts['Select']['AllCards'], cursor),
     localization.headers['ShowCards'],
-    localization.messages['ContentView']['AllCards'],
-    localization.messages['EmptyView']['AllCards'])
+    localization.messages['ContentTable']['AllCards'],
+    localization.messages['EmptyTable']['AllCards'])
 
 def ShowTableQuery(tableRowsDescription, header, notEmptyTableHeader, emptyTableHeader):
     if header:
@@ -78,11 +72,30 @@ def ShowTableQuery(tableRowsDescription, header, notEmptyTableHeader, emptyTable
         print(emptyTableHeader)
         print(tableRowsDescription['Header'])
 
+def GetTableColumns(tableNames, cursor):
+    result = []
+    for tableName in tableNames:
+        if sql.Execute(sql.scripts['CountRows'][tableName], cursor):
+            row = cursor.fetchone()
+            result.append('Таблица {} (всего строк:  {})'.format(tableName, row[0]))
+            if sql.Execute(sql.scripts['GetTableColumns'][tableName], cursor):
+                rows = cursor.fetchall()
+                [result.append(row) for row in format.GetLinesFromRows(rows, 5, ', ')]
+    return result
+
+def GetTableRowsDescription(script, cursor):
+    rows = None
+    header = None
+    if sql.Execute(script, cursor):
+        rows = cursor.fetchall()
+        header = format.GetTableRowHeader(cursor.description)
+    return { 'Script' : script, 'Rows' : rows, 'Header' : header }
+
 #-------------------------------- Add Cards -----------------------------------
 
 def AddCards(inputRows, hasUpdate, cursor):
     if not inputRows:
-        print(localization.messages['MissingView']['AllCards'])
+        print(localization.messages['MissingTable']['AllCards'])
         return
 
     print(localization.headers['AddCards'])
@@ -150,7 +163,7 @@ def CreateInputRelationInfos(rows, primaryIndex, groupItemIndex, primaryColumnCo
         return result
 
     result = []
-    for key, items in groupby(rows, itemgetter(primaryIndex)):
+    for key, items in itertools.groupby(rows, operator.itemgetter(primaryIndex)):
         for item in GetGroupItems(items, groupItemIndex):
             if not IsEmpty(key, primaryColumnCount) and not IsEmpty(item, groupItemColumnCount):
                 info = (key, item)
@@ -167,7 +180,7 @@ def IsEmpty(item, columnCount):
 
 def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
     result = []
-    rows = GetTableRowsDescription('SelectAllFromTable', tableName, cursor)['Rows']
+    rows = GetTableRowsDescription(sql.scripts['Select'][tableName], cursor)['Rows']
     if not rows:
         return result
     for row in rows:
@@ -179,7 +192,7 @@ def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
 
 def CreateExistingRelationInfos(tableName, keyInfos, valueInfos, cursor):
     result = []
-    rows = GetTableRowsDescription('SelectAllFromTable', tableName, cursor)['Rows']
+    rows = GetTableRowsDescription(sql.scripts['Select'][tableName], cursor)['Rows']
     if not rows:
         return result
     for row in rows:
@@ -358,41 +371,20 @@ def ExportCards(file_name, cursor):
     if not file_name:
         print(localization.files['EmptyFileName'])
         return
-    if not sql.Execute(sql.scripts['SelectAllFromView']['AllCards'], cursor):
+    if not sql.Execute(sql.scripts['Select']['AllCards'], cursor):
         return
     rows = cursor.fetchall()
     if not rows:
-        print(localization.messages['EmptyView']['AllCards'])
+        print(localization.messages['EmptyTable']['AllCards'])
         return
-    if not exists(file_name):
+    if not os.path.exists(file_name):
         print(localization.files['CreateFile'].format(file_name))
     else:
         print(localization.files['ReWriteFile'].format(file_name))
-    if files.WriteFile(file_name, GetLinesFromRows(rows, 6, ", ")):
+    if files.WriteFile(file_name, format.GetLinesFromRows(rows, 6, ", ")):
         print(localization.files['FileContent'].format(file_name))
         for line in files.ReadFile(file_name):
             print(line)
-
-def GetLinesFromRows(rows, columnCount, delimeter):
-    return [GetRowString(row, columnCount, delimeter) for row in rows]
-
-def GetFormatColumn(column):
-    if column == 0:
-        return f'{column}'
-    elif column == '0':
-        return f'{column}'
-    elif column:
-        return f'{column}'
-    else:
-        return ''
-
-def GetRowString(row, columnCount, delimeter):
-    result = ""
-    for i in range(columnCount):
-        result += GetFormatColumn(row[i])
-        if i < columnCount - 1:
-            result += delimeter
-    return result
 
 #----------------------------- Commit Changes ---------------------------------
 

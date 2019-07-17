@@ -19,11 +19,8 @@ def MainMenu(hasUpdate, cursor):
             TablesMenu(cursor)
         if actionType == 2:
             ClearScreen()
-            ViewsMenu(cursor)
-        if actionType == 3:
-            ClearScreen()
             CardsMenu(hasUpdate, cursor)
-        if actionType == 4:
+        if actionType == 3:
             ClearScreen()
             operations.RunTesting(cursor)
             EndMenuAction()
@@ -40,43 +37,19 @@ def TablesMenu(cursor):
         actionType = GetActionType('Tables', key)
         if actionType == 1:
             ClearScreen()
-            operations.RunSimpleTableOperation('CreateTable', cursor)
+            operations.CreateTables(cursor)
             EndMenuAction()
         if actionType == 2:
             ClearScreen()
-            operations.RunSimpleTableOperation('DropTable', cursor)
+            operations.DropTables(cursor)
             EndMenuAction()
         if actionType == 3:
             ClearScreen()
-            operations.RunSimpleTableOperation('DeleteFrom', cursor)
+            operations.DeleteTables(cursor)
             EndMenuAction()
         if actionType == 4:
             ClearScreen()
             operations.ShowAllTables(cursor)
-            EndMenuAction()
-
-
-#---------------------------- Views menu --------------------------------------
-
-def ViewsMenu(cursor):
-    while True:
-        ClearScreen()
-        PrintLines(CreateMenu('Views'))
-        key = getch()
-        if key == b'\x1b':
-            break
-        actionType = GetActionType('Views', key)
-        if actionType == 1:
-            ClearScreen()
-            operations.RunSimpleViewOperation('CreateView', cursor)
-            EndMenuAction()
-        if actionType == 2:
-            ClearScreen()
-            operations.RunSimpleViewOperation('DropView', cursor)
-            EndMenuAction()
-        if actionType == 3:
-            ClearScreen()
-            operations.ShowAllViews(cursor)
             EndMenuAction()
 
 # --------------------------- Cards menu --------------------------------------
