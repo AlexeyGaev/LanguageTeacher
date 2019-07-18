@@ -19,7 +19,7 @@ messages = {
         'ThemeCards': 'Создаем таблицу ThemeCards.',
         'AccountCards': 'Создаем таблицу AccountCards.',
         'Answers': 'Создаем таблицу Answers.',
-        'AllCards': 'Создаем представление для всех карточек.'
+        'AllCards': 'Создаем таблицу AllCards.'
         },
     'DropTable': {
         'Themes': 'Удаляем таблицу Themes.',
@@ -28,7 +28,7 @@ messages = {
         'ThemeCards': 'Удаляем таблицу ThemeCards.',
         'AccountCards': 'Удаляем таблицу AccountCards.',
         'Answers': 'Удаляем таблицу Answers.',
-        'AllCards': 'Удаляем представление для всех карточек.'
+        'AllCards': 'Удаляем таблицу AllCards.'
         },
     'DeleteFrom': {
         'Themes': 'Очищаем таблицу Themes.',
@@ -37,6 +37,7 @@ messages = {
         'ThemeCards': 'Очищаем таблицу ThemeCards.',
         'AccountCards': 'Очищаем таблицу AccountCards.',
         'Answers': 'Очищаем таблицу Answers.'
+        'AllCards': 'Очищаем таблицу AllCards.'
         },
     'HasTable' : {
         'Themes': 'Таблица Themes существует.',

@@ -37,19 +37,32 @@ def TablesMenu(cursor):
         actionType = GetActionType('Tables', key)
         if actionType == 1:
             ClearScreen()
-            operations.CreateTables(cursor)
+            print(localization.headers['CreateTable'])
+            log = operations.CreateTables(sql.tables, cursor):
+            if log:
+                dialogs.ShowSimpleOperationResult('CreateTable', log)
             EndMenuAction()
         if actionType == 2:
             ClearScreen()
-            operations.DropTables(cursor)
+            print(localization.headers['DropTable'])
+            log = operations.DropTables(sql.tables, cursor)
+            if log:
+                dialogs.ShowSimpleOperationResult('DropTable', log)
             EndMenuAction()
         if actionType == 3:
             ClearScreen()
-            operations.DeleteTables(cursor)
+            print(localization.headers['DeleteFrom'])
+            tableNames = [tableName for tableName in sql.tables if sql.views.count(tableName) == 0]
+            log = operations.DeleteTables(tableNames, cursor)
+            if log:
+                dialogs.ShowSimpleOperationResult('DeleteFrom', log)
             EndMenuAction()
         if actionType == 4:
             ClearScreen()
-            operations.ShowAllTables(cursor)
+            print(localization.headers['ShowTables'])
+            log = operations.SelectAllColumnsAndAllRowsFromTables(sql.tables, cursor)
+            if log:
+                dialogs.ShowSelectAllColumnsAndAllRowsFromTablesResult(log)
             EndMenuAction()
 
 # --------------------------- Cards menu --------------------------------------

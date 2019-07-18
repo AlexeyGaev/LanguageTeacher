@@ -7,7 +7,7 @@ import menues
 import operations
 import sql
 
-#---------------------- Starting dialog ---------------------------------------
+#---------------------- Starting dialog TODO ----------------------------------
 
 def StartDialog(connect, hasUpdate):
     print("Установлена связь с базой данных.")
@@ -17,15 +17,23 @@ def StartDialog(connect, hasUpdate):
     print("Проверка содержимого базы данных.")
     print(localization.messages['PressAnyKey'])
     msvcrt.getch()
-    ShowAllTables(serverMode, hasUpdate, cursor, connection)
+    tableNames = SelectAllTableNames(cursor)
+    if not tableNames:
+        print('Не могу сделать запрос на проверку таблиц.')
+        print('Работа с приложением невозможна.')
+    else:
+        log = operations.SelectAllColumnsAndRowsFromTables(tableNames, cursor)
+        if log:
+            ShowSelectAllColumnsAndAllRowsFromTablesResult(log)
+            print(localization.messages['PressAnyKey'])
+            msvcrt.getch()
+        menues.MainMenu(hasUpdate, cursor)
+        CommitChanges(serverMode, cursor, connection)
     cursor.close()
     connection.close()
 
 def ShowOptionsLog(log):
     print(localization.messages['ShowOptions'])
-    [print(row) for row in log]
-
-def ShowTableInfos(log):
     [print(row) for row in log]
 
 def CreateOptionsLog(database, hasUpdate):
@@ -34,32 +42,19 @@ def CreateOptionsLog(database, hasUpdate):
     result.append('HasUpdate: {}'.format(hasUpdate))
     return result
 
-def CreateTableInfosLog(tablesInfo):
-    result = []
-    for tableName in tablesInfo.keys():
-        result.append(tableName)
+def ShowSimpleOperationResult(operation, log):
+    [print(localization.messages[operation][key]) for key in log.keys() if log[key]]
+
+def ShowSelectAllColumnsAndAllRowsFromTablesResult(log):
+    for tableName in log.keys():
+        print(tableName)
         columnsRows = tablesInfo[tableName]
-        result.append('Column count: {}'.format(len(columnsRows['Columns'])))
+        print('Column count: {}'.format(len(columnsRows['Columns'])))
         for column in columnsRows['Columns']:
-            result.append(column)
-        result.append('Row count: {}'.format(len(columnsRows['Rows'])))
+            print(column)
+        print('Row count: {}'.format(len(columnsRows['Rows'])))
         for row in columnsRows['Rows']:
-            result.append(row)
-    return result;
-
-#----------------------- Show All Tables dialog -------------------------------
-
-def ShowAllTables(serverMode, hasUpdate, cursor, connection):
-    tablesInfo = operations.GetTablesInfo(cursor)
-    if not tablesInfo:
-        print('Не могу сделать запрос на проверку таблиц.')
-        print('Работа с приложением невозможна.')
-    else:
-        ShowTableInfos(CreateTableInfosLog(tablesInfo))
-        print(localization.messages['PressAnyKey'])
-        msvcrt.getch()
-        menues.MainMenu(hasUpdate, cursor)
-        CommitChanges(serverMode, cursor, connection)
+            print(row)
 
 #------------------------- Add cards dialog -----------------------------------
 

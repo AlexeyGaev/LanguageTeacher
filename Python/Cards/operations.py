@@ -9,42 +9,79 @@ import exceptions
 import files
 import format
 
-#-------------------------------- Table operations ----------------------------
-
 def Connect():
     serverMode = True
     try:
         if serverMode:
             database = 'DRIVER=SQL Server;SERVER=HOME\SQLEXPRESS;DATABASE=Cards'
-            return (True, pyodbc.connect(database), database)
+            return True, pyodbc.connect(database), database
         else:
             database = 'Cards.db'
-            return (False, sqlite3.connect(database), database)
+            return False, sqlite3.connect(database), database
     except:
         return None
 
-def CreateTables(cursor):
-    print(localization.headers['CreateTable'])
-    for tableName in sql.tables:
-        if sql.Execute(sql.scripts['CreateTable'][tableName], cursor):
-            print(localization.messages['CreateTable'][tableName])
+def CreateTables(tableNames, cursor):
+    result = {}
+    for tableName in tableNames:
+        result[tableName] = CreateTable(tableName, cursor)
+    return result
 
-def DropTables(cursor):
-    print(localization.headers['DropTable'])
-    for tableName in sql.tables:
-        if sql.Execute(sql.scripts['DropTable'][tableName], cursor):
-            print(localization.messages['DropTable'][tableName])
+def CreateTable(tableName, cursor):
+    return sql.Execute(sql.scripts['CreateTable'][tableName], cursor)
 
-def DeleteTables(cursor):
-    print(localization.headers['DeleteFrom'])
-    for tableName in sql.tables:
-        if sql.views.count(tableName) == 0 and sql.Execute(sql.scripts['DeleteFrom'][tableName], cursor):
-            print(localization.messages['DeleteFrom'][tableName])
+def DropTables(tableNames, cursor):
+    result = {}
+    for tableName in tableNames:
+        result[tableName] = DropTable(tableName, cursor)
+    return result
 
-def ShowAllTables(cursor):
-    print(localization.headers['ShowTables'])
-    for tableName in sql.tables:
-        ShowTable(tableName, cursor)
+def DropTable(tableName, cursor):
+    return sql.Execute(sql.scripts['DropTable'][tableName], cursor)
+
+def DeleteTables(tableNames, cursor):
+    result = {}
+    for tableName in tableNames:
+        result[tableName] = DropTable(tableName, cursor)
+    return result
+
+def DeleteTable(tableName, cursor):
+    return sql.Execute(sql.scripts['DeleteFrom'][tableName], cursor)
+
+def SelectAllRowsFromTables(tableNames, cursor):
+    result = {}
+    for tableName in tableNames:
+        result[tableName] = SelectAllFromTable(tableName, cursor)
+    return result
+
+def SelectAllRowsFromTable(tableName, cursor):
+    if sql.Execute(sql.scripts['SelectAllRowsFromTable'][tableName], cursor):
+        return [row for row in cursor.fetchall()]
+    return None
+
+def SelectAllColumnsFromTable(tableName, cursor):
+    if sql.Execute(sql.scripts['SelectAllColumnsFromTable'][tableName], cursor):
+        return [row for row in cursor.fetchall()]
+    return None
+
+def SelectAllColumnsAndAllRowsFromTables(tableNames, cursor):
+    result = {}
+    for tableName in tableNames:
+        result[tableName] = SelectAllColumnsAndAllRowsFromTable(tableName, cursor)
+    return result
+
+def SelectAllColumnsAndAllRowsFromTable(tableName, cursor):
+    return {
+        'Columns' : SelectAllColumnsFromTable(tableName, cursor),
+        'Rows' : SelectAllRowsFromTable(tableName, cursor)
+        }
+
+def SelectAllTableNames(cursor):
+    if not sql.Execute(sql.scripts['SelectAllTableNames'], cursor):
+        return None
+    return [row[0] for row in cursor.fetchall()]
+
+#------------------------  TODO -----------------------------------------------
 
 def ShowTable(tableName, cursor):
     ShowTableQuery(GetTableRowsDescription(sql.scripts['Select'][tableName], cursor), "",
@@ -68,21 +105,6 @@ def ShowTableQuery(tableRowsDescription, header, notEmptyTableHeader, emptyTable
     else:
         print(emptyTableHeader)
         print(tableRowsDescription['Header'])
-
-def GetTablesInfo(cursor):
-    if not sql.Execute(sql.scripts['GetAllTableNames'], cursor):
-        return None
-    result = {}
-    for tableNameRow in cursor.fetchall():
-        tableName = tableNameRow[0]
-        columns = None
-        rows = None
-        if sql.Execute(sql.scripts['GetTableColumns'][tableName], cursor):
-            columns = [row for row in cursor.fetchall()]
-        if sql.Execute(sql.scripts['Select'][tableName], cursor):
-            rows = [row for row in cursor.fetchall()]
-        result[tableName] = {'Columns' : columns, 'Rows' : rows }
-    return result
 
 def GetTableRowsDescription(script, cursor):
     rows = None

@@ -41,8 +41,8 @@ table_columns = {
     }
 
 scripts = {
-    'GetAllTableNames': "Select Table_Name from information_schema.tables where Table_Name != 'sysdiagrams'",
-    'GetTableColumns': {
+    'SelectAllTableNames': "Select Table_Name from information_schema.tables where Table_Name != 'sysdiagrams'",
+    'SelectAllColumnsFromTable': {
         'Themes': "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Themes'",
         'Cards' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Cards'",
         'Accounts' : "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = 'Accounts'",
@@ -96,7 +96,7 @@ scripts = {
         'AccountCards': 'Delete from AccountCards',
         'Answers': 'Delete from Answers'
         },
-    'Select': {
+    'SelectAllRowsFromTable': {
         'Themes': 'Select Id, RTRIM(Themes.Name) as Name from Themes',
         'Cards': 'Select * from Cards',
         'Accounts': 'Select Id, RTRIM(Accounts.Name) as Name from Accounts',
