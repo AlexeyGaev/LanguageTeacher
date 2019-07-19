@@ -36,7 +36,7 @@ messages = {
         'Accounts': 'Очищаем таблицу Accounts.',
         'ThemeCards': 'Очищаем таблицу ThemeCards.',
         'AccountCards': 'Очищаем таблицу AccountCards.',
-        'Answers': 'Очищаем таблицу Answers.'
+        'Answers': 'Очищаем таблицу Answers.',
         'AllCards': 'Очищаем таблицу AllCards.'
         },
     'HasTable' : {
@@ -46,7 +46,7 @@ messages = {
         'ThemeCards': 'Таблица ThemeCards существует.',
         'AccountCards': 'Таблица AccountCards существует.',
         'Answers': 'Таблица Answers существует.',
-        'AllCards' : 'Представление AllCards существует.'
+        'AllCards' : 'Tаблица AllCards существует.'
         },
     'MissingTable' : {
         'Themes': 'Таблица Themes не существует.',
@@ -55,7 +55,7 @@ messages = {
         'ThemeCards': 'Таблица ThemeCards не существует.',
         'AccountCards': 'Таблица AccountCards не существует.',
         'Answers': 'Таблица Answers не существует.',
-        'AllCards': "Карточки отсутствуют."
+        'AllCards': "Tаблица AllCards не существует."
         },
     'ContentTable' : {
         'Themes': 'Содержимое таблицы Themes:',
@@ -64,7 +64,43 @@ messages = {
         'ThemeCards': 'Содержимое таблицы ThemeCards:',
         'AccountCards': 'Содержимое таблицы AccountCards:',
         'Answers': 'Содержимое таблицы Answers:',
-        'AllCards': 'Содержимое представления для всех карточек:'
+        'AllCards': 'Содержимое таблицы AllCards:'
+        },
+    'ColumnCount' : {
+        'Themes': 'Количество колонок таблицы Themes: {}',
+        'Cards': 'Количество колонок таблицы Cards: {}',
+        'Accounts': 'Количество колонок таблицы Accounts: {}',
+        'ThemeCards': 'Количество колонок таблицы ThemeCards: {}',
+        'AccountCards': 'Количество колонок таблицы AccountCards: {}',
+        'Answers': 'Количество колонок таблицы Answers: {}',
+        'AllCards': 'Количество колонок таблицы AllCards: {}'
+        },
+    'RowCount' : {
+        'Themes': 'Количество строк таблицы Themes: {}',
+        'Cards': 'Количество строк таблицы Cards: {}',
+        'Accounts': 'Количество строк таблицы Accounts: {}',
+        'ThemeCards': 'Количество строк таблицы ThemeCards: {}',
+        'AccountCards': 'Количество строк таблицы AccountCards: {}',
+        'Answers': 'Количество строк таблицы Answers: {}',
+        'AllCards': 'Количество строк таблицы AllCards: {}'
+        },
+    'MissingColumns' : {
+        'Themes': 'Колонки таблицы Themes отсутвуют.',
+        'Cards': 'Колонки таблицы Cards отсутвуют.',
+        'Accounts': 'Колонки таблицы Accounts отсутвуют.',
+        'ThemeCards': 'Колонки таблицы ThemeCards отсутвуют.',
+        'AccountCards': 'Колонки таблицы AccountCards отсутвуют.',
+        'Answers': 'Колонки таблицы Answers отсутвуют.',
+        'AllCards': 'Колонки таблицы AllCards отсутвуют.'
+        },
+    'MissingRows' : {
+        'Themes': 'Строки таблицы Themes отсутвуют.',
+        'Cards': 'Строки таблицы Cards отсутвуют.',
+        'Accounts': 'Строки таблицы Accounts отсутвуют.',
+        'ThemeCards': 'Строки таблицы ThemeCards отсутвуют.',
+        'AccountCards': 'Строки таблицы AccountCards отсутвуют.',
+        'Answers': 'Строки таблицы Answers отсутвуют.',
+        'AllCards': 'Строки таблицы AllCards отсутвуют.'
         },
     'EmptyTable' : {
         'Themes': 'Таблица Themes пустая.',
@@ -81,6 +117,8 @@ messages = {
     'MainException' : 'Не могу связаться к базой данных.',
     'InvalidTable' : 'Проблема с доступом к таблице.',
     'Error' : "Неизвестная ошибка",
+    'HasException' : 'Произошло исключение c id = {}',
+    'ScriptException' : 'Не могу выполнить скрипт: {}',
 
     'PressAnyKey' : 'Нажмите любую клавишу...',
     'TempImposible' : 'Временно не поддерживается',

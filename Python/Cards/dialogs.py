@@ -1,13 +1,152 @@
+import os
 import os.path
 import msvcrt
 
 import localization
 import files
-import menues
 import operations
 import sql
 
-#---------------------- Starting dialog TODO ----------------------------------
+def MainMenu(hasUpdate, cursor):
+    menu = CreateMenu('Main')
+    while True:
+        key = ShowMenu(menu)
+        if key == b'\x1b':
+            break
+        actionType = GetActionType('Main', key)
+        if actionType == 1:
+            TablesMenu(cursor)
+        if actionType == 2:
+            CardsMenu(hasUpdate, cursor)
+        if actionType == 3:
+            TestingDialog(cursor)
+
+def TablesMenu(cursor):
+    menu = CreateMenu('Tables')
+    while True:
+        key = ShowMenu(menu)
+        if key == b'\x1b':
+            break
+        actionType = GetActionType('Tables', key)
+        if actionType == 1:
+            CreateTablesDialog(cursor)
+        if actionType == 2:
+            DropTablesDialog(cursor)
+        if actionType == 3:
+            ClearTablesDialog(cursor)
+        if actionType == 4:
+            ShowTablesDialog(cursor)
+
+def CardsMenu(hasUpdate, cursor):
+    menu = CreateMenu('Cards')
+    while True:
+        key = ShowMenu(menu)
+        if key == b'\x1b':
+            break
+        actionType = GetActionType('Cards', key)
+        if actionType == 1:
+            ShowAllCardsDialog(cursor)
+        if actionType == 2:
+            AddCardsDialog(hasUpdate, cursor)
+        if actionType == 3:
+            ImportCardsDialog(hasUpdate, cursor)
+        if actionType == 4:
+            ExportCardsDialog(cursor)
+
+def CreateTablesDialog(cursor):
+    ClearScreen()
+    print(localization.headers['CreateTable'])
+    log = operations.CreateTables(sql.tables, cursor)
+    if log:
+        ShowSimpleTableOperation('CreateTable', log)
+    EndDialog()
+
+def DropTablesDialog(cursor):
+    ClearScreen()
+    print(localization.headers['DropTable'])
+    log = operations.DropTables(sql.tables, cursor)
+    if log:
+        ShowSimpleTableOperation('DropTable', log)
+    EndDialog()
+
+def ClearTablesDialog(cursor):
+    ClearScreen()
+    print(localization.headers['DeleteFrom'])
+    tableNames = [tableName for tableName in sql.tables if sql.views.count(tableName) == 0]
+    log = operations.DeleteTables(tableNames, cursor)
+    if log:
+        ShowSimpleTableOperation('DeleteFrom', log)
+    EndDialog()
+
+def ShowTablesDialog(cursor):
+    ClearScreen()
+    print(localization.headers['ShowTables'])
+    log = operations.SelectAllColumnsAndAllRowsFromTables(sql.tables, cursor)
+    if log:
+        ShowSelectAllColumnsAndAllRowsFromTables(log)
+    EndDialog()
+
+def ShowAllCardsDialog(cursor):
+    ClearScreen()
+    print(localization.headers['ShowAllCards'])
+    log = operations.SelectAllColumnsAndAllRowsFromTable('AllCards', cursor)
+    if log:
+        ShowSelectAllColumnsAndAllRowsFromTable('AllCards', log)
+    EndDialog()
+
+def AddCardsDialog(hasUpdate, cursor):
+    ClearScreen()
+    operations.AddCards(InputAddCards(), hasUpdate, cursor)
+    EndDialog()
+
+def ImportCardsDialog(hasUpdate, cursor):
+    ClearScreen()
+    operations.AddCards(InputImportCards(','), hasUpdate, cursor)
+    EndDialog()
+
+def ExportCardsDialog(cursor):
+    ClearScreen()
+    print(localization.headers['ExportCards'])
+    file_name = input(localization.dialogs['InputFileName'])
+    file_name = file_name.strip()
+    if not file_name:
+        print(localization.files['EmptyFileName'])
+        return
+    rows = SelectAllRowsFromTable('AllCards', cursor)
+    if not rows:
+        return
+    if not os.path.exists(file_name):
+        print(localization.files['CreateFile'].format(file_name))
+    else:
+        print(localization.files['ReWriteFile'].format(file_name))
+    if files.WriteFile(file_name, format.GetLinesFromRows(rows, 6, ", ")):
+        print(localization.files['FileContent'].format(file_name))
+        for line in files.ReadFile(file_name):
+            print(line)
+    EndDialog()
+
+def ShowScriptException(e, script):
+    print(localization.messages['HasException'].format(e.args[0]))
+    print(localization.messages['ScriptException'].format(script))
+    if e.args[0] == '42S01' or e.args[0] == '42S02':
+        print(localization.messages['InvalidTable'], e.args[1]);
+
+#---------------------- TODO : localization, Dialog ---------------------------
+
+def TestingDialog(cursor):
+    # TODO dialog
+    print(localization.headers['Testing'])
+    account = input(localization.dialogs['InputExistingAccount'])
+    if not account:
+        print('Не введен пользователь.')
+        if input('Хотите выбрать вопросы без пользователя (1 - да)?') != '1':
+            return
+    theme = input(localization.dialogs['InputExistingTheme'])
+    if not theme:
+        print('Не введена тема.')
+        if input('Хотите выбрать вопросы без темы (1 - да)?') != '1':
+            return
+    print(localization.messages['TempImposible'])
 
 def StartDialog(connect, hasUpdate):
     print("Установлена связь с базой данных.")
@@ -17,84 +156,57 @@ def StartDialog(connect, hasUpdate):
     print("Проверка содержимого базы данных.")
     print(localization.messages['PressAnyKey'])
     msvcrt.getch()
-    tableNames = SelectAllTableNames(cursor)
+    tableNames = operations.SelectAllTableNames(cursor)
     if not tableNames:
         print('Не могу сделать запрос на проверку таблиц.')
         print('Работа с приложением невозможна.')
     else:
-        log = operations.SelectAllColumnsAndRowsFromTables(tableNames, cursor)
+        log = operations.SelectAllColumnsAndAllRowsFromTables(tableNames, cursor)
         if log:
-            ShowSelectAllColumnsAndAllRowsFromTablesResult(log)
+            ShowSelectAllColumnsAndAllRowsFromTables(log)
             print(localization.messages['PressAnyKey'])
             msvcrt.getch()
-        menues.MainMenu(hasUpdate, cursor)
-        CommitChanges(serverMode, cursor, connection)
+        # TODO: verify with column's names from sql
+        MainMenu(hasUpdate, cursor)
+        CommitChanges(cursor if serverMode else connection)
     cursor.close()
     connection.close()
 
-def ShowOptionsLog(log):
-    print(localization.messages['ShowOptions'])
-    [print(row) for row in log]
+def CommitChanges(cursor):
+    print("Вы закончили работать с базой данных.")
+    print("Отправить изменения в базу данных (0 - нет)?")
+    if msvcrt.getch() != b'0':
+        print(localization.headers['ApplyChanges'])
+        cursor.commit()
+        print(localization.messages['ApplyChanges'])
 
-def CreateOptionsLog(database, hasUpdate):
-    result = []
-    result.append('DataBase: {}'.format(database))
-    result.append('HasUpdate: {}'.format(hasUpdate))
-    return result
-
-def ShowSimpleOperationResult(operation, log):
-    [print(localization.messages[operation][key]) for key in log.keys() if log[key]]
-
-def ShowSelectAllColumnsAndAllRowsFromTablesResult(log):
-    for tableName in log.keys():
-        print(tableName)
-        columnsRows = tablesInfo[tableName]
-        print('Column count: {}'.format(len(columnsRows['Columns'])))
-        for column in columnsRows['Columns']:
-            print(column)
-        print('Row count: {}'.format(len(columnsRows['Rows'])))
-        for row in columnsRows['Rows']:
-            print(row)
-
-#------------------------- Add cards dialog -----------------------------------
+#--------------------------- End TODO -----------------------------------------
+#-------------------------  Add cards dialog ----------------------------------
 
 def InputAddCards():
     result = []
-    InputAddCard(result)
+    primary_side = input("Primary Side : ").strip()
+    secondary_side = input("Secondary Side : ").strip()
+    card_level = StringToInt(input("Card Level : "))
+    theme_name = input("Theme : ").strip()
+    theme_level = StringToInt(input("Theme Level : "))
+    account_name = input("Account : ").strip()
+    result.append((primary_side, secondary_side, card_level, theme_name, theme_level, account_name))
     while True:
         if input(localization.dialogs['InputContinueCreateCard']) != '1':
             break
-        InputAddCard(result)
+        primary_side = input("Primary Side : ").strip()
+        secondary_side = input("Secondary Side : ").strip()
+        card_level = StringToInt(input("Card Level : "))
+        theme_name = input("Theme : ").strip()
+        theme_level = StringToInt(input("Theme Level : "))
+        account_name = input("Account : ").strip()
+        result.append((primary_side, secondary_side, card_level, theme_name, theme_level, account_name))
     return result
-
-def InputAccount():
-    result = ()
-    result += (input("Account : ").strip(), )
-    return result
-
-def InputTheme():
-    result = ()
-    result += (input("Theme : ").strip(), )
-    result += (StringToInt(input("Theme Level : ")), )
-    return result
-
-def InputCard():
-    result = ()
-    result += (input("Primary Side : ").strip(), )
-    result += (input("Secondary Side : ").strip(), )
-    result += (StringToInt(input("Card Level : ")), )
-    return result
-
-def InputAddCard(cardsList):
-    cardInfo = InputCard()
-    themeInfo = InputTheme()
-    accountInfo = InputAccount()
-    if cardInfo != ("", "", "") or themeInfo != ("", "") or accountInfo != "":
-        cardsList.append((cardInfo,themeInfo,accountInfo))
 
 #-------------------- Import cards from file dialog ---------------------------
 
-def InputImportCards():
+def InputImportCards(delimeter):
     print(localization.headers['ImportCards'])
     file_name = input(localization.dialogs['InputFileName'])
     file_name = file_name.strip()
@@ -107,33 +219,96 @@ def InputImportCards():
     linesFromFile = files.ReadFile(file_name)
     result = []
     for line in linesFromFile:
-        lineItems = line.split(',')
-        cardInfo = (lineItems[0].strip(), lineItems[1].strip(), StringToInt(lineItems[2].strip()))
-        themeInfo = (lineItems[3].strip(), StringToInt(lineItems[4].strip()))
-        accountInfo = ()
-        accountInfo += (lineItems[5].strip(), )
-        result.append((cardInfo, themeInfo, accountInfo))
+        columns = line.split(delimeter)
+        primary_side = columns[0].strip()
+        secondary_side = columns[1].strip()
+        card_level = StringToInt(columns[2].strip())
+        theme_name = columns[3].strip()
+        theme_level = StringToInt(columns[4].strip())
+        account_name = columns[5].strip()
+        result.append((primary_side, secondary_side, card_level, theme_name, theme_level, account_name))
     return result
 
 def StringToInt(value):
     if not value:
         return None
     elif value == '':
-        return 0
+        return None
     else:
-        return int(value)
+        try:
+            return int(value)
+        except:
+            return None
 
-#--------------------- Export to file dialog ----------------------------------
+#-------------------------------- Utils ---------------------------------------
 
-def InputExportCards():
-    print(localization.headers['ExportCards'])
-    file_name = input(localization.dialogs['InputFileName'])
-    return file_name.strip()
+def CreateOptionsLog(database, hasUpdate):
+    result = []
+    result.append('DataBase: {}'.format(database))
+    result.append('HasUpdate: {}'.format(hasUpdate))
+    return result
 
-#-------------------- Commit dialog -------------------------------------------
+def ShowOptionsLog(log):
+    print(localization.messages['ShowOptions'])
+    [print(row) for row in log]
 
-def CommitChanges(serverMode, cursor, connection):
-    print("Вы закончили работать с базой данных.")
-    print("Отправить изменения в базу данных (0 - нет)?")
-    if msvcrt.getch() != b'0':
-        operations.CommitChanges(cursor if serverMode else connection)
+def ShowSimpleTableOperation(operation, log):
+    [print(localization.messages[operation][key]) for key in log.keys() if log[key]]
+
+def ShowSelectAllColumnsAndAllRowsFromTables(log):
+    for tableName in log.keys():
+        ShowSelectAllColumnsAndAllRowsFromTable(tableName, log[tableName])
+
+def ShowSelectAllColumnsAndAllRowsFromTable(tableName, columnsRows):
+    print(localization.messages['ContentTable'][tableName])
+    ShowSelectAllColumnsFromTable(tableName, columnsRows['Columns'])
+    ShowSelectAllRowsFromTable(tableName, columnsRows['Rows'])
+
+def ShowSelectAllColumnsFromTable(tableName, columnsLog):
+    if not columnsLog:
+        print(localization.messages['MissingColumns'][tableName])
+    else:
+        print(localization.messages['ColumnCount'][tableName].format(len(columnsLog)))
+        for column in columnsLog:
+            print(column)
+
+def ShowSelectAllRowsFromTable(tableName, rowsLog):
+    if not rowsLog:
+        print(localization.messages['MissingRows'][tableName])
+    else:
+        print(localization.messages['RowCount'][tableName].format(len(rowsLog)))
+        for row in rowsLog:
+            print(row)
+
+def ClearScreen():
+    os.system('cls' if os.name=='nt' else 'clear')
+
+def EndDialog():
+    print(localization.messages['PressAnyKey'])
+    msvcrt.getch()
+
+def ShowMenu(menu):
+    ClearScreen()
+    PrintLines(menu)
+    return msvcrt.getch()
+
+def CreateMenu(description):
+    result = []
+    localizationMenu = localization.menues[description]
+    for header in localizationMenu['Headers']:
+        result.append(header)
+    for item in localizationMenu['Items']:
+        h, n, k = item
+        result.append("{} - {}".format(h, n))
+    return result
+
+def GetActionType(description, key):
+    actions = {}
+    for item in localization.menues[description]['Items']:
+        h, n, k = item
+        if k == key:
+            return h
+    return -1
+
+def PrintLines(lines):
+    [print(line) for line in lines]

@@ -1,13 +1,10 @@
 import sqlite3
 import pyodbc
-import os.path
 import operator
 import itertools
-import localization
 import sql
-import exceptions
-import files
-import format
+
+import localization
 
 def Connect():
     serverMode = True
@@ -83,40 +80,17 @@ def SelectAllTableNames(cursor):
 
 #------------------------  TODO -----------------------------------------------
 
-def ShowTable(tableName, cursor):
-    ShowTableQuery(GetTableRowsDescription(sql.scripts['Select'][tableName], cursor), "",
-    localization.messages['ContentTable'][tableName],
-    localization.messages['EmptyTable'][tableName])
-
-def ShowAllCards(cursor):
-    ShowTableQuery(GetTableRowsDescription(sql.scripts['Select']['AllCards'], cursor),
-    localization.headers['ShowCards'],
-    localization.messages['ContentTable']['AllCards'],
-    localization.messages['EmptyTable']['AllCards'])
-
-def ShowTableQuery(tableRowsDescription, header, notEmptyTableHeader, emptyTableHeader):
-    if header:
-        print(header)
-    rows = tableRowsDescription['Rows']
-    if rows:
-        print(notEmptyTableHeader)
-        print(tableRowsDescription['Header'])
-        [print(row) for row in rows]
-    else:
-        print(emptyTableHeader)
-        print(tableRowsDescription['Header'])
-
-def GetTableRowsDescription(script, cursor):
-    rows = None
-    header = None
-    if sql.Execute(script, cursor):
-        rows = cursor.fetchall()
-        header = format.GetTableRowHeader(cursor.description)
-    return { 'Script' : script, 'Rows' : rows, 'Header' : header }
-
 #-------------------------------- Add Cards -----------------------------------
 
-def AddCards(inputRows, hasUpdate, cursor):
+def AddCards(rows, hasUpdate, cursor):
+    inputRows = []
+    for row in rows:
+        cardInfo = (row[0], row[1], row[2])
+        themeInfo = (row[3], row[4])
+        accountInfo = ()
+        accountInfo += (lineItems[5], )
+        inputRows.append((cardInfo, themeInfo, accountInfo))
+
     if not inputRows:
         print(localization.messages['MissingTable']['AllCards'])
         return
@@ -203,7 +177,7 @@ def IsEmpty(item, columnCount):
 
 def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
     result = []
-    rows = GetTableRowsDescription(sql.scripts['Select'][tableName], cursor)['Rows']
+    rows = SelectAllRowsFromTable(tableName, cursor)
     if not rows:
         return result
     for row in rows:
@@ -215,7 +189,7 @@ def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
 
 def CreateExistingRelationInfos(tableName, keyInfos, valueInfos, cursor):
     result = []
-    rows = GetTableRowsDescription(sql.scripts['Select'][tableName], cursor)['Rows']
+    rows = SelectAllRowsFromTable(tableName, cursor)
     if not rows:
         return result
     for row in rows:
@@ -387,47 +361,3 @@ def ExecuteAddedScripts(addedScripts, cursor):
     for script, result in resultExecuteScripts:
         scriptResult = localization.add_cards['SuccessRunSqlScript'] if result else localization.add_cards['FailRunSqlScript']
         print(script, scriptResult)
-
-#---------------------------- Export Cards ------------------------------------
-
-def ExportCards(file_name, cursor):
-    if not file_name:
-        print(localization.files['EmptyFileName'])
-        return
-    if not sql.Execute(sql.scripts['Select']['AllCards'], cursor):
-        return
-    rows = cursor.fetchall()
-    if not rows:
-        print(localization.messages['EmptyTable']['AllCards'])
-        return
-    if not os.path.exists(file_name):
-        print(localization.files['CreateFile'].format(file_name))
-    else:
-        print(localization.files['ReWriteFile'].format(file_name))
-    if files.WriteFile(file_name, format.GetLinesFromRows(rows, 6, ", ")):
-        print(localization.files['FileContent'].format(file_name))
-        for line in files.ReadFile(file_name):
-            print(line)
-
-#----------------------------- Commit Changes ---------------------------------
-
-def CommitChanges(cursor):
-    print(localization.headers['ApplyChanges'])
-    cursor.commit()
-    print(localization.messages['ApplyChanges'])
-
-#----------------------------- Run Testing ------------------------------------
-
-def RunTesting(cursor):
-    print(localization.headers['Testing'])
-    account = input(localization.dialogs['InputExistingAccount'])
-    if not account:
-        print('Не введен пользователь.')
-        if input('Хотите выбрать вопросы без пользователя (1 - да)?') != '1':
-            return
-    theme = input(localization.dialogs['InputExistingTheme'])
-    if not theme:
-        print('Не введена тема.')
-        if input('Хотите выбрать вопросы без темы (1 - да)?') != '1':
-            return
-    print(localization.messages['TempImposible'])

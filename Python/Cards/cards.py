@@ -6,6 +6,8 @@ import dialogs
 
 script = sys.argv
 
+#------------------- TODO : move to start dialog ------------------------------
+
 print(localization.messages['Start'].format(script))
 print(localization.messages['DataBaseSync'])
 print(localization.messages['PressAnyKey'])

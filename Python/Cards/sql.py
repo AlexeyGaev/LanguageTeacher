@@ -39,6 +39,13 @@ table_columns = {
         'Account_Name, varchar, , 6, YES'
         ]
     }
+table_column_descriptions = [
+    'Column_Name',
+    'Data_Type',
+    'Character_maximum_length',
+    'Ordinal_position'
+    'Is_nullable'
+]
 
 scripts = {
     'SelectAllTableNames': "Select Table_Name from information_schema.tables where Table_Name != 'sysdiagrams'",
@@ -144,15 +151,17 @@ scripts = {
         },
     }
 
-import exceptions
-
+import dialogs
 def Execute(script, cursor):
     if not script:
         return False;
     try:
         cursor.execute(script)
     except Exception as e:
-        exceptions.Error(cursor, e)
+        dialogs.ShowScriptException(e, script)
+        print(localization.messages['HasException'].format(e.args[0]))
+        print(localization.messages['ScriptException'].format(script))
+        exceptions.ScriptError(script, cursor, e)
         return False;
     else:
         return True
