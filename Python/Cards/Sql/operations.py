@@ -18,6 +18,74 @@ def Connect():
     except:
         return None
 
+def GetValidTables(validTableNames, validTableColumns, cursor):
+    if not SelectAllTableNames(cursor):
+        return None
+    tableNameRows = cursor.fetchall()
+    if not tableNameRows:
+        return {
+            'ValidTables' : None,
+            'InvalidTables': None,
+            'MissingTableNames' : validTableNames.copy(),
+            'ExtraTableNames' : None
+        }
+    validTables = {}
+    invalidTables = {}
+    missingTableNames = validTableNames.copy();
+    extraTableNames = []
+    for row in tableNameRows:
+        tableName = row[0]
+        if missingTableNames.count(tableName) > 0:
+            missingTableNames.remove(tableName)
+            columnsRows = GetValidTableColumnsRows(tableName, validTableColumns[tableName], cursor)
+            columns = columnsRows['Columns']
+            if not columns:
+                validTables[tableName] = columnsRows
+            else:
+                validColumns = columns['ValidColumns']
+                missingColumns = columns['MissingColumns']
+                extraColumns = columns['ExtraColumns']
+                if validColumns and not missingColumns and not extraColumns:
+                    validTables[tableName] = columnsRows
+                elif not validColumns and len(missingColumns) == len(validTableColumns[tableName]) and not extraColumns:
+                    validTables[tableName] = columnsRows
+                else:
+                    invalidTables[tableName] = columnsRows
+        else:
+            extraTableNames.append(tableName)
+    return {
+        'ValidTables' : validTables,
+        'InvalidTables': invalidTables,
+        'MissingTableNames' : missingTableNames,
+        'ExtraTableNames' : extraTableNames
+        }
+
+def SelectAllTableNames(cursor):
+    return sql.Execute(sql.scripts['SelectAllTableNames'], cursor)
+
+def GetValidTableColumnsRows(tableName, validTableColumns, cursor):
+    columnsRows = SelectAllColumnsFromTable(tableName, cursor)
+    return {
+        'Columns': GetValidTableColumns(columnsRows, validTableColumns[tableName]) if columnsRows else None,
+        'Rows': SelectAllRowsFromTable(tableName, cursor)
+    }
+
+def GetValidTableColumns(columns, validColumns):
+    newValidColumns = []
+    missingColumns = validColumns.copy();
+    extraColumns = []
+    for column in columns:
+        if missingColumns.count(column) > 0:
+            missingColumns.remove(column)
+            newValidColumns.append(column)
+        else:
+            extraColumns.append(column)
+    return {
+        'ValidColumns' : newValidColumns,
+        'MissingColumns' : missingColumns,
+        'ExtraColumns' :  extraColumns
+        }
+
 def CreateTables(tableNames, cursor):
     result = {}
     for tableName in tableNames:
@@ -78,31 +146,6 @@ def SelectAllColumnsAndAllRowsFromTable(tableName, cursor):
         'Columns' : SelectAllColumnsFromTable(tableName, cursor),
         'Rows' : SelectAllRowsFromTable(tableName, cursor)
         }
-
-def CheckValidTableColumnsRows(tableName, validTableColumns, cursor):
-    columns = SelectAllColumnsFromTable(tableName, cursor)
-    validColumns = {}
-    for column in columns:
-        validColumns[column] = validTableColumns[tableName].count(column) > 0
-    return {
-        'Columns' : columns,
-        'Rows' : SelectAllRowsFromTable(tableName, cursor),
-        'ValidColumns': validColumns
-        }
-
-def SelectAllTableNames(cursor):
-    return sql.Execute(sql.scripts['SelectAllTableNames'], cursor)
-
-def CheckValidTableNames(tableNames, cursor):
-    if not SelectAllTableNames(cursor):
-        return None
-    rows = [row[0] for row in cursor.fetchall()]
-    result = {}
-    for tableName in tableNames:
-        result[tableName] = rows.count(tableName) > 0
-    return result
-
-#------------------------  TODO -----------------------------------------------
 
 #-------------------------------- Add Cards -----------------------------------
 

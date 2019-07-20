@@ -112,6 +112,8 @@ messages = {
         'AllCards' : 'Представления для всех карточек пустое.'
         },
 
+    'EndProgram': 'Вы закончили работать с базой данных.',
+    'InputApplyChanges': 'Отправить изменения в базу данных (0 - нет)?',
     'ApplyChanges': 'Изменения успешно отправлены.',
 
     'MainException' : 'Не могу связаться к базой данных.',
@@ -126,9 +128,23 @@ messages = {
     'Start': 'Вы запустили программу {}.',
     'ShowOptions': 'Установлены следующие опции:',
     'DataBaseSync': 'Устанавливаю связь с базой данных...',
-
+    'DataBaseSyncSaccess': 'Установлена связь с базой данных.',
+    'DataBaseVerify': 'Проверка содержимого базы данных.',
+    'DataBaseMissingTableNames': 'Не могу выполнить запрос на проверку таблиц.',
+    'DataBaseMissingAllTables': 'Таблиц в базе не существет.',
+    'DataBaseInvalidTables': 'Не все таблицы валидные.',
+    'DataBaseValidTable': 'Таблица {} валидная.',
+    'DataBaseInvalidTable':'Таблица {} не валидная',
+    'DataBaseException': 'Работа с приложением невозможна.',
     'IsValidColumn' : "Колонка {} валидная.",
-    'InvalidColumn' : "Колонка {} не валидная."
+    'MissingColumn' : "Колонка {} отсутствует.",
+    'ExtraColumn' : "Колонка {} излишняя.",
+    'ExtraTableName' : 'Таблица {} излишняя.',
+
+    'NothingInputAccount': 'Не введен пользователь.',
+    'InputHasAnswersWithoutAccount': 'Хотите выбрать вопросы без пользователя (1 - да)?',
+    'NothingInputTheme': 'Не введена тема.',
+    'InputHasAnswersWithoutTheme': 'Хотите выбрать вопросы без темы (1 - да)?'
 }
 
 menues = {
