@@ -2,9 +2,9 @@ import sqlite3
 import pyodbc
 import operator
 import itertools
-import sql
 
-import localization
+import sql.scripts as sql
+import localization.rus as localization
 
 def Connect():
     serverMode = True
@@ -39,7 +39,7 @@ def DropTable(tableName, cursor):
 def DeleteTables(tableNames, cursor):
     result = {}
     for tableName in tableNames:
-        result[tableName] = DropTable(tableName, cursor)
+        result[tableName] = DeleteTable(tableName, cursor)
     return result
 
 def DeleteTable(tableName, cursor):
@@ -52,14 +52,20 @@ def SelectAllRowsFromTables(tableNames, cursor):
     return result
 
 def SelectAllRowsFromTable(tableName, cursor):
-    if sql.Execute(sql.scripts['SelectAllRowsFromTable'][tableName], cursor):
-        return [row for row in cursor.fetchall()]
-    return None
+    if not sql.Execute(sql.scripts['SelectAllRowsFromTable'][tableName], cursor):
+        return None
+    return [GetRowItems(row) for row in cursor.fetchall()]
+
+def GetRowItems(row):
+    result = ()
+    for item in row:
+        result += (item, )
+    return result
 
 def SelectAllColumnsFromTable(tableName, cursor):
-    if sql.Execute(sql.scripts['SelectAllColumnsFromTable'][tableName], cursor):
-        return [row for row in cursor.fetchall()]
-    return None
+    if not sql.Execute(sql.scripts['SelectAllColumnsFromTable'][tableName], cursor):
+        return None
+    return [GetRowItems(row) for row in cursor.fetchall()]
 
 def SelectAllColumnsAndAllRowsFromTables(tableNames, cursor):
     result = {}
@@ -73,10 +79,28 @@ def SelectAllColumnsAndAllRowsFromTable(tableName, cursor):
         'Rows' : SelectAllRowsFromTable(tableName, cursor)
         }
 
+def CheckValidTableColumnsRows(tableName, validTableColumns, cursor):
+    columns = SelectAllColumnsFromTable(tableName, cursor)
+    validColumns = {}
+    for column in columns:
+        validColumns[column] = validTableColumns[tableName].count(column) > 0
+    return {
+        'Columns' : columns,
+        'Rows' : SelectAllRowsFromTable(tableName, cursor),
+        'ValidColumns': validColumns
+        }
+
 def SelectAllTableNames(cursor):
-    if not sql.Execute(sql.scripts['SelectAllTableNames'], cursor):
+    return sql.Execute(sql.scripts['SelectAllTableNames'], cursor)
+
+def CheckValidTableNames(tableNames, cursor):
+    if not SelectAllTableNames(cursor):
         return None
-    return [row[0] for row in cursor.fetchall()]
+    rows = [row[0] for row in cursor.fetchall()]
+    result = {}
+    for tableName in tableNames:
+        result[tableName] = rows.count(tableName) > 0
+    return result
 
 #------------------------  TODO -----------------------------------------------
 
@@ -88,7 +112,7 @@ def AddCards(rows, hasUpdate, cursor):
         cardInfo = (row[0], row[1], row[2])
         themeInfo = (row[3], row[4])
         accountInfo = ()
-        accountInfo += (lineItems[5], )
+        accountInfo += (row[5], )
         inputRows.append((cardInfo, themeInfo, accountInfo))
 
     if not inputRows:

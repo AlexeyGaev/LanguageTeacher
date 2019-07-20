@@ -1,52 +1,3 @@
-tables = [ 'Themes', 'Cards', 'Accounts', 'ThemeCards', 'AccountCards', 'Answers', 'AllCards' ]
-views = ['AllCards']
-table_columns = {
-    'Themes': [
-        'Id, int, , 1, NO',
-        'Name, char, 255, 2, YES',
-        'Level, int, , 3, YES'
-    ],
-    'Cards': [
-        'Id, int, ,1, NO',
-        'Primary_Side, text, 2147483647, 2, YES',
-        'Secondary_Side, text, 2147483647, 3, YES',
-        'Level, int, , 4, YES'
-        ],
-    'Accounts': [
-        'Id, int, ,1, NO',
-        'Name, char, 255, 2, YES'
-        ],
-    'ThemeCards': [
-        'Theme_Id, int, , 1, NO',
-        'Card_Id, int, , 2, NO'
-        ],
-    'AccountCards': [
-        'Account_Id, int, , 1, NO',
-        'Card_Id, int, , 2, NO'
-        ],
-    'Answers': [
-        'Card_Id, int, , 1, NO',
-        'Side_Order, bit, ,2, NO'
-        'Result, int, , 3, NO'
-        'Level, int, , 4, YES'
-        ],
-    'AllCards': [
-        'Primary_Side, text, 2147483647, 1, YES',
-        'Secondary_Side, text, 2147483647, 2, YES',
-        'Card_Level, int, , 3, YES',
-        'Theme_Name, varchar, , 4, YES',
-        'Theme_Level, int, , 5, YES',
-        'Account_Name, varchar, , 6, YES'
-        ]
-    }
-table_column_descriptions = [
-    'Column_Name',
-    'Data_Type',
-    'Character_maximum_length',
-    'Ordinal_position'
-    'Is_nullable'
-]
-
 scripts = {
     'SelectAllTableNames': "Select Table_Name from information_schema.tables where Table_Name != 'sysdiagrams'",
     'SelectAllColumnsFromTable': {
@@ -70,7 +21,7 @@ scripts = {
     'CreateTable': {
         'Themes': 'Create table Themes(Id integer not null primary key, Name char(255), Level integer)',
         'Cards': 'Create table Cards(Id integer not null primary key, Primary_Side text, Secondary_Side text, Level integer)',
-        'Accounts': 'Create table Accounts(Id integer not null primary key, Name text)',
+        'Accounts': 'Create table Accounts(Id integer not null primary key, Name char(255))',
         'ThemeCards': 'Create table ThemeCards(Theme_Id integer not null, Card_Id integer not null)',
         'AccountCards': 'Create table AccountCards(Account_Id integer not null, Card_Id integer not null)',
         'Answers': 'Create table Answers(Card_Id integer not null, Side_Order bit not null, Result integer not null, Level integer)',
@@ -104,7 +55,7 @@ scripts = {
         'Answers': 'Delete from Answers'
         },
     'SelectAllRowsFromTable': {
-        'Themes': 'Select Id, RTRIM(Themes.Name) as Name from Themes',
+        'Themes': 'Select Id, RTRIM(Themes.Name) as Name, Level from Themes',
         'Cards': 'Select * from Cards',
         'Accounts': 'Select Id, RTRIM(Accounts.Name) as Name from Accounts',
         'ThemeCards': 'Select * from ThemeCards',
@@ -151,7 +102,7 @@ scripts = {
         },
     }
 
-import dialogs
+import dialogs.console as dialogs
 def Execute(script, cursor):
     if not script:
         return False;
@@ -159,9 +110,6 @@ def Execute(script, cursor):
         cursor.execute(script)
     except Exception as e:
         dialogs.ShowScriptException(e, script)
-        print(localization.messages['HasException'].format(e.args[0]))
-        print(localization.messages['ScriptException'].format(script))
-        exceptions.ScriptError(script, cursor, e)
         return False;
     else:
         return True

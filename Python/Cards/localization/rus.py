@@ -85,22 +85,22 @@ messages = {
         'AllCards': 'Количество строк таблицы AllCards: {}'
         },
     'MissingColumns' : {
-        'Themes': 'Колонки таблицы Themes отсутвуют.',
-        'Cards': 'Колонки таблицы Cards отсутвуют.',
-        'Accounts': 'Колонки таблицы Accounts отсутвуют.',
-        'ThemeCards': 'Колонки таблицы ThemeCards отсутвуют.',
-        'AccountCards': 'Колонки таблицы AccountCards отсутвуют.',
+        'Themes': 'Колонки таблицы Themes отсутствуют.',
+        'Cards': 'Колонки таблицы Cards отсутствуют.',
+        'Accounts': 'Колонки таблицы Accounts отсутствуют.',
+        'ThemeCards': 'Колонки таблицы ThemeCards отсутствуют.',
+        'AccountCards': 'Колонки таблицы AccountCards отсутствуют.',
         'Answers': 'Колонки таблицы Answers отсутвуют.',
         'AllCards': 'Колонки таблицы AllCards отсутвуют.'
         },
     'MissingRows' : {
-        'Themes': 'Строки таблицы Themes отсутвуют.',
-        'Cards': 'Строки таблицы Cards отсутвуют.',
-        'Accounts': 'Строки таблицы Accounts отсутвуют.',
-        'ThemeCards': 'Строки таблицы ThemeCards отсутвуют.',
-        'AccountCards': 'Строки таблицы AccountCards отсутвуют.',
-        'Answers': 'Строки таблицы Answers отсутвуют.',
-        'AllCards': 'Строки таблицы AllCards отсутвуют.'
+        'Themes': 'Строки таблицы Themes отсутствуют.',
+        'Cards': 'Строки таблицы Cards отсутствуют.',
+        'Accounts': 'Строки таблицы Accounts отсутствуют.',
+        'ThemeCards': 'Строки таблицы ThemeCards отсутствуют.',
+        'AccountCards': 'Строки таблицы AccountCards отсутствуют.',
+        'Answers': 'Строки таблицы Answers отсутствуют.',
+        'AllCards': 'Строки таблицы AllCards отсутствуют.'
         },
     'EmptyTable' : {
         'Themes': 'Таблица Themes пустая.',
@@ -125,7 +125,10 @@ messages = {
 
     'Start': 'Вы запустили программу {}.',
     'ShowOptions': 'Установлены следующие опции:',
-    'DataBaseSync': 'Устанавливаю связь с базой данных...'
+    'DataBaseSync': 'Устанавливаю связь с базой данных...',
+
+    'IsValidColumn' : "Колонка {} валидная.",
+    'InvalidColumn' : "Колонка {} не валидная."
 }
 
 menues = {

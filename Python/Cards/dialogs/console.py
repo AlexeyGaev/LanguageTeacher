@@ -1,11 +1,76 @@
+# !!!TODO : rename to console dialog, add web dialog -----------------------------
+
 import os
 import os.path
 import msvcrt
 
-import localization
-import files
-import operations
-import sql
+import localization.rus as localization
+import sql.descriptions as sql
+import sql.operations as operations
+import utils.files as files
+import utils.format as format
+
+# -------------------------- TODO : refactor, localize ------------------------
+
+def StartDialog(script, hasUpdate):
+    print(localization.messages['Start'].format(script))
+    print(localization.messages['DataBaseSync'])
+    print(localization.messages['PressAnyKey'])
+    msvcrt.getch()
+    connect = operations.Connect()
+    if connect == None:
+        print(localization.messages['MainException'])
+        print(localization.messages['PressAnyKey'])
+        msvcrt.getch()
+        return;
+    print("Установлена связь с базой данных.")
+    serverMode, connection, database = connect
+    ShowOptionsLog(CreateOptionsLog(database, hasUpdate))
+    cursor = connection.cursor()
+    print("Проверка содержимого базы данных.")
+    print(localization.messages['PressAnyKey'])
+    msvcrt.getch()
+    check = operations.CheckValidTableNames(sql.tables, cursor)
+    if not check:
+        print('Не могу сделать запрос на проверку таблиц.')
+        print('Работа с приложением невозможна.')
+        cursor.close()
+        connection.close()
+        return;
+    validTables = {}
+    for tableName in check.keys():
+        if check[tableName]:
+            log = operations.CheckValidTableColumnsRows(tableName, sql.table_columns, cursor)
+            if log:
+                ShowCheckValidTableColumnsRows(tableName, log)
+                isValidTable = True
+                for value in log['ValidColumns'].values():
+                    if not value:
+                        isValidTable = False
+                        break;
+                validTables[tableName] = isValidTable
+                if isValidTable:
+                    print("Таблица {} валидная ".format(tableName))
+                else:
+                    print("Таблица {} не валидная ".format(tableName))
+        else:
+            print(localization.messages['MissingTable'][tableName])
+            validTables[tableName] = True
+    print(localization.messages['PressAnyKey'])
+    msvcrt.getch()
+    for tableName in validTables.keys():
+        if not validTables[tableName]:
+            print('Не все таблицы валидные.')
+            print('Работа с приложением невозможна.')
+            cursor.close()
+            connection.close()
+            return;
+    MainMenu(hasUpdate, cursor)
+    CommitChanges(cursor if serverMode else connection)
+    cursor.close()
+    connection.close()
+
+# ------------------------- End TODO ------------------------------------------
 
 def MainMenu(hasUpdate, cursor):
     menu = CreateMenu('Main')
@@ -58,7 +123,7 @@ def CreateTablesDialog(cursor):
     print(localization.headers['CreateTable'])
     log = operations.CreateTables(sql.tables, cursor)
     if log:
-        ShowSimpleTableOperation('CreateTable', log)
+        ShowSimpleTablesOperation('CreateTable', log)
     EndDialog()
 
 def DropTablesDialog(cursor):
@@ -66,7 +131,7 @@ def DropTablesDialog(cursor):
     print(localization.headers['DropTable'])
     log = operations.DropTables(sql.tables, cursor)
     if log:
-        ShowSimpleTableOperation('DropTable', log)
+        ShowSimpleTablesOperation('DropTable', log)
     EndDialog()
 
 def ClearTablesDialog(cursor):
@@ -75,7 +140,7 @@ def ClearTablesDialog(cursor):
     tableNames = [tableName for tableName in sql.tables if sql.views.count(tableName) == 0]
     log = operations.DeleteTables(tableNames, cursor)
     if log:
-        ShowSimpleTableOperation('DeleteFrom', log)
+        ShowSimpleTablesOperation('DeleteFrom', log)
     EndDialog()
 
 def ShowTablesDialog(cursor):
@@ -88,7 +153,7 @@ def ShowTablesDialog(cursor):
 
 def ShowAllCardsDialog(cursor):
     ClearScreen()
-    print(localization.headers['ShowAllCards'])
+    print(localization.headers['ShowCards'])
     log = operations.SelectAllColumnsAndAllRowsFromTable('AllCards', cursor)
     if log:
         ShowSelectAllColumnsAndAllRowsFromTable('AllCards', log)
@@ -112,7 +177,7 @@ def ExportCardsDialog(cursor):
     if not file_name:
         print(localization.files['EmptyFileName'])
         return
-    rows = SelectAllRowsFromTable('AllCards', cursor)
+    rows = operations.SelectAllRowsFromTable('AllCards', cursor)
     if not rows:
         return
     if not os.path.exists(file_name):
@@ -131,7 +196,12 @@ def ShowScriptException(e, script):
     if e.args[0] == '42S01' or e.args[0] == '42S02':
         print(localization.messages['InvalidTable'], e.args[1]);
 
-#---------------------- TODO : localization, Dialog ---------------------------
+def ShowCheckValidTableColumnsRows(tableName, log):
+    print(localization.messages['ContentTable'][tableName])
+    ShowCheckValidTableColumns(tableName, log['Columns'], log['ValidColumns'])
+    ShowSelectAllRowsFromTable(tableName, log['Rows'])
+
+#------- TODO : localization, TestingDialog --------------------- -------------
 
 def TestingDialog(cursor):
     # TODO dialog
@@ -147,30 +217,6 @@ def TestingDialog(cursor):
         if input('Хотите выбрать вопросы без темы (1 - да)?') != '1':
             return
     print(localization.messages['TempImposible'])
-
-def StartDialog(connect, hasUpdate):
-    print("Установлена связь с базой данных.")
-    serverMode, connection, database = connect
-    ShowOptionsLog(CreateOptionsLog(database, hasUpdate))
-    cursor = connection.cursor()
-    print("Проверка содержимого базы данных.")
-    print(localization.messages['PressAnyKey'])
-    msvcrt.getch()
-    tableNames = operations.SelectAllTableNames(cursor)
-    if not tableNames:
-        print('Не могу сделать запрос на проверку таблиц.')
-        print('Работа с приложением невозможна.')
-    else:
-        log = operations.SelectAllColumnsAndAllRowsFromTables(tableNames, cursor)
-        if log:
-            ShowSelectAllColumnsAndAllRowsFromTables(log)
-            print(localization.messages['PressAnyKey'])
-            msvcrt.getch()
-        # TODO: verify with column's names from sql
-        MainMenu(hasUpdate, cursor)
-        CommitChanges(cursor if serverMode else connection)
-    cursor.close()
-    connection.close()
 
 def CommitChanges(cursor):
     print("Вы закончили работать с базой данных.")
@@ -252,8 +298,11 @@ def ShowOptionsLog(log):
     print(localization.messages['ShowOptions'])
     [print(row) for row in log]
 
-def ShowSimpleTableOperation(operation, log):
-    [print(localization.messages[operation][key]) for key in log.keys() if log[key]]
+def ShowSimpleTablesOperation(operation, log):
+    [ShowSimpleTableOperation(operation, key) for key in log.keys() if log[key]]
+
+def ShowSimpleTableOperation(operation, tableName):
+    print(localization.messages[operation][tableName])
 
 def ShowSelectAllColumnsAndAllRowsFromTables(log):
     for tableName in log.keys():
@@ -263,6 +312,17 @@ def ShowSelectAllColumnsAndAllRowsFromTable(tableName, columnsRows):
     print(localization.messages['ContentTable'][tableName])
     ShowSelectAllColumnsFromTable(tableName, columnsRows['Columns'])
     ShowSelectAllRowsFromTable(tableName, columnsRows['Rows'])
+
+def ShowCheckValidTableColumns(tableName, columnsLog, validColumnsLog):
+    if not columnsLog:
+        print(localization.messages['MissingColumns'][tableName])
+    else:
+        print(localization.messages['ColumnCount'][tableName].format(len(columnsLog)))
+        for column in columnsLog:
+            if validColumnsLog[column]:
+                print(localization.messages['IsValidColumn'].format(column))
+            else:
+                print(localization.messages['InvalidColumn'].format(column))
 
 def ShowSelectAllColumnsFromTable(tableName, columnsLog):
     if not columnsLog:
