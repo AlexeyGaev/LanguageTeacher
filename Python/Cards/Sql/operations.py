@@ -4,7 +4,45 @@ import operator
 import itertools
 
 import sql.scripts as sql
-import localization.rus as localization
+
+def SelectAllTableNames(cursor):
+    return ExecuteSqlScript(sql.scripts['SelectAllTableNames'], cursor)
+
+def CreateTable(tableName, cursor):
+    return ExecuteSqlScript(sql.scripts['CreateTable'][tableName], cursor)
+
+def DropTable(tableName, cursor):
+    return ExecuteSqlScript(sql.scripts['DropTable'][tableName], cursor)
+
+def DeleteTable(tableName, cursor):
+    return ExecuteSqlScript(sql.scripts['DeleteFrom'][tableName], cursor)
+
+def SelectAllRowsFromTable(tableName, cursor):
+    ok, exception = ExecuteSqlScript(sql.scripts['SelectAllRowsFromTable'][tableName], cursor)
+    if not ok:
+        return ok, exception
+    return [GetRowItems(row) for row in cursor.fetchall()]
+
+def SelectAllColumnsFromTable(tableName, cursor):
+    ok, exception = ExecuteSqlScript(sql.scripts['SelectAllColumnsFromTable'][tableName], cursor)
+    if not ok:
+        return ok, exception
+    return [GetRowItems(row) for row in cursor.fetchall()]
+
+def ExecuteAddedScripts(addedScripts, cursor):
+    if not addedScripts:
+        return None
+    return [(script, ExecuteSqlScript(script, cursor)) for script in addedScripts]
+
+def ExecuteSqlScript(script, cursor):
+    if not script:
+        return False, None;
+    try:
+        cursor.execute(script)
+    except Exception as e:
+        return False, e;
+    else:
+        return True, None
 
 def Connect():
     serverMode = True
@@ -19,8 +57,9 @@ def Connect():
         return None
 
 def GetValidTables(validTableNames, validTableColumns, cursor):
-    if not SelectAllTableNames(cursor):
-        return None
+    ok, exception = SelectAllTableNames(cursor)
+    if not ok:
+        return ok, exception
     tableNameRows = cursor.fetchall()
     if not tableNameRows:
         return {
@@ -60,13 +99,10 @@ def GetValidTables(validTableNames, validTableColumns, cursor):
         'ExtraTableNames' : extraTableNames
         }
 
-def SelectAllTableNames(cursor):
-    return sql.Execute(sql.scripts['SelectAllTableNames'], cursor)
-
 def GetValidTableColumnsRows(tableName, validTableColumns, cursor):
     columnsRows = SelectAllColumnsFromTable(tableName, cursor)
     return {
-        'Columns': GetValidTableColumns(columnsRows, validTableColumns[tableName]) if columnsRows else None,
+        'Columns': GetValidTableColumns(columnsRows, validTableColumns) if columnsRows else None,
         'Rows': SelectAllRowsFromTable(tableName, cursor)
     }
 
@@ -92,17 +128,11 @@ def CreateTables(tableNames, cursor):
         result[tableName] = CreateTable(tableName, cursor)
     return result
 
-def CreateTable(tableName, cursor):
-    return sql.Execute(sql.scripts['CreateTable'][tableName], cursor)
-
 def DropTables(tableNames, cursor):
     result = {}
     for tableName in tableNames:
         result[tableName] = DropTable(tableName, cursor)
     return result
-
-def DropTable(tableName, cursor):
-    return sql.Execute(sql.scripts['DropTable'][tableName], cursor)
 
 def DeleteTables(tableNames, cursor):
     result = {}
@@ -110,30 +140,17 @@ def DeleteTables(tableNames, cursor):
         result[tableName] = DeleteTable(tableName, cursor)
     return result
 
-def DeleteTable(tableName, cursor):
-    return sql.Execute(sql.scripts['DeleteFrom'][tableName], cursor)
-
 def SelectAllRowsFromTables(tableNames, cursor):
     result = {}
     for tableName in tableNames:
         result[tableName] = SelectAllFromTable(tableName, cursor)
     return result
 
-def SelectAllRowsFromTable(tableName, cursor):
-    if not sql.Execute(sql.scripts['SelectAllRowsFromTable'][tableName], cursor):
-        return None
-    return [GetRowItems(row) for row in cursor.fetchall()]
-
 def GetRowItems(row):
     result = ()
     for item in row:
         result += (item, )
     return result
-
-def SelectAllColumnsFromTable(tableName, cursor):
-    if not sql.Execute(sql.scripts['SelectAllColumnsFromTable'][tableName], cursor):
-        return None
-    return [GetRowItems(row) for row in cursor.fetchall()]
 
 def SelectAllColumnsAndAllRowsFromTables(tableNames, cursor):
     result = {}
@@ -159,49 +176,22 @@ def AddCards(rows, hasUpdate, cursor):
         inputRows.append((cardInfo, themeInfo, accountInfo))
 
     if not inputRows:
-        print(localization.messages['MissingTable']['AllCards'])
-        return
-
-    print(localization.headers['AddCards'])
-    print(localization.add_cards['PrepareSqlScripts'])
-    ShowInfos(inputRows, 'HasInputRows', 'MissingInputRows', None)
-
+        return None
     inputCardInfos = CreateInputInfos(inputRows, 0, 3)
     inputThemeInfos = CreateInputInfos(inputRows, 1, 2)
     inputAccountInfos = CreateInputInfos(inputRows, 2, 1)
     inputThemeCardInfos = CreateInputRelationInfos(inputRows, 1, 0, 2, 3)
     inputAccountCardInfos = CreateInputRelationInfos(inputRows, 2, 0, 1, 3)
-
-    ShowInfos(inputCardInfos, 'HasInput', 'MissingInput', 'Cards')
-    ShowInfos(inputThemeInfos, 'HasInput', 'MissingInput', 'Themes')
-    ShowInfos(inputAccountInfos, 'HasInput', 'MissingInput', 'Accounts')
-    ShowInfos(inputThemeCardInfos, 'HasInput', 'MissingInput', 'ThemeCards')
-    ShowInfos(inputAccountCardInfos, 'HasInput', 'MissingInput', 'AccountCards')
-
     existingCardInfos = CreateExistingInfos('Cards', [1, 2, 3], cursor)
     existingThemeInfos = CreateExistingInfos('Themes', [1, 2], cursor)
     existingAccountInfos = CreateExistingInfos('Accounts', [1], cursor)
     existingThemeCardInfos = CreateExistingRelationInfos('ThemeCards', existingThemeInfos, existingCardInfos, cursor)
     existingAccountCardInfos = CreateExistingRelationInfos('AccountCards', existingAccountInfos, existingCardInfos, cursor)
-
-    ShowInfos(existingCardInfos, 'HasExisting', 'MissingExisting', 'Cards')
-    ShowInfos(existingThemeInfos, 'HasExisting', 'MissingExisting', 'Themes')
-    ShowInfos(existingAccountInfos, 'HasExisting', 'MissingExisting', 'Accounts')
-    ShowInfos(existingThemeCardInfos, 'HasExisting', 'MissingExisting', 'ThemeCards')
-    ShowInfos(existingAccountCardInfos, 'HasExisting', 'MissingExisting', 'AccountCards')
-
     addedCardsInfos = CreateAddedInfos(inputCardInfos, existingCardInfos, hasUpdate, 3)
     addedThemeInfos = CreateAddedInfos(inputThemeInfos, existingThemeInfos, hasUpdate, 2)
     addedAccountInfos = CreateAddedInfos(inputAccountInfos, existingAccountInfos, hasUpdate, 1)
     addedThemeCardInfos = CreateAddedRelationInfos(inputThemeCardInfos, existingThemeCardInfos, addedThemeInfos, addedCardsInfos)
     addedAccountCardInfos = CreateAddedRelationInfos(inputAccountCardInfos, existingAccountCardInfos, addedAccountInfos, addedCardsInfos)
-
-    ShowInfos(addedCardsInfos, 'HasAdded', 'MissingAdded', 'Cards')
-    ShowInfos(addedThemeInfos, 'HasAdded', 'MissingAdded', 'Themes')
-    ShowInfos(addedAccountInfos, 'HasAdded', 'MissingAdded', 'Accounts')
-    ShowInfos(addedThemeCardInfos, 'HasAdded', 'MissingAdded', 'ThemeCards')
-    ShowInfos(addedAccountCardInfos, 'HasAdded', 'MissingAdded', 'AccountCards')
-
     addedScripts = []
     addedScripts.extend(CreateAddedCardScripts(addedCardsInfos))
     addedScripts.extend(CreateAddedThemeScripts(addedThemeInfos))
@@ -209,7 +199,24 @@ def AddCards(rows, hasUpdate, cursor):
     addedScripts.extend(CreateAddedRelationScripts(addedThemeCardInfos, 'ThemeCards'))
     addedScripts.extend(CreateAddedRelationScripts(addedAccountCardInfos, 'AccountCards'))
 
-    ExecuteAddedScripts(addedScripts, cursor)
+    result = {}
+    result['InputRows'] = inputRows
+    result['InputCardInfos'] = inputCardInfos
+    result['InputThemeInfos'] = inputThemeInfos
+    result['InputAccountInfos'] = inputAccountInfos
+    result['InputThemeCardInfos'] = inputThemeCardInfos
+    result['InputAccountCardInfos'] = inputAccountCardInfos
+    result['ExistingCardInfos'] = existingCardInfos
+    result['ExistingThemeInfos'] = existingThemeInfos
+    result['ExistingAccountInfos'] = existingAccountInfos
+    result['ExistingThemeCardInfos'] = existingThemeCardInfos
+    result['ExistingAccountCardInfos'] = existingAccountCardInfos
+    result['AddedCardsInfos'] = addedCardsInfos
+    result['AddedThemeInfos'] = addedThemeInfos
+    result['AddedAccountInfos'] = addedAccountInfos
+    result['AddedThemeCardInfos'] = addedThemeCardInfos
+    result['AddedAccountCardInfos'] = addedAccountCardInfos
+    result['AddedScripts'] = ExecuteAddedScripts(addedScripts, cursor)
 
 def CreateInputInfos(rows, firstColumnIndex, columnCount):
     result = []
@@ -412,19 +419,3 @@ def CreateThemeUpdateScript(id, inputInfo, existingInfo):
 
 def CreateAddedRelationScripts(infos, tableName):
     return [sql.scripts['InsertInto'][tableName][0].format(info[0], info[1]) for info in infos]
-
-def ShowInfos(rows, description_has, descrition_missing, tableName):
-    locStr = localization.add_cards[description_has] if rows else localization.add_cards[descrition_missing]
-    print(locStr[tableName] if tableName else locStr)
-    if rows:
-        [print(row) for row in rows]
-
-def ExecuteAddedScripts(addedScripts, cursor):
-    if not addedScripts:
-        print(localization.add_cards['MissingSqlScripts'])
-        return
-    resultExecuteScripts = [(script, sql.Execute(script, cursor)) for script in addedScripts]
-    print(localization.add_cards['HeaderRunSqlScripts'])
-    for script, result in resultExecuteScripts:
-        scriptResult = localization.add_cards['SuccessRunSqlScript'] if result else localization.add_cards['FailRunSqlScript']
-        print(script, scriptResult)

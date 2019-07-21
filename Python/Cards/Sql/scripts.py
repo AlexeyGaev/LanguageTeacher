@@ -101,15 +101,3 @@ scripts = {
         'Answers': [ "Update Answers set Level = {} where Card_Id = {} and Side_Order = {} and Result = {}" ]
         },
     }
-
-import dialogs.console as dialogs
-def Execute(script, cursor):
-    if not script:
-        return False;
-    try:
-        cursor.execute(script)
-    except Exception as e:
-        dialogs.ShowScriptException(e, script)
-        return False;
-    else:
-        return True

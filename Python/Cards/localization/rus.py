@@ -144,7 +144,9 @@ messages = {
     'NothingInputAccount': 'Не введен пользователь.',
     'InputHasAnswersWithoutAccount': 'Хотите выбрать вопросы без пользователя (1 - да)?',
     'NothingInputTheme': 'Не введена тема.',
-    'InputHasAnswersWithoutTheme': 'Хотите выбрать вопросы без темы (1 - да)?'
+    'InputHasAnswersWithoutTheme': 'Хотите выбрать вопросы без темы (1 - да)?',
+
+    'MissingAddedRows' : 'Отсуствуют строки для добавления'
 }
 
 menues = {
@@ -209,8 +211,6 @@ files = {
     }
 
 add_cards = {
-    'PrepareSqlScripts': 'Подготовка sql-скриптов:',
-
     'HeaderRunSqlScripts' : 'Результаты выполнения sql-скриптов:',
     'SuccessRunSqlScript' : 'Успешно выпонен.',
     'FailRunSqlScript' : 'Не выпонен.',

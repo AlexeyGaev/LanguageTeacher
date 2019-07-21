@@ -203,18 +203,56 @@ def ShowAllCardsDialog(cursor):
     print(localization.headers['ShowCards'])
     log = operations.SelectAllColumnsAndAllRowsFromTable('AllCards', cursor)
     if log:
-        ShowSelectAllColumnsAndAllRowsFromTable('AllCards', log)
+        ShowSelectAllColumnsAndAllRowsFromTable('AllCards', log['Columns'], log['Rows'])
     EndDialog()
 
 def AddCardsDialog(hasUpdate, cursor):
     ClearScreen()
-    operations.AddCards(InputAddCards(), hasUpdate, cursor)
+    ShowAddCards(operations.AddCards(InputAddCards(), hasUpdate, cursor))
     EndDialog()
 
 def ImportCardsDialog(hasUpdate, cursor):
     ClearScreen()
-    operations.AddCards(InputImportCards(','), hasUpdate, cursor)
+    ShowAddCards(operations.AddCards(InputImportCards(','), hasUpdate, cursor))
     EndDialog()
+
+def ShowAddCards(log):
+    print(localization.headers['AddCards'])
+    if not log:
+        print(localization.messages['MissingAddedRows'])
+        return
+
+    ShowInfos(log['InputRows'], 'HasInputRows', 'MissingInputRows', None)
+    ShowInfos(log['InputCardInfos'], 'HasInput', 'MissingInput', 'Cards')
+    ShowInfos(log['InputThemeInfos'], 'HasInput', 'MissingInput', 'Themes')
+    ShowInfos(log['InputAccountInfos'], 'HasInput', 'MissingInput', 'Accounts')
+    ShowInfos(log['InputThemeCardInfos'], 'HasInput', 'MissingInput', 'ThemeCards')
+    ShowInfos(log['InputAccountCardInfos'], 'HasInput', 'MissingInput', 'AccountCards')
+    ShowInfos(log['ExistingCardInfos'], 'HasExisting', 'MissingExisting', 'Cards')
+    ShowInfos(log['ExistingThemeInfos'], 'HasExisting', 'MissingExisting', 'Themes')
+    ShowInfos(log['ExistingAccountInfos'], 'HasExisting', 'MissingExisting', 'Accounts')
+    ShowInfos(log['ExistingThemeCardInfos'], 'HasExisting', 'MissingExisting', 'ThemeCards')
+    ShowInfos(log['ExistingAccountCardInfos'], 'HasExisting', 'MissingExisting', 'AccountCards')
+    ShowInfos(log['AddedCardsInfos'], 'HasAdded', 'MissingAdded', 'Cards')
+    ShowInfos(log['AddedThemeInfos'], 'HasAdded', 'MissingAdded', 'Themes')
+    ShowInfos(log['AddedAccountInfos'], 'HasAdded', 'MissingAdded', 'Accounts')
+    ShowInfos(log['AddedThemeCardInfos'], 'HasAdded', 'MissingAdded', 'ThemeCards')
+    ShowInfos(log['AddedAccountCardInfos'], 'HasAdded', 'MissingAdded', 'AccountCards')
+    ShowAddedScripts(log['AddedScripts'])
+
+def ShowInfos(rows, description_has, descrition_missing, tableName):
+    locStr = localization.add_cards[description_has] if rows else localization.add_cards[descrition_missing]
+    print(locStr[tableName] if tableName else locStr)
+    if rows:
+        [print(row) for row in rows]
+
+def ShowAddedScripts(log):
+    if not log:
+        print(localization.add_cards['MissingSqlScripts'])
+        return
+    for script, result in log:
+        scriptResult = localization.add_cards['SuccessRunSqlScript'] if result else localization.add_cards['FailRunSqlScript']
+        print(script, scriptResult)
 
 def ExportCardsDialog(cursor):
     ClearScreen()
