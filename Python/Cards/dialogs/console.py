@@ -21,7 +21,14 @@ def StartDialog(script, hasUpdate):
     print(localization.messages['DataBaseSyncSaccess'])
     ShowOptionsDialog(database, hasUpdate)
     print(localization.messages['DataBaseVerify'])
-    log = operations.GetValidTables(sql.tables, sql.table_columns, cursor)
+    ok, log = operations.GetValidTables(sql.tables, sql.table_columns, cursor)
+    if not ok:
+        if not log:
+            ShowScriptException(log)
+        ShowInvalidDataBaseDialog(localization.messages['MainException'])
+        cursor.close()
+        connection.close()
+        return
     if not log:
         ShowInvalidDataBaseDialog(localization.messages['DataBaseMissingTableNames'])
         cursor.close()
@@ -370,10 +377,26 @@ def StringToInt(value):
 #-------------------------------- Utils ---------------------------------------
 
 def ShowSimpleTablesOperation(operation, log):
-    [ShowSimpleTableOperation(operation, key) for key in log.keys() if log[key]]
+    for key in log.keys():
+        ok, script, exception = log[key]
+        if ok:
+            ShowSimpleTableOperation(operation, script, key)
+        elif exception:
+            ShowScriptException(exception)
+        elif not script:
+            ShowFailEmptyScript(script)
+        else:
+            ShowFailScriptEmptyResult(script)
 
-def ShowSimpleTableOperation(operation, tableName):
+def ShowSimpleTableOperation(operation, script, tableName):
     print(localization.messages[operation][tableName])
+
+def ShowFailEmptyScript(script):
+    print(localization.messages['EmptyScript'].format(script))
+
+def ShowFailScriptEmptyResult(script):
+    print(localization.messages['ScriptHeader'].format(script))
+    print(localization.messages['ScriptEmptyResult'])
 
 def ShowSelectAllColumnsAndAllRowsFromTables(log):
     for tableName in log.keys():

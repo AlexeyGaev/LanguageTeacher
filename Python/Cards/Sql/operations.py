@@ -3,8 +3,8 @@ import pyodbc
 import operator
 import itertools
 
+#------------------------------SQL --------------------------------------------
 import sql.scripts as sql
-
 def SelectAllTableNames(cursor):
     return ExecuteSqlScript(sql.scripts['SelectAllTableNames'], cursor)
 
@@ -18,31 +18,22 @@ def DeleteTable(tableName, cursor):
     return ExecuteSqlScript(sql.scripts['DeleteFrom'][tableName], cursor)
 
 def SelectAllRowsFromTable(tableName, cursor):
-    ok, exception = ExecuteSqlScript(sql.scripts['SelectAllRowsFromTable'][tableName], cursor)
-    if not ok:
-        return ok, exception
-    return [GetRowItems(row) for row in cursor.fetchall()]
+    return ExecuteSqlScript(sql.scripts['SelectAllRowsFromTable'][tableName], cursor)
 
 def SelectAllColumnsFromTable(tableName, cursor):
-    ok, exception = ExecuteSqlScript(sql.scripts['SelectAllColumnsFromTable'][tableName], cursor)
-    if not ok:
-        return ok, exception
-    return [GetRowItems(row) for row in cursor.fetchall()]
-
-def ExecuteAddedScripts(addedScripts, cursor):
-    if not addedScripts:
-        return None
-    return [(script, ExecuteSqlScript(script, cursor)) for script in addedScripts]
+    return ExecuteSqlScript(sql.scripts['SelectAllColumnsFromTable'][tableName], cursor)
 
 def ExecuteSqlScript(script, cursor):
     if not script:
-        return False, None;
+        return False, script, None;
     try:
         cursor.execute(script)
     except Exception as e:
-        return False, e;
+        return False, script, e;
     else:
-        return True, None
+        return True, script, None
+    
+#------------------------------------------------------------------------------
 
 def Connect():
     serverMode = True
@@ -57,17 +48,16 @@ def Connect():
         return None
 
 def GetValidTables(validTableNames, validTableColumns, cursor):
-    ok, exception = SelectAllTableNames(cursor)
+    ok, script, exception = SelectAllTableNames(cursor)
     if not ok:
-        return ok, exception
+        return ok, script, exception
     tableNameRows = cursor.fetchall()
     if not tableNameRows:
-        return {
+        return True, script, {
             'ValidTables' : None,
             'InvalidTables': None,
             'MissingTableNames' : validTableNames.copy(),
-            'ExtraTableNames' : None
-        }
+            'ExtraTableNames' : None }
     validTables = {}
     invalidTables = {}
     missingTableNames = validTableNames.copy();
@@ -76,10 +66,10 @@ def GetValidTables(validTableNames, validTableColumns, cursor):
         tableName = row[0]
         if missingTableNames.count(tableName) > 0:
             missingTableNames.remove(tableName)
-            columnsRows = GetValidTableColumnsRows(tableName, validTableColumns[tableName], cursor)
-            columns = columnsRows['Columns']
-            if not columns:
-                validTables[tableName] = columnsRows
+            validColumns = GetValidTableColumns(tableName, validTableColumns[tableName], cursor)
+            rows = GetAllTableRows(tableName, cursor)
+            if not validColumns:
+                validTables[tableName] = { 'Columns' : validColumns, 'Rows' : rows }
             else:
                 validColumns = columns['ValidColumns']
                 missingColumns = columns['MissingColumns']
@@ -92,31 +82,38 @@ def GetValidTables(validTableNames, validTableColumns, cursor):
                     invalidTables[tableName] = columnsRows
         else:
             extraTableNames.append(tableName)
-    return {
+    return True, script, {
         'ValidTables' : validTables,
         'InvalidTables': invalidTables,
         'MissingTableNames' : missingTableNames,
-        'ExtraTableNames' : extraTableNames
-        }
+        'ExtraTableNames' : extraTableNames }
 
-def GetValidTableColumnsRows(tableName, validTableColumns, cursor):
-    columnsRows = SelectAllColumnsFromTable(tableName, cursor)
-    return {
-        'Columns': GetValidTableColumns(columnsRows, validTableColumns) if columnsRows else None,
-        'Rows': SelectAllRowsFromTable(tableName, cursor)
-    }
+def GetAllTableRows(tableName, cursor):
+    ok, script, exception = SelectAllRowsFromTable(tableName, cursor)
+    if not ok:
+        return ok, script, exception
+    return True, script, [GetRowItems(row) for row in cursor.fetchall()]
 
-def GetValidTableColumns(columns, validColumns):
+def GetAllTableColumns(tableName, cursor):
+    ok, script, exception = SelectAllColumnsFromTable(tableName, cursor)
+    if not ok:
+        return ok, script, exception
+    return True, [GetRowItems(row) for row in cursor.fetchall()]
+
+def GetValidTableColumns(tableName, validColumns, cursor):
+    ok, script, log = GetAllTableColumns(tableName, cursor)
+    if not ok:
+        return ok, script, log
     newValidColumns = []
     missingColumns = validColumns.copy();
     extraColumns = []
-    for column in columns:
+    for column in log:
         if missingColumns.count(column) > 0:
             missingColumns.remove(column)
             newValidColumns.append(column)
         else:
             extraColumns.append(column)
-    return {
+    return True, script, {
         'ValidColumns' : newValidColumns,
         'MissingColumns' : missingColumns,
         'ExtraColumns' :  extraColumns
@@ -160,8 +157,8 @@ def SelectAllColumnsAndAllRowsFromTables(tableNames, cursor):
 
 def SelectAllColumnsAndAllRowsFromTable(tableName, cursor):
     return {
-        'Columns' : SelectAllColumnsFromTable(tableName, cursor),
-        'Rows' : SelectAllRowsFromTable(tableName, cursor)
+        'Columns' : GetAllTableColumns(tableName, cursor),
+        'Rows' : GetAllTableRows(tableName, cursor)
         }
 
 #-------------------------------- Add Cards -----------------------------------
@@ -216,7 +213,7 @@ def AddCards(rows, hasUpdate, cursor):
     result['AddedAccountInfos'] = addedAccountInfos
     result['AddedThemeCardInfos'] = addedThemeCardInfos
     result['AddedAccountCardInfos'] = addedAccountCardInfos
-    result['AddedScripts'] = ExecuteAddedScripts(addedScripts, cursor)
+    result['AddedScripts'] = [ExecuteSqlScript(script, cursor) for script in addedScripts] if addedScripts else None
 
 def CreateInputInfos(rows, firstColumnIndex, columnCount):
     result = []
@@ -250,28 +247,28 @@ def IsEmpty(item, columnCount):
     return True
 
 def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
+    ok, script, log = GetAllTableRows(tableName, cursor)
+    if not ok:
+        return ok, script, log
     result = []
-    rows = SelectAllRowsFromTable(tableName, cursor)
-    if not rows:
-        return result
     for row in rows:
         secondaryColumns = ()
         for index in secondaryColumnIndexes:
             secondaryColumns += (row[index], )
         result.append((row[0], secondaryColumns))
-    return result
+    return True, script, result
 
 def CreateExistingRelationInfos(tableName, keyInfos, valueInfos, cursor):
+    ok, script, log = GetAllTableRows(tableName, cursor)
+    if not ok:
+        return ok, script, log
     result = []
-    rows = SelectAllRowsFromTable(tableName, cursor)
-    if not rows:
-        return result
-    for row in rows:
+    for row in log:
         keyValue = FindInfoById(keyInfos, row[0])
         valueValue = FindInfoById(valueInfos, row[1])
         if keyValue and valueValue:
             result.append((keyValue, valueValue))
-    return result
+    return True, script, result
 
 def FindInfoById(infos, id):
     for info in infos:

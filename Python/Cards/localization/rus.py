@@ -146,7 +146,10 @@ messages = {
     'NothingInputTheme': 'Не введена тема.',
     'InputHasAnswersWithoutTheme': 'Хотите выбрать вопросы без темы (1 - да)?',
 
-    'MissingAddedRows' : 'Отсуствуют строки для добавления'
+    'MissingAddedRows' : 'Отсуствуют строки для добавления',
+    'EmptyScript': 'SQL-скрипт: {} пустой',
+    'ScriptHeader': 'SQL-скрипт: {}',
+    'ScriptEmptyResult': 'Результат выполнения пустой.'
 }
 
 menues = {
