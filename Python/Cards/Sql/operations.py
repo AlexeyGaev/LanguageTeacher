@@ -32,7 +32,7 @@ def ExecuteSqlScript(script, cursor):
         return False, script, e;
     else:
         return True, script, None
-    
+
 #------------------------------------------------------------------------------
 
 def Connect():
@@ -56,35 +56,43 @@ def GetValidTables(validTableNames, validTableColumns, cursor):
         return True, script, {
             'ValidTables' : None,
             'InvalidTables': None,
+            'ExceptionTables': None,
             'MissingTableNames' : validTableNames.copy(),
             'ExtraTableNames' : None }
     validTables = {}
     invalidTables = {}
+    exceptionTables = {}
     missingTableNames = validTableNames.copy();
     extraTableNames = []
     for row in tableNameRows:
         tableName = row[0]
         if missingTableNames.count(tableName) > 0:
             missingTableNames.remove(tableName)
-            validColumns = GetValidTableColumns(tableName, validTableColumns[tableName], cursor)
-            rows = GetAllTableRows(tableName, cursor)
-            if not validColumns:
-                validTables[tableName] = { 'Columns' : validColumns, 'Rows' : rows }
+            validColumnsLog = GetValidTableColumns(tableName, validTableColumns[tableName], cursor)
+            rowsLog = GetAllTableRows(tableName, cursor)
+            columnsRowsLog = { 'Columns' : validColumnsLog, 'Rows' : rowsLog }
+            okColumns, scriptColumns, dataColumns = validColumnsLog
+            okRows, scriptRows, dataRows = rowsLog
+            if not okColumns or not okRows:
+                exceptionTables[tableName] = columnsRowsLog
+            elif not dataColumns and okRows:
+                validTables[tableName] = columnsRowsLog
             else:
-                validColumns = columns['ValidColumns']
-                missingColumns = columns['MissingColumns']
-                extraColumns = columns['ExtraColumns']
+                validColumns = dataColumns['ValidColumns']
+                missingColumns = dataColumns['MissingColumns']
+                extraColumns = dataColumns['ExtraColumns']
                 if validColumns and not missingColumns and not extraColumns:
-                    validTables[tableName] = columnsRows
+                    validTables[tableName] = columnsRowsLog
                 elif not validColumns and len(missingColumns) == len(validTableColumns[tableName]) and not extraColumns:
-                    validTables[tableName] = columnsRows
+                    validTables[tableName] = columnsRowsLog
                 else:
-                    invalidTables[tableName] = columnsRows
+                    invalidTables[tableName] = columnsRowsLog
         else:
             extraTableNames.append(tableName)
     return True, script, {
         'ValidTables' : validTables,
         'InvalidTables': invalidTables,
+        'ExceptionTables': exceptionTables,
         'MissingTableNames' : missingTableNames,
         'ExtraTableNames' : extraTableNames }
 
@@ -98,7 +106,13 @@ def GetAllTableColumns(tableName, cursor):
     ok, script, exception = SelectAllColumnsFromTable(tableName, cursor)
     if not ok:
         return ok, script, exception
-    return True, [GetRowItems(row) for row in cursor.fetchall()]
+    return True, script, [GetRowItems(row) for row in cursor.fetchall()]
+
+def GetRowItems(row):
+    result = ()
+    for item in row:
+        result += (item, )
+    return result
 
 def GetValidTableColumns(tableName, validColumns, cursor):
     ok, script, log = GetAllTableColumns(tableName, cursor)
@@ -137,30 +151,6 @@ def DeleteTables(tableNames, cursor):
         result[tableName] = DeleteTable(tableName, cursor)
     return result
 
-def SelectAllRowsFromTables(tableNames, cursor):
-    result = {}
-    for tableName in tableNames:
-        result[tableName] = SelectAllFromTable(tableName, cursor)
-    return result
-
-def GetRowItems(row):
-    result = ()
-    for item in row:
-        result += (item, )
-    return result
-
-def SelectAllColumnsAndAllRowsFromTables(tableNames, cursor):
-    result = {}
-    for tableName in tableNames:
-        result[tableName] = SelectAllColumnsAndAllRowsFromTable(tableName, cursor)
-    return result
-
-def SelectAllColumnsAndAllRowsFromTable(tableName, cursor):
-    return {
-        'Columns' : GetAllTableColumns(tableName, cursor),
-        'Rows' : GetAllTableRows(tableName, cursor)
-        }
-
 #-------------------------------- Add Cards -----------------------------------
 
 def AddCards(rows, hasUpdate, cursor):
@@ -179,11 +169,24 @@ def AddCards(rows, hasUpdate, cursor):
     inputAccountInfos = CreateInputInfos(inputRows, 2, 1)
     inputThemeCardInfos = CreateInputRelationInfos(inputRows, 1, 0, 2, 3)
     inputAccountCardInfos = CreateInputRelationInfos(inputRows, 2, 0, 1, 3)
-    existingCardInfos = CreateExistingInfos('Cards', [1, 2, 3], cursor)
-    existingThemeInfos = CreateExistingInfos('Themes', [1, 2], cursor)
-    existingAccountInfos = CreateExistingInfos('Accounts', [1], cursor)
-    existingThemeCardInfos = CreateExistingRelationInfos('ThemeCards', existingThemeInfos, existingCardInfos, cursor)
-    existingAccountCardInfos = CreateExistingRelationInfos('AccountCards', existingAccountInfos, existingCardInfos, cursor)
+
+    cardRowsOk, cardRowsScript, cardRowsData = GetAllTableRows('Cards', cursor)
+    themeRowsOk, themeRowsScript, themeRowsData = GetAllTableRows('Themes', cursor)
+    accountRowsOk, accountRowsScript, accountRowsData = GetAllTableRows('Accounts', cursor)
+    themeCardRowsOk, themeCardRowsScript, themeCardRowsData = GetAllTableRows('ThemeCards', cursor)
+    accountCardRowsOk, accountCardRowsScript, accountCardRowsData = GetAllTableRows('AccountCards', cursor)
+    if not cardRowsOk or not themeRowsOk or not accountRowsOk or not themeCardRowsOk or not accountCardRowsOk:
+        print("!!!ОШИБКА!!!")
+        input()
+        return
+
+#------------------ TODO -------------------------------------------------------
+
+    existingCardInfos = CreateExistingInfos(cardRowsData, [1, 2, 3])
+    existingThemeInfos = CreateExistingInfos(themeRowsData, [1, 2])
+    existingAccountInfos = CreateExistingInfos(accountRowsData, [1])
+    existingThemeCardInfos = CreateExistingRelationInfos(themeCardRowsData, existingThemeInfos, existingCardInfos)
+    existingAccountCardInfos = CreateExistingRelationInfos(accountCardRowsData, existingAccountInfos, existingCardInfos)
     addedCardsInfos = CreateAddedInfos(inputCardInfos, existingCardInfos, hasUpdate, 3)
     addedThemeInfos = CreateAddedInfos(inputThemeInfos, existingThemeInfos, hasUpdate, 2)
     addedAccountInfos = CreateAddedInfos(inputAccountInfos, existingAccountInfos, hasUpdate, 1)
@@ -246,29 +249,23 @@ def IsEmpty(item, columnCount):
             return False
     return True
 
-def CreateExistingInfos(tableName, secondaryColumnIndexes, cursor):
-    ok, script, log = GetAllTableRows(tableName, cursor)
-    if not ok:
-        return ok, script, log
+def CreateExistingInfos(rows, secondaryColumnIndexes):
     result = []
     for row in rows:
         secondaryColumns = ()
         for index in secondaryColumnIndexes:
             secondaryColumns += (row[index], )
         result.append((row[0], secondaryColumns))
-    return True, script, result
+    return result
 
-def CreateExistingRelationInfos(tableName, keyInfos, valueInfos, cursor):
-    ok, script, log = GetAllTableRows(tableName, cursor)
-    if not ok:
-        return ok, script, log
+def CreateExistingRelationInfos(rows, keyInfos, valueInfos):
     result = []
-    for row in log:
+    for row in rows:
         keyValue = FindInfoById(keyInfos, row[0])
         valueValue = FindInfoById(valueInfos, row[1])
         if keyValue and valueValue:
             result.append((keyValue, valueValue))
-    return True, script, result
+    return result
 
 def FindInfoById(infos, id):
     for info in infos:

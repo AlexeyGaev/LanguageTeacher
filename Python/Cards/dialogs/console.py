@@ -11,7 +11,9 @@ import utils.files as files
 import utils.format as format
 
 def StartDialog(script, hasUpdate):
-    ShowScriptDialog(script)
+    print(localization.messages['Start'].format(script))
+    print(localization.messages['DataBaseSync'])
+    EndDialog()
     connect = operations.Connect()
     if connect == None:
         ShowInvalidDataBaseDialog(localization.messages['MainException'])
@@ -19,9 +21,12 @@ def StartDialog(script, hasUpdate):
     serverMode, connection, database = connect
     cursor = connection.cursor()
     print(localization.messages['DataBaseSyncSaccess'])
-    ShowOptionsDialog(database, hasUpdate)
+    print(localization.messages['ShowOptions'])
+    print('DataBase: {}'.format(database))
+    print('HasUpdate: {}'.format(hasUpdate))
+    EndDialog()
     print(localization.messages['DataBaseVerify'])
-    ok, log = operations.GetValidTables(sql.tables, sql.table_columns, cursor)
+    ok, script, log = operations.GetValidTables(sql.tables, sql.table_columns, cursor)
     if not ok:
         if not log:
             ShowScriptException(log)
@@ -36,77 +41,71 @@ def StartDialog(script, hasUpdate):
         return;
     validTables = log['ValidTables']
     invalidTables = log['InvalidTables']
+    exceptionTables = log['ExceptionTables']
     missingTableNames = log['MissingTableNames']
     extraTableNames = log['ExtraTableNames']
-    if not validTables and not invalidTables and len(missingTableNames) == len(sql.tables) and len(extraTableNames) == 0:
+    if not validTables and not invalidTables and not exceptionTables and len(missingTableNames) == len(sql.tables) and len(extraTableNames) == 0:
         print(localization.messages['DataBaseMissingAllTables'])
         EndDialog()
         ShowMainDialog(serverMode, hasUpdate, cursor, connection)
         return;
-    if validTables and not invalidTables and len(missingTableNames) == 0 and len(extraTableNames) == 0:
-        ShowValidTablesDialog(validTables)
+    if validTables and not invalidTables and not exceptionTables and len(missingTableNames) == 0 and len(extraTableNames) == 0:
+        ShowValidTables(validTables)
         ShowMainDialog(serverMode, hasUpdate, cursor, connection)
         return;
     if validTables:
-        ShowValidTablesDialog()
+        ShowValidTables(validTables)
     if invalidTables:
-        ShowInvalidTablesDialog(invalidTables)
-    if len(missingTableNames) > 0:
-        ShowMissingTableNames(missingTableNames)
-    if len(extraTableNames) > 0:
-        ShowExtraTableNames(extraTableNames)
+        ShowInvalidTables(invalidTables)
+    if exceptionTables:
+        ShowExceptionTables(invalidTables)
+    for tableName in missingTableNames:
+        print(localization.messages['MissingTable'][tableName])
+    for tableName in extraTableNames:
+        print(localization.messages['ExtraTableName'].format(tableName))
     ShowInvalidDataBaseDialog(localization.messages['DataBaseInvalidTables'])
     cursor.close()
     connection.close()
-
-def ShowScriptDialog(script):
-    print(localization.messages['Start'].format(script))
-    print(localization.messages['DataBaseSync'])
-    EndDialog()
 
 def ShowInvalidDataBaseDialog(header):
     print(header)
     print(localization.messages['DataBaseException'])
     EndDialog()
 
-def ShowOptionsDialog(database, hasUpdate):
-    print(localization.messages['ShowOptions'])
-    print('DataBase: {}'.format(database))
-    print('HasUpdate: {}'.format(hasUpdate))
-    EndDialog()
-
-def ShowValidTablesDialog(validTables):
+def ShowValidTables(validTables):
     for tableName in validTables.keys():
-        columnsRows = validTables[tableName]
+        columnsRowsLog = validTables[tableName]
         print(localization.messages['DataBaseValidTable'].format(tableName))
-        ShowSelectAllColumnsAndAllRowsFromTable(tableName, columnsRows['Columns']['ValidColumns'], columnsRows['Rows'])
+        print(localization.messages['ContentTable'][tableName])
+        okColumns, scriptColumns, dataColumns = columnsRowsLog['Columns']
+        columns = dataColumns['ValidColumns']
+        print(localization.messages['ColumnCount'][tableName].format(len(columns)))
+        ShowValidColumns(columns)
+        ShowTableRowsLog(tableName, columnsRowsLog['Rows'])
     EndDialog()
 
-def ShowInvalidTablesDialog(invalidTables):
+def ShowInvalidTables(invalidTables):
     for tableName in invalidTables.keys():
         columnsRows = invalidTables[tableName]
         print(localization.messages['DataBaseInvalidTable'].format(tableName))
         print(localization.messages['ContentTable'][tableName])
-        validColumns = columnsRows['Columns']['ValidColumns']
-        missingColumns = columnsRows['Columns']['MissingColumns']
-        extraColumns =  columnsRows['Columns']['ExtraColumns']
-        print(localization.messages['ColumnCount'][tableName].format(len(validColumns) + len(extraColumns)))
-        if validColumns:
-            ShowValidColumns(validColumns)
-        if missingColumns:
-            ShowMissingColumns(missingColumns)
-        if extraColumns:
-            ShowExtraColumns(extraColumns)
-        ShowSelectAllRowsFromTable(columnsRows['Rows'])
+        okValid, scriptValid, dataValid = columnsRows['Columns']['ValidColumns']
+        okMissing, scriptMissing, dataMissing = columnsRows['Columns']['MissingColumns']
+        okExtra, scriptExtra, dataExtra = columnsRows['Columns']['ExtraColumns']
+        print(localization.messages['ColumnCount'][tableName].format(len(dataValid) + len(dataExtra)))
+        ShowValidColumns(dataValid)
+        ShowMissingColumns(dataMissing)
+        ShowExtraColumns(dataExtra)
+        ShowTableRowsLog(tableName, columnsRows['Rows'])
     EndDialog()
 
-def ShowMissingTableNames(missingTableNames):
-    for tableName in missingTableNames:
-        print(localization.messages['MissingTable'][tableName])
-
-def ShowExtraTableNames(extraTableNames):
-    for tableName in extraTableNames:
-        print(localization.messages['ExtraTableName'].format(tableName))
+def ShowExceptionTables(exceptionTables):
+    for tableName in exceptionTables.keys():
+        columnsRows = exceptionTables[tableName]
+        print(localization.messages['DataBaseExceptionTable'].format(tableName))
+        ShowTableColumnsLog(tableName, columnsRows['Columns'])
+        ShowTableRowsLog(tableName, columnsRows['Rows'])
+    EndDialog()
 
 def ShowValidColumns(validColumns):
     for column in validColumns:
@@ -200,17 +199,67 @@ def ClearTablesDialog(cursor):
 def ShowTablesDialog(cursor):
     ClearScreen()
     print(localization.headers['ShowTables'])
-    log = operations.SelectAllColumnsAndAllRowsFromTables(sql.tables, cursor)
-    if log:
-        ShowSelectAllColumnsAndAllRowsFromTables(log)
+    for tableName in sql.tables:
+        columnsLog = operations.GetAllTableColumns(tableName, cursor)
+        rowsLog = operations.GetAllTableRows(tableName, cursor)
+        ShowTableLog(tableName, columnsLog, rowsLog)
     EndDialog()
+
+def ShowSimpleTablesOperation(operation, log):
+    for key in log.keys():
+        ok, script, exception = log[key]
+        if ok:
+            ShowSimpleTableOperation(operation, script, key)
+        elif exception:
+            ShowScriptException(exception)
+        elif not script:
+            ShowFailEmptyScript(script)
+        else:
+            ShowFailScriptEmptyResult(script)
+
+def ShowSimpleTableOperation(operation, script, tableName):
+    print(localization.messages[operation][tableName])
+
+def ShowFailEmptyScript(script):
+    print(localization.messages['EmptyScript'].format(script))
+
+def ShowFailScriptEmptyResult(script):
+    print(localization.messages['ScriptHeader'].format(script))
+    print(localization.messages['ScriptEmptyResult'])
+
+def ShowTableLog(tableName, columnsLog, rowsLog):
+    print(localization.messages['ContentTable'][tableName])
+    ShowTableColumnsLog(tableName, columnsLog)
+    ShowTableRowsLog(tableName, rowsLog)
+
+def ShowTableColumnsLog(tableName, columnsLog):
+    ok, script, data = columnsLog
+    if not data:
+        print(localization.messages['MissingColumns'][tableName])
+    elif not ok:
+        ShowScriptException(data, script)
+    else:
+        print(localization.messages['ColumnCount'][tableName].format(len(data)))
+        for dataItem in data:
+            print(dataItem)
+
+def ShowTableRowsLog(tableName, rowsLog):
+    ok, script, data = rowsLog
+    if not data:
+        print(localization.messages['MissingRows'][tableName])
+    elif not ok:
+        ShowScriptException(data, script)
+    else:
+        print(localization.messages['RowCount'][tableName].format(len(data)))
+        for dataItem in data:
+            print(dataItem)
 
 def ShowAllCardsDialog(cursor):
     ClearScreen()
     print(localization.headers['ShowCards'])
-    log = operations.SelectAllColumnsAndAllRowsFromTable('AllCards', cursor)
-    if log:
-        ShowSelectAllColumnsAndAllRowsFromTable('AllCards', log['Columns'], log['Rows'])
+    columnsLog = operations.GetAllTableColumns('AllCards', cursor)
+    rowsLog = operations.GetAllTableRows('AllCards', cursor)
+    ShowTableLog('AllCards', columnsLog, rowsLog)
     EndDialog()
 
 def AddCardsDialog(hasUpdate, cursor):
@@ -254,10 +303,11 @@ def ShowInfos(rows, description_has, descrition_missing, tableName):
         [print(row) for row in rows]
 
 def ShowAddedScripts(log):
-    if not log:
+    ok, script, data = log
+    if not data:
         print(localization.add_cards['MissingSqlScripts'])
         return
-    for script, result in log:
+    for script, data in log:
         scriptResult = localization.add_cards['SuccessRunSqlScript'] if result else localization.add_cards['FailRunSqlScript']
         print(script, scriptResult)
 
@@ -375,54 +425,6 @@ def StringToInt(value):
             return None
 
 #-------------------------------- Utils ---------------------------------------
-
-def ShowSimpleTablesOperation(operation, log):
-    for key in log.keys():
-        ok, script, exception = log[key]
-        if ok:
-            ShowSimpleTableOperation(operation, script, key)
-        elif exception:
-            ShowScriptException(exception)
-        elif not script:
-            ShowFailEmptyScript(script)
-        else:
-            ShowFailScriptEmptyResult(script)
-
-def ShowSimpleTableOperation(operation, script, tableName):
-    print(localization.messages[operation][tableName])
-
-def ShowFailEmptyScript(script):
-    print(localization.messages['EmptyScript'].format(script))
-
-def ShowFailScriptEmptyResult(script):
-    print(localization.messages['ScriptHeader'].format(script))
-    print(localization.messages['ScriptEmptyResult'])
-
-def ShowSelectAllColumnsAndAllRowsFromTables(log):
-    for tableName in log.keys():
-        columnsRows = log[tableName]
-        ShowSelectAllColumnsAndAllRowsFromTable(tableName, columnsRows['Columns'], columnsRows['Rows'])
-
-def ShowSelectAllColumnsAndAllRowsFromTable(tableName, columns, rows):
-    print(localization.messages['ContentTable'][tableName])
-    ShowSelectAllColumnsFromTable(tableName, columns)
-    ShowSelectAllRowsFromTable(tableName, rows)
-
-def ShowSelectAllColumnsFromTable(tableName, columnsLog):
-    if not columnsLog:
-        print(localization.messages['MissingColumns'][tableName])
-    else:
-        print(localization.messages['ColumnCount'][tableName].format(len(columnsLog)))
-        for column in columnsLog:
-            print(column)
-
-def ShowSelectAllRowsFromTable(tableName, rowsLog):
-    if not rowsLog:
-        print(localization.messages['MissingRows'][tableName])
-    else:
-        print(localization.messages['RowCount'][tableName].format(len(rowsLog)))
-        for row in rowsLog:
-            print(row)
 
 def ClearScreen():
     os.system('cls' if os.name=='nt' else 'clear')
