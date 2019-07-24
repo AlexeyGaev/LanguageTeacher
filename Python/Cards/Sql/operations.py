@@ -3,25 +3,95 @@ import pyodbc
 import operator
 import itertools
 
-#------------------------------SQL --------------------------------------------
-import sql.scripts as sql
-def SelectAllTableNames(cursor):
-    return ExecuteSqlScript(sql.scripts['SelectAllTableNames'], cursor)
+#------------------------------ SQL scripts -----------------------------------
 
-def CreateTable(tableName, cursor):
-    return ExecuteSqlScript(sql.scripts['CreateTable'][tableName], cursor)
+def GetSelectAllTableNamesScript():
+    return "Select Table_Name from information_schema.tables where Table_Name != 'sysdiagrams'"
 
-def DropTable(tableName, cursor):
-    return ExecuteSqlScript(sql.scripts['DropTable'][tableName], cursor)
+def GetCreateTableScript(tableName):
+    if tableName == 'Themes':
+        return 'Create table Themes(Id integer not null primary key, Name char(255), Level integer)'
+    elif tableName == 'Cards':
+        return 'Create table Cards(Id integer not null primary key, Primary_Side text, Secondary_Side text, Level integer)'
+    elif tableName == 'Accounts':
+        return 'Create table Accounts(Id integer not null primary key, Name char(255))'
+    elif tableName == 'ThemeCards':
+        return 'Create table ThemeCards(Theme_Id integer not null, Card_Id integer not null)'
+    elif tableName == 'AccountCards':
+        return 'Create table AccountCards(Account_Id integer not null, Card_Id integer not null)'
+    elif tableName == 'Answers':
+        return 'Create table Answers(Card_Id integer not null, Side_Order bit not null, Result integer not null, Level integer)'
+    elif tableName == 'AllCards':
+        return 'Create view AllCards as Select Primary_Side, Secondary_Side, Cards.Level as Card_Level, RTRIM(Themes.Name) as Theme_Name, Themes.Level as Theme_Level, RTRIM(Accounts.Name) as Account_Name from Cards left join ThemeCards on ThemeCards.Card_Id = Cards.Id left join Themes on ThemeCards.Theme_Id = Themes.Id left join AccountCards on AccountCards.Card_Id = Cards.Id left join Accounts on AccountCards.Account_Id = Accounts.Id'
 
-def DeleteTable(tableName, cursor):
-    return ExecuteSqlScript(sql.scripts['DeleteFrom'][tableName], cursor)
+def GetDropTableScript(tableName):
+    return 'Drop table {}'.format(tableName)
 
-def SelectAllRowsFromTable(tableName, cursor):
-    return ExecuteSqlScript(sql.scripts['SelectAllRowsFromTable'][tableName], cursor)
+def GetDeleteTableScript(tableName):
+    return 'Delete from {}'.format(tableName)
 
-def SelectAllColumnsFromTable(tableName, cursor):
-    return ExecuteSqlScript(sql.scripts['SelectAllColumnsFromTable'][tableName], cursor)
+def GetSelectAllRowsFromTableScript(tableName):
+    if tableName == 'Themes':
+        return 'Select Id, RTRIM(Themes.Name) as Name, Level from Themes'
+    elif tableName == 'Accounts':
+        return 'Select Id, RTRIM(Accounts.Name) as Name from Accounts'
+    return 'Select * from {}'.format(tableName)
+
+def GetSelectAllColumnsFromTableScript(tableName):
+    return "Select column_name, data_type, character_maximum_length, ordinal_position, is_nullable from information_schema.columns where table_name = '{}'".format(tableName)
+
+def GetCardInsertIntoScript(id, primary_side, secondary_side, level):
+    if primary_side == "" and secondary_side == "" and level == "":
+        return "Insert into Cards(Id) values({})".format(id)
+    elif primary_side == "" and secondary_side == "" and level != "":
+        return "Insert into Cards(Id, Level) values({}, {})".format(id, level)
+    elif primary_side == "" and secondary_side != "" and level == "":
+        return "Insert into Cards(Id, Secondary_Side) values({}, '{}')".format(id, secondary_side)
+    elif primary_side == "" and secondary_side != "" and level != "":
+        return "Insert into Cards(Id, Secondary_Side, Level) values({}, '{}', {})".format(id, secondary_side, level)
+    elif primary_side != "" and secondary_side == "" and level == "":
+        return "Insert into Cards(Id, Primary_Side) values({}, '{}')".format(id, primary_side)
+    elif primary_side != "" and secondary_side == "" and level != "":
+        return "Insert into Cards(Id, Primary_Side, Level) values({}, '{}', {})".format(id, primary_side, level)
+    elif primary_side != "" and secondary_side != "" and level == "":
+        return "Insert into Cards(Id, Primary_Side, Secondary_Side) values({}, '{}', '{}')".format(id, primary_side, secondary_side)
+    else:
+        return "Insert into Cards values({}, '{}', '{}', {})".format(id, primary_side, secondary_side, level)
+
+def GetThemeInsertIntoScript(id, name, level):
+    if name == "" and level == "":
+        return "Insert into Themes(Id) values({})".format(id)
+    elif name == "" and level != "":
+        return "Insert into Themes(Id, Level) values({}, {})".format(id, level)
+    elif name != "" and level == "":
+        return "Insert into Themes(Id, Name) values({}, '{}')".format(id, name)
+    else:
+        return "Insert into Themes values({}, '{}', {})".format(id, name, level)
+
+def GetAccountInsertIntoScript(id, name):
+    if name == "":
+        return "Insert into Accounts(Id) values({})".format(id)
+    else:
+        return "Insert into Accounts values({}, '{}')".format(id, name)
+
+def GetAddedRelationScript(tableName, id, value):
+    return "Insert into {} values({}, {})".format(tableName, id, value)
+
+def GetCardUpdateScript(id, secondary_side, level, has_secondary_side, has_level):
+    if not has_secondary_side and has_level:
+        return "Update Cards set Level = '{}' where Id = {}".format(level, id)
+    elif has_secondary_side and not has_level:
+        return "Update Cards set Secondary_Side = '{}' where Id = {}".format(secondary_side, id)
+    else:
+        return "Update Cards set Secondary_Side = '{}', Level = '{}' where Id = {}".format(secondary_side, level, id)
+
+def GetThemeUpdateScript(id, level):
+    return "Update Themes set Level = {} where Id = {}".format(level, id)
+
+#TODO: Answers
+#"Insert into Answers(Card_Id, Side_Order, Result) values({}, {}, {})"
+#"Insert into Answers values({}, {}, {}, {})"
+#"Update Answers set Level = {} where Card_Id = {} and Side_Order = {} and Result = {}"
 
 def ExecuteSqlScript(script, cursor):
     if not script:
@@ -33,7 +103,7 @@ def ExecuteSqlScript(script, cursor):
     else:
         return True, script, None
 
-#------------------------------------------------------------------------------
+#-------------------------- Connect ------------------------------------------
 
 def Connect():
     serverMode = True
@@ -47,8 +117,11 @@ def Connect():
     except:
         return None
 
+#=-------------------------- Validation ---------------------------------------
+
 def GetValidTables(validTableNames, validTableColumns, cursor):
-    ok, script, exception = SelectAllTableNames(cursor)
+    script = GetSelectAllTableNamesScript()
+    ok, script, exception = ExecuteSqlScript(script, cursor)
     if not ok:
         return ok, script, exception
     tableNameRows = cursor.fetchall()
@@ -96,24 +169,6 @@ def GetValidTables(validTableNames, validTableColumns, cursor):
         'MissingTableNames' : missingTableNames,
         'ExtraTableNames' : extraTableNames }
 
-def GetAllTableRows(tableName, cursor):
-    ok, script, exception = SelectAllRowsFromTable(tableName, cursor)
-    if not ok:
-        return ok, script, exception
-    return True, script, [GetRowItems(row) for row in cursor.fetchall()]
-
-def GetAllTableColumns(tableName, cursor):
-    ok, script, exception = SelectAllColumnsFromTable(tableName, cursor)
-    if not ok:
-        return ok, script, exception
-    return True, script, [GetRowItems(row) for row in cursor.fetchall()]
-
-def GetRowItems(row):
-    result = ()
-    for item in row:
-        result += (item, )
-    return result
-
 def GetValidTableColumns(tableName, validColumns, cursor):
     ok, script, log = GetAllTableColumns(tableName, cursor)
     if not ok:
@@ -133,23 +188,36 @@ def GetValidTableColumns(tableName, validColumns, cursor):
         'ExtraColumns' :  extraColumns
         }
 
-def CreateTables(tableNames, cursor):
-    result = {}
-    for tableName in tableNames:
-        result[tableName] = CreateTable(tableName, cursor)
-    return result
+#--------------------------- Columns or rows ----------------------------------
 
-def DropTables(tableNames, cursor):
-    result = {}
-    for tableName in tableNames:
-        result[tableName] = DropTable(tableName, cursor)
-    return result
+def GetAllTableRows(tableName, cursor):
+    return GetAllTableColumnsOrRows(GetSelectAllRowsFromTableScript(tableName), cursor)
 
-def DeleteTables(tableNames, cursor):
-    result = {}
-    for tableName in tableNames:
-        result[tableName] = DeleteTable(tableName, cursor)
-    return result
+def GetAllTableColumns(tableName, cursor):
+    return GetAllTableColumnsOrRows(GetSelectAllColumnsFromTableScript(tableName), cursor)
+
+def GetAllTableColumnsOrRows(script, cursor):
+    def GetRowItems(row):
+        result = ()
+        for item in row:
+            result += (item, )
+        return result
+
+    ok, script, exception = ExecuteSqlScript(script, cursor)
+    if not ok:
+        return ok, script, exception
+    return True, script, [GetRowItems(row) for row in cursor.fetchall()]
+
+#------------------------ Simple operations -----------------------------------
+
+def CreateTable(tableName, cursor):
+    return ExecuteSqlScript(GetCreateTableScript(tableName), cursor)
+
+def DropTable(tableName, cursor):
+    return ExecuteSqlScript(GetDropTableScript(tableName), cursor)
+
+def DeleteTable(tableNames, cursor):
+    return ExecuteSqlScript(GetDeleteTableScript(tableName), cursor)
 
 #-------------------------------- Add Cards -----------------------------------
 
@@ -163,24 +231,32 @@ def AddCards(rows, hasUpdate, cursor):
         inputRows.append((cardInfo, themeInfo, accountInfo))
 
     if not inputRows:
-        return None
+        return True, None
+
     inputCardInfos = CreateInputInfos(inputRows, 0, 3)
     inputThemeInfos = CreateInputInfos(inputRows, 1, 2)
     inputAccountInfos = CreateInputInfos(inputRows, 2, 1)
     inputThemeCardInfos = CreateInputRelationInfos(inputRows, 1, 0, 2, 3)
     inputAccountCardInfos = CreateInputRelationInfos(inputRows, 2, 0, 1, 3)
 
-    cardRowsOk, cardRowsScript, cardRowsData = GetAllTableRows('Cards', cursor)
-    themeRowsOk, themeRowsScript, themeRowsData = GetAllTableRows('Themes', cursor)
-    accountRowsOk, accountRowsScript, accountRowsData = GetAllTableRows('Accounts', cursor)
-    themeCardRowsOk, themeCardRowsScript, themeCardRowsData = GetAllTableRows('ThemeCards', cursor)
-    accountCardRowsOk, accountCardRowsScript, accountCardRowsData = GetAllTableRows('AccountCards', cursor)
+    cardRowsLog = GetAllTableRows('Cards', cursor)
+    themeRowsLog = GetAllTableRows('Themes', cursor)
+    accountRowsLog = GetAllTableRows('Accounts', cursor)
+    themeCardRowsLog = GetAllTableRows('ThemeCards', cursor)
+    accountCardRowsLog = GetAllTableRows('AccountCards', cursor)
+    cardRowsOk, cardRowsScript, cardRowsData = cardRowsLog
+    themeRowsOk, themeRowsScript, themeRowsData = themeRowsLog
+    accountRowsOk, accountRowsScript, accountRowsData = accountRowsLog
+    themeCardRowsOk, themeCardRowsScript, themeCardRowsData = themeCardRowsLog
+    accountCardRowsOk, accountCardRowsScript, accountCardRowsData = accountCardRowsLog
     if not cardRowsOk or not themeRowsOk or not accountRowsOk or not themeCardRowsOk or not accountCardRowsOk:
-        print("!!!ОШИБКА!!!")
-        input()
-        return
-
-#------------------ TODO -------------------------------------------------------
+        result = {}
+        result['Cards'] = cardRowsLog
+        result['Themes'] = themeRowsLog
+        result['Accounts'] = accountRowsLog
+        result['ThemeCards'] = themeCardRowsLog
+        result['AccountCards'] = accountCardRowsLog
+        return False, result
 
     existingCardInfos = CreateExistingInfos(cardRowsData, [1, 2, 3])
     existingThemeInfos = CreateExistingInfos(themeRowsData, [1, 2])
@@ -217,6 +293,7 @@ def AddCards(rows, hasUpdate, cursor):
     result['AddedThemeCardInfos'] = addedThemeCardInfos
     result['AddedAccountCardInfos'] = addedAccountCardInfos
     result['AddedScripts'] = [ExecuteSqlScript(script, cursor) for script in addedScripts] if addedScripts else None
+    return True, result
 
 def CreateInputInfos(rows, firstColumnIndex, columnCount):
     result = []
@@ -259,6 +336,12 @@ def CreateExistingInfos(rows, secondaryColumnIndexes):
     return result
 
 def CreateExistingRelationInfos(rows, keyInfos, valueInfos):
+    def FindInfoById(infos, id):
+        for info in infos:
+            if info[0] == id:
+                return info[1]
+        return None
+
     result = []
     for row in rows:
         keyValue = FindInfoById(keyInfos, row[0])
@@ -266,12 +349,6 @@ def CreateExistingRelationInfos(rows, keyInfos, valueInfos):
         if keyValue and valueValue:
             result.append((keyValue, valueValue))
     return result
-
-def FindInfoById(infos, id):
-    for info in infos:
-        if info[0] == id:
-            return info[1]
-    return None
 
 def CreateAddedInfos(inputInfos, existingInfos, hasUpdate, columnCount):
     def GetMaxId(rows):
@@ -342,9 +419,10 @@ def CreateAddedCardScripts(addedInfos):
     for info in addedInfos:
         id, inputInfo, update = info
         if update == 'InsertInto':
-            script = CreateCardInsertIntoScript(id, inputInfo)
+            script = GetCardInsertIntoScript(id, inputInfo[0], inputInfo[1], inputInfo[2])
         else:
-            script = CreateCardUpdateScript(id, inputInfo, update[1][1])
+            existingInfo = update[1][1]
+            script = GetCardUpdateScript(id, inputInfo[1], inputInfo[2], existingInfo[1] != inputInfo[1], existingInfo[2] != inputInfo[2])
         result.append(script)
     return result
 
@@ -353,9 +431,9 @@ def CreateAddedThemeScripts(addedInfos):
     for info in addedInfos:
         id, inputInfo, update = info
         if update == 'InsertInto':
-            script = CreateThemeInsertIntoScript(id, inputInfo)
+            script = GetThemeInsertIntoScript(id, inputInfo[0], inputInfo[1])
         else:
-            script = CreateThemeUpdateScript(id, inputInfo, update[1][1])
+            script = GetThemeUpdateScript(id, inputInfo[1])
         result.append(script)
     return result
 
@@ -363,53 +441,8 @@ def CreateAddedAccountScripts(addedInfos):
     result = []
     for info in addedInfos:
         id, inputInfo, update = info
-        result.append(CreateAccountInsertIntoScript(id, inputInfo))
+        result.append(GetAccountInsertIntoScript(id, inputInfo[0]))
     return result
 
-def CreateCardInsertIntoScript(id, inputInfo):
-    if inputInfo[0] == "" and inputInfo[1] == "" and inputInfo[2] == "":
-        return sql.scripts['InsertInto']['Cards'][0].format(id)
-    elif inputInfo[0] == "" and inputInfo[1] == "" and inputInfo[2] != "":
-        return sql.scripts['InsertInto']['Cards'][1].format(id, inputInfo[2])
-    elif inputInfo[0] == "" and inputInfo[1] != "" and inputInfo[2] == "":
-        return sql.scripts['InsertInto']['Cards'][2].format(id, inputInfo[1])
-    elif inputInfo[0] == "" and inputInfo[1] != "" and inputInfo[2] != "":
-        return sql.scripts['InsertInto']['Cards'][3].format(id, inputInfo[1], inputInfo[2])
-    elif inputInfo[0] != "" and inputInfo[1] == "" and inputInfo[2] == "":
-        return sql.scripts['InsertInto']['Cards'][4].format(id, inputInfo[0])
-    elif inputInfo[0] != "" and inputInfo[1] == "" and inputInfo[2] != "":
-        return sql.scripts['InsertInto']['Cards'][5].format(id, inputInfo[0], inputInfo[2])
-    elif inputInfo[0] != "" and inputInfo[1] != "" and inputInfo[2] == "":
-        return sql.scripts['InsertInto']['Cards'][6].format(id, inputInfo[0], inputInfo[1])
-    else:
-        return sql.scripts['InsertInto']['Cards'][7].format(id, inputInfo[0], inputInfo[1], inputInfo[2])
-
-def CreateThemeInsertIntoScript(id, inputInfo):
-    if inputInfo[0] == "" and inputInfo[1] == "":
-        return sql.scripts['InsertInto']['Themes'][0].format(id)
-    elif inputInfo[0] == "" and inputInfo[1] != "":
-        return sql.scripts['InsertInto']['Themes'][1].format(id, inputInfo[1])
-    elif inputInfo[0] != "" and inputInfo[1] == "":
-        return sql.scripts['InsertInto']['Themes'][2].format(id, inputInfo[0])
-    else:
-        return sql.scripts['InsertInto']['Themes'][3].format(id, inputInfo[0], inputInfo[1])
-
-def CreateAccountInsertIntoScript(id, inputInfo):
-    if inputInfo[0] == "":
-        return sql.scripts['InsertInto']['Accounts'][0].format(id)
-    else:
-        return sql.scripts['InsertInto']['Accounts'][1].format(id, inputInfo[0])
-
-def CreateCardUpdateScript(id, inputInfo, existingInfo):
-    if inputInfo[1] == existingInfo[1] and inputInfo[2] != existingInfo[2]:
-        return sql.scripts['Update']['Cards'][0].format(inputInfo[2], id)
-    elif inputInfo[1] != existingInfo[1] and inputInfo[2] == existingInfo[2]:
-        return sql.scripts['Update']['Cards'][1].format(inputInfo[1], id)
-    else:
-        return sql.scripts['Update']['Cards'][2].format(inputInfo[1], inputInfo[2], id)
-
-def CreateThemeUpdateScript(id, inputInfo, existingInfo):
-    return sql.scripts['Update']['Cards'][0].format(inputInfo[1], id)
-
 def CreateAddedRelationScripts(infos, tableName):
-    return [sql.scripts['InsertInto'][tableName][0].format(info[0], info[1]) for info in infos]
+    return [GetAddedRelationScript(tableName, info[0], info[1]) for info in infos]

@@ -28,3 +28,6 @@ Insert into AccountCards values(1, 2);
 Insert into AccountCards values(1, 6);
 Insert into AccountCards values(1, 7);
 
+/*alter table Cards drop column Level;
+alter table Accounts add passwords char(20);*/
+

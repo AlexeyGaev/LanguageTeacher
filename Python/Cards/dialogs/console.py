@@ -1,5 +1,3 @@
-# !!!TODO : rename to console dialog, add web dialog -----------------------------
-
 import os
 import os.path
 import msvcrt
@@ -11,7 +9,7 @@ import utils.files as files
 import utils.format as format
 
 def StartDialog(script, hasUpdate):
-    print(localization.messages['Start'].format(script))
+    print(localization.messages['Start'].format(script[0]))
     print(localization.messages['DataBaseSync'])
     EndDialog()
     connect = operations.Connect()
@@ -44,13 +42,14 @@ def StartDialog(script, hasUpdate):
     exceptionTables = log['ExceptionTables']
     missingTableNames = log['MissingTableNames']
     extraTableNames = log['ExtraTableNames']
-    if not validTables and not invalidTables and not exceptionTables and len(missingTableNames) == len(sql.tables) and len(extraTableNames) == 0:
+    if not validTables and not invalidTables and not exceptionTables and len(missingTableNames) == len(sql.tables) and not extraTableNames:
         print(localization.messages['DataBaseMissingAllTables'])
         EndDialog()
         ShowMainDialog(serverMode, hasUpdate, cursor, connection)
         return;
-    if validTables and not invalidTables and not exceptionTables and len(missingTableNames) == 0 and len(extraTableNames) == 0:
+    if validTables and not invalidTables and not exceptionTables and len(missingTableNames) == 0 and not extraTableNames:
         ShowValidTables(validTables)
+        EndDialog()
         ShowMainDialog(serverMode, hasUpdate, cursor, connection)
         return;
     if validTables:
@@ -58,7 +57,7 @@ def StartDialog(script, hasUpdate):
     if invalidTables:
         ShowInvalidTables(invalidTables)
     if exceptionTables:
-        ShowExceptionTables(invalidTables)
+        ShowExceptionTables(exceptionTables)
     for tableName in missingTableNames:
         print(localization.messages['MissingTable'][tableName])
     for tableName in extraTableNames:
@@ -82,30 +81,42 @@ def ShowValidTables(validTables):
         print(localization.messages['ColumnCount'][tableName].format(len(columns)))
         ShowValidColumns(columns)
         ShowTableRowsLog(tableName, columnsRowsLog['Rows'])
-    EndDialog()
 
 def ShowInvalidTables(invalidTables):
     for tableName in invalidTables.keys():
-        columnsRows = invalidTables[tableName]
+        columnsRowsLog = invalidTables[tableName]
         print(localization.messages['DataBaseInvalidTable'].format(tableName))
         print(localization.messages['ContentTable'][tableName])
-        okValid, scriptValid, dataValid = columnsRows['Columns']['ValidColumns']
-        okMissing, scriptMissing, dataMissing = columnsRows['Columns']['MissingColumns']
-        okExtra, scriptExtra, dataExtra = columnsRows['Columns']['ExtraColumns']
+        okColumns, scriptColumns, dataColumns = columnsRowsLog['Columns']
+        dataValid = dataColumns['ValidColumns']
+        dataMissing = dataColumns['MissingColumns']
+        dataExtra = dataColumns['ExtraColumns']
         print(localization.messages['ColumnCount'][tableName].format(len(dataValid) + len(dataExtra)))
         ShowValidColumns(dataValid)
         ShowMissingColumns(dataMissing)
         ShowExtraColumns(dataExtra)
-        ShowTableRowsLog(tableName, columnsRows['Rows'])
-    EndDialog()
+        ShowTableRowsLog(tableName, columnsRowsLog['Rows'])
 
 def ShowExceptionTables(exceptionTables):
     for tableName in exceptionTables.keys():
-        columnsRows = exceptionTables[tableName]
+        columnsRowsLog = exceptionTables[tableName]
         print(localization.messages['DataBaseExceptionTable'].format(tableName))
-        ShowTableColumnsLog(tableName, columnsRows['Columns'])
-        ShowTableRowsLog(tableName, columnsRows['Rows'])
-    EndDialog()
+        okColumns, scriptColumns, dataColumns = columnsRowsLog['Columns']
+        if not okColumns:
+            ShowScriptException(dataColumns, scriptColumns)
+        else:
+            dataValid = dataColumns['ValidColumns']
+            dataMissing = dataColumns['MissingColumns']
+            dataExtra = dataColumns['ExtraColumns']
+            print(localization.messages['ColumnCount'][tableName].format(len(dataValid) + len(dataExtra)))
+            ShowValidColumns(dataValid)
+            ShowMissingColumns(dataMissing)
+            ShowExtraColumns(dataExtra)
+        okRows, scriptRows, dataRows = columnsRowsLog['Rows']
+        if not okRows:
+            ShowScriptException(dataRows, scriptRows)
+        else:
+            ShowTableRowsLog(tableName, dataRows)
 
 def ShowValidColumns(validColumns):
     for column in validColumns:
@@ -174,26 +185,25 @@ def CardsMenu(hasUpdate, cursor):
 def CreateTablesDialog(cursor):
     ClearScreen()
     print(localization.headers['CreateTable'])
-    log = operations.CreateTables(sql.tables, cursor)
-    if log:
-        ShowSimpleTablesOperation('CreateTable', log)
+    for tableName in sql.tables:
+        log = operations.CreateTable(tableName, cursor)
+        ShowSimpleTableOperation('CreateTable', tableName, log)
     EndDialog()
 
 def DropTablesDialog(cursor):
     ClearScreen()
     print(localization.headers['DropTable'])
-    log = operations.DropTables(sql.tables, cursor)
-    if log:
-        ShowSimpleTablesOperation('DropTable', log)
+    for tableName in sql.tables:
+        log = operations.DropTable(tableName, cursor)
+        ShowSimpleTablesOperation('DropTable', tableName, log)
     EndDialog()
 
 def ClearTablesDialog(cursor):
     ClearScreen()
     print(localization.headers['DeleteFrom'])
-    tableNames = [tableName for tableName in sql.tables if sql.views.count(tableName) == 0]
-    log = operations.DeleteTables(tableNames, cursor)
-    if log:
-        ShowSimpleTablesOperation('DeleteFrom', log)
+    for tableName in [tableName for tableName in sql.tables if sql.views.count(tableName) == 0]:
+        log = operations.DeleteTable(tableName, cursor)
+        ShowSimpleTablesOperation('DeleteTable', tableName, log)
     EndDialog()
 
 def ShowTablesDialog(cursor):
@@ -205,27 +215,17 @@ def ShowTablesDialog(cursor):
         ShowTableLog(tableName, columnsLog, rowsLog)
     EndDialog()
 
-def ShowSimpleTablesOperation(operation, log):
-    for key in log.keys():
-        ok, script, exception = log[key]
-        if ok:
-            ShowSimpleTableOperation(operation, script, key)
-        elif exception:
-            ShowScriptException(exception)
-        elif not script:
-            ShowFailEmptyScript(script)
-        else:
-            ShowFailScriptEmptyResult(script)
-
-def ShowSimpleTableOperation(operation, script, tableName):
-    print(localization.messages[operation][tableName])
-
-def ShowFailEmptyScript(script):
-    print(localization.messages['EmptyScript'].format(script))
-
-def ShowFailScriptEmptyResult(script):
-    print(localization.messages['ScriptHeader'].format(script))
-    print(localization.messages['ScriptEmptyResult'])
+def ShowSimpleTableOperation(operation, tableName, log):
+    ok, script, exception = log
+    if ok:
+        print(localization.messages[operation][tableName])
+    elif exception:
+        ShowScriptException(exception)
+    elif not script:
+        print(localization.messages['EmptyScript'].format(script))
+    else:
+        print(localization.messages['ScriptHeader'].format(script))
+        print(localization.messages['ScriptEmptyResult'])
 
 def ShowTableLog(tableName, columnsLog, rowsLog):
     print(localization.messages['ContentTable'][tableName])
@@ -273,28 +273,36 @@ def ImportCardsDialog(hasUpdate, cursor):
     EndDialog()
 
 def ShowAddCards(log):
+    ok, data = log
     print(localization.headers['AddCards'])
-    if not log:
+    if not ok:
+        print('При расчете строк произошли исключения.')
+        if data:
+            for row in data:
+                ok, script, exception = row
+                ShowScriptException(exception, script)
+        return
+    if not data:
         print(localization.messages['MissingAddedRows'])
         return
 
-    ShowInfos(log['InputRows'], 'HasInputRows', 'MissingInputRows', None)
-    ShowInfos(log['InputCardInfos'], 'HasInput', 'MissingInput', 'Cards')
-    ShowInfos(log['InputThemeInfos'], 'HasInput', 'MissingInput', 'Themes')
-    ShowInfos(log['InputAccountInfos'], 'HasInput', 'MissingInput', 'Accounts')
-    ShowInfos(log['InputThemeCardInfos'], 'HasInput', 'MissingInput', 'ThemeCards')
-    ShowInfos(log['InputAccountCardInfos'], 'HasInput', 'MissingInput', 'AccountCards')
-    ShowInfos(log['ExistingCardInfos'], 'HasExisting', 'MissingExisting', 'Cards')
-    ShowInfos(log['ExistingThemeInfos'], 'HasExisting', 'MissingExisting', 'Themes')
-    ShowInfos(log['ExistingAccountInfos'], 'HasExisting', 'MissingExisting', 'Accounts')
-    ShowInfos(log['ExistingThemeCardInfos'], 'HasExisting', 'MissingExisting', 'ThemeCards')
-    ShowInfos(log['ExistingAccountCardInfos'], 'HasExisting', 'MissingExisting', 'AccountCards')
-    ShowInfos(log['AddedCardsInfos'], 'HasAdded', 'MissingAdded', 'Cards')
-    ShowInfos(log['AddedThemeInfos'], 'HasAdded', 'MissingAdded', 'Themes')
-    ShowInfos(log['AddedAccountInfos'], 'HasAdded', 'MissingAdded', 'Accounts')
-    ShowInfos(log['AddedThemeCardInfos'], 'HasAdded', 'MissingAdded', 'ThemeCards')
-    ShowInfos(log['AddedAccountCardInfos'], 'HasAdded', 'MissingAdded', 'AccountCards')
-    ShowAddedScripts(log['AddedScripts'])
+    ShowInfos(data['InputRows'], 'HasInputRows', 'MissingInputRows', None)
+    ShowInfos(data['InputCardInfos'], 'HasInput', 'MissingInput', 'Cards')
+    ShowInfos(data['InputThemeInfos'], 'HasInput', 'MissingInput', 'Themes')
+    ShowInfos(data['InputAccountInfos'], 'HasInput', 'MissingInput', 'Accounts')
+    ShowInfos(data['InputThemeCardInfos'], 'HasInput', 'MissingInput', 'ThemeCards')
+    ShowInfos(data['InputAccountCardInfos'], 'HasInput', 'MissingInput', 'AccountCards')
+    ShowInfos(data['ExistingCardInfos'], 'HasExisting', 'MissingExisting', 'Cards')
+    ShowInfos(data['ExistingThemeInfos'], 'HasExisting', 'MissingExisting', 'Themes')
+    ShowInfos(data['ExistingAccountInfos'], 'HasExisting', 'MissingExisting', 'Accounts')
+    ShowInfos(data['ExistingThemeCardInfos'], 'HasExisting', 'MissingExisting', 'ThemeCards')
+    ShowInfos(data['ExistingAccountCardInfos'], 'HasExisting', 'MissingExisting', 'AccountCards')
+    ShowInfos(data['AddedCardsInfos'], 'HasAdded', 'MissingAdded', 'Cards')
+    ShowInfos(data['AddedThemeInfos'], 'HasAdded', 'MissingAdded', 'Themes')
+    ShowInfos(data['AddedAccountInfos'], 'HasAdded', 'MissingAdded', 'Accounts')
+    ShowInfos(data['AddedThemeCardInfos'], 'HasAdded', 'MissingAdded', 'ThemeCards')
+    ShowInfos(data['AddedAccountCardInfos'], 'HasAdded', 'MissingAdded', 'AccountCards')
+    ShowAddedScripts(data['AddedScripts'])
 
 def ShowInfos(rows, description_has, descrition_missing, tableName):
     locStr = localization.add_cards[description_has] if rows else localization.add_cards[descrition_missing]
@@ -303,12 +311,11 @@ def ShowInfos(rows, description_has, descrition_missing, tableName):
         [print(row) for row in rows]
 
 def ShowAddedScripts(log):
-    ok, script, data = log
-    if not data:
+    if not log:
         print(localization.add_cards['MissingSqlScripts'])
         return
-    for script, data in log:
-        scriptResult = localization.add_cards['SuccessRunSqlScript'] if result else localization.add_cards['FailRunSqlScript']
+    for ok, script, data in log:
+        scriptResult = localization.add_cards['SuccessRunSqlScript'] if ok else localization.add_cards['FailRunSqlScript']
         print(script, scriptResult)
 
 def ExportCardsDialog(cursor):
@@ -319,14 +326,15 @@ def ExportCardsDialog(cursor):
     if not file_name:
         print(localization.files['EmptyFileName'])
         return
-    rows = operations.SelectAllRowsFromTable('AllCards', cursor)
-    if not rows:
+    ok, script, data = operations.GetAllTableRows('AllCards', cursor)
+    if not ok:
+        ShowScriptException(data, script)
         return
     if not os.path.exists(file_name):
         print(localization.files['CreateFile'].format(file_name))
     else:
         print(localization.files['ReWriteFile'].format(file_name))
-    if files.WriteFile(file_name, format.GetLinesFromRows(rows, 6, ", ")):
+    if files.WriteFile(file_name, format.GetLinesFromRows(data, 6, ", ")):
         print(localization.files['FileContent'].format(file_name))
         for line in files.ReadFile(file_name):
             print(line)
