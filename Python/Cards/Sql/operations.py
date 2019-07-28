@@ -88,10 +88,27 @@ def GetCardUpdateScript(id, secondary_side, level, has_secondary_side, has_level
 def GetThemeUpdateScript(id, level):
     return "Update Themes set Level = {} where Id = {}".format(level, id)
 
-#TODO: Answers
-#"Insert into Answers(Card_Id, Side_Order, Result) values({}, {}, {})"
-#"Insert into Answers values({}, {}, {}, {})"
-#"Update Answers set Level = {} where Card_Id = {} and Side_Order = {} and Result = {}"
+def GetSelectAllCardsByThemeAndAccount(theme_name, account_name):
+    if not theme_name and not account_name:
+        return 'Select * from AllCards where theme_name is null and account_name is null'
+    elif not account_name:
+        return 'Select * from AllCards where account_name is null'
+    elif not theme_name:
+        return 'Select * from AllCards where theme_name is null'
+    else:
+        return "Select * from AllCards where theme_name = '{}' and account_name = '{}'".format(theme_name, account_name)
+
+def GetSelectCardIdBySide(side, side_order):
+    if side_order == 0:
+        return "Select Id from Cards where Primary_Side like '{}'".format(side)
+    elif side_order == 1:
+        return "Select Id from Cards where Secondary_Side like '{}'".format(side)
+    return None
+
+def GetInsertIntoAnswer(card_id, side_order, result, level):
+    if not level:
+        return "Insert into Answers(Card_Id, Side_Order, Result) values({}, {}, {})".format(card_id, side_order, result)
+    return "Insert into Answers values({}, {}, {}, {})".format(card_id, side_order, result, level)
 
 def ExecuteSqlScript(script, cursor):
     if not script:
@@ -263,9 +280,9 @@ def AddCards(rows, hasUpdate, cursor):
     existingAccountInfos = CreateExistingInfos(accountRowsData, [1])
     existingThemeCardInfos = CreateExistingRelationInfos(themeCardRowsData, existingThemeInfos, existingCardInfos)
     existingAccountCardInfos = CreateExistingRelationInfos(accountCardRowsData, existingAccountInfos, existingCardInfos)
-    addedCardsInfos = CreateAddedInfos(inputCardInfos, existingCardInfos, hasUpdate, 3)
-    addedThemeInfos = CreateAddedInfos(inputThemeInfos, existingThemeInfos, hasUpdate, 2)
-    addedAccountInfos = CreateAddedInfos(inputAccountInfos, existingAccountInfos, hasUpdate, 1)
+    addedCardsInfos = CreateAddedInfos(inputCardInfos, existingCardInfos, hasUpdate, 3, [0, 1])
+    addedThemeInfos = CreateAddedInfos(inputThemeInfos, existingThemeInfos, hasUpdate, 2, [0])
+    addedAccountInfos = CreateAddedInfos(inputAccountInfos, existingAccountInfos, hasUpdate, 1, [0])
     addedThemeCardInfos = CreateAddedRelationInfos(inputThemeCardInfos, existingThemeCardInfos, addedThemeInfos, addedCardsInfos)
     addedAccountCardInfos = CreateAddedRelationInfos(inputAccountCardInfos, existingAccountCardInfos, addedAccountInfos, addedCardsInfos)
     addedScripts = []
@@ -350,7 +367,7 @@ def CreateExistingRelationInfos(rows, keyInfos, valueInfos):
             result.append((keyValue, valueValue))
     return result
 
-def CreateAddedInfos(inputInfos, existingInfos, hasUpdate, columnCount):
+def CreateAddedInfos(inputInfos, existingInfos, hasUpdate, columnCount, compareColumnIndexes):
     def GetMaxId(rows):
         result = 0
         if not rows:
@@ -371,9 +388,14 @@ def CreateAddedInfos(inputInfos, existingInfos, hasUpdate, columnCount):
         result += (update, )
         return result
 
-    def GetFirstIndex(column, existingInfos):
+    def GetFirstIndex(inputInfo, indexes, existingInfos):
         for existingInfo in existingInfos:
-            if column == existingInfo[0]:
+            hasDifferences = False
+            for index in indexes:
+                if inputInfo[index] != existingInfo[index]:
+                    hasDifferences = True
+                    break;
+            if not hasDifferences:
                 return existingInfos.index(existingInfo)
         return -1
 
@@ -381,7 +403,7 @@ def CreateAddedInfos(inputInfos, existingInfos, hasUpdate, columnCount):
     existingPartialInfos = [info[1] for info in existingInfos]
     result = []
     for inputInfo in inputInfos:
-        existingIndex = GetFirstIndex(inputInfo[0], existingPartialInfos)
+        existingIndex = GetFirstIndex(inputInfo, compareColumnIndexes, existingPartialInfos)
         if existingIndex == -1:
             result.append(CreateTuple(startId, inputInfo, columnCount, 'InsertInto'))
             startId += 1

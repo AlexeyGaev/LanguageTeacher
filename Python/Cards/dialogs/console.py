@@ -346,10 +346,10 @@ def ShowScriptException(e, script):
     if e.args[0] == '42S01' or e.args[0] == '42S02':
         print(localization.messages['InvalidTable'], e.args[1]);
 
-#--------------------- TODO : TestingDialog -----------------------------------
+#--------------------- TODO : Refactor and localization TestingDialog ---------
 
 def TestingDialog(cursor):
-    # TODO dialog
+    ClearScreen()
     print(localization.headers['Testing'])
     account = input(localization.dialogs['InputExistingAccount'])
     if not account:
@@ -361,7 +361,102 @@ def TestingDialog(cursor):
         print(localization.messages['NothingInputTheme'])
         if input(localization.messages['InputHasAnswersWithoutTheme']) != '1':
             return
-    print(localization.messages['TempImposible'])
+    ok, script, exception = operations.ExecuteSqlScript(operations.GetSelectAllCardsByThemeAndAccount(theme, account), cursor)
+    if not ok:
+        ShowScriptException(exception, script)
+        EndDialog()
+        return
+    rows = cursor.fetchall()
+    if not rows:
+        print('Не выбрано ни одной карточки')
+        EndDialog()
+        return
+    cards = [row for row in rows]
+    print('Выбрано карточек : {}.'.format(len(cards)))
+    side_order = 0
+    while True:
+        print('Какую сторону карточки будете открывать (0 - Primary / 1 - Secondary)?')
+        key = msvcrt.getch()
+        if key == b'0':
+            side_order = 0
+            break
+        elif key == b'1':
+            side_order = 1
+            break
+        else:
+            print('Вы сделали неправильный выбор. Повторите ввод.')
+    print('Начинаем тестирование.')
+    EndDialog()
+    interrupt = False
+    answers = []
+    for card in cards:
+        while True:
+            ClearScreen()
+            opened_side = card[side_order]
+            closed_side = card[1+side_order]
+            print('Содержимое карточки: ')
+            print(opened_side)
+            print('Выберите один из вариантов:')
+            print('0 - Знаю')
+            print('1 - Не знаю')
+            print('2 - Пропустить')
+            print('3 - Открыть')
+            key = msvcrt.getch()
+            if key == b'\x1b':
+                print('Вы точно хотите прервать тестирование (1 - да)?')
+                if (msvcrt.getch() == b'1'):
+                    interrupt = True
+                    break
+                else:
+                    continue
+            if key == b'0':
+                level = input('Оцените сложность ответа (цифрой от 0 до 10): ')
+                answers.append((opened_side, side_order, 0, int(level.strip())))
+                EndDialog()
+                break
+            elif key == b'1':
+                answers.append((opened_side, side_order, 1, None))
+                EndDialog()
+                break
+            elif key == b'2':
+                answers.append((opened_side, side_order, 2, None))
+                EndDialog()
+                break
+            elif key == b'3':
+                print('Закрытая сторона: ')
+                print(closed_side)
+                answers.append((opened_side, side_order, 3, None))
+                EndDialog()
+                break
+            else:
+                continue
+        if interrupt:
+            break
+    ClearScreen()
+    print('Выбрано карточек : {}.'.format(len(cards)))
+    print('Получено ответов : {}.'.format(len(answers)))
+    print('Ответы:')
+    for answer in answers:
+        print(answer)
+    EndDialog()
+    print('Записываю в базу ответы.')
+    for answer in answers:
+        script = operations.GetSelectCardIdBySide(answer[0], answer[1])
+        idOk, idScript, idException = operations.ExecuteSqlScript(script, cursor)
+        if not ok:
+            ShowScriptException(idException, idScript)
+            continue
+        card_id = cursor.fetchone()
+        if card_id:
+            script = operations.GetInsertIntoAnswer(card_id[0], answer[1], answer[2], answer[3])
+            insertOk, insertScript, insertException = operations.ExecuteSqlScript(script, cursor)
+            if not insertOk:
+                ShowScriptException(insertException, insertScript)
+            else:
+                print(insertScript, 'успешно выполнен')
+        else:
+            print('Не найдена card_id для side = {} и side_order = {}'.format(answer[0], answer[1]))
+    EndDialog()
 
 #--------------------------- End TODO -----------------------------------------
 
