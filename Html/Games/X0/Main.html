@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<title>X-0</title>
+		<link rel="stylesheet" type="text/css" href="Themes/general.css">
+		<script src="Scripts/main.js"></script>
+	</head>
+	<body>
+	    <p><b>Welcome in X-O game!</b></p>
+		<p><b>Change type of game:</b><Br>
+			<input type="radio" name="gameType" value="OnePlayer">One player with computer<Br>
+			<input type="radio" name="gameType" value="TwoPlayers" checked="checked">Two players<Br>
+			<button onclick="StartGame()">Start game</button><Br>
+		</p>
+		<div class="names">
+			<div id="playerHeader"> </div>
+			<div id="player_1"> </div>
+			<div id="player_2"> </div>
+		</div>
+		<div>
+			<div class="row">
+				<div id="0" onclick="Place(this)"></div>
+				<div id="1" onclick="Place(this)"></div>
+				<div id="2" onclick="Place(this)"></div>
+			</div>
+			<div class="row">
+				<div id="3" onclick="Place(this)"></div>
+				<div id="4" onclick="Place(this)"></div>
+				<div id="5" onclick="Place(this)"></div>
+			</div>
+			<div class="row">
+				<div id="6" onclick="Place(this)"></div>
+				<div id="7" onclick="Place(this)"></div>
+				<div id="8" onclick="Place(this)"></div>
+			</div>
+			<div class="row" id="footer"></div>
+		</div>
+	</body>
+</html>

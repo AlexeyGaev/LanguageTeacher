@@ -1,0 +1,18 @@
+.names{
+	font-size: 32pt;
+	text-align: left;
+	background-color: yellow;
+}
+.row div {
+	padding: 10px;
+	border: 3px solid black;
+	height: 70px;
+	width: 70px;
+	float: left;
+	background-color: #00FF00;
+	font-size: 32pt;
+	text-align: center;
+}
+.row {
+	clear: both;
+	}
