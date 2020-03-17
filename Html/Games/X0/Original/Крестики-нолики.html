@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<title>Крестики - нолики</title>
+		<style>
+			.names{
+			font-size: 32pt;
+			text-align: left;
+			background-color: yellow;
+			}
+			.row div {
+			padding: 10px;
+			border: 3px solid black;
+			height: 70px;
+			width: 70px;
+			float: left;
+			background-color: purple;
+			font-size: 32pt;
+			text-align: center;
+			}
+			.row {
+			clear: both;
+			}
+		</style>
+	</head>
+	<body>
+		<script>
+			var currentPlayer="0";
+			var won = false;
+			var winIdFirst;
+			var winIdSecond;
+			var winIdThird;
+			function place(box) {
+				if(box.innerText != "" || won)
+				return;
+				currentPlayer == "0" ? currentPlayer = "X" : currentPlayer = "0";
+				box.innerText = currentPlayer;
+				box.style.background = "#0000FF"
+				box.style.color = "#00FF00"
+				checkGameBoard();
+				printResults();
+			}
+			function printResults(){
+				var playerItem1 = document.getElementById("player_1");
+				var playerItem2 = document.getElementById("player_2");
+				if(won) {
+					if(currentPlayer=="X")
+					printWinner(playerItem1,playerItem2,"Игрок 1 (X) - Победитель!", "Игрок 2 (0) - проиграл");
+					else
+					printWinner(playerItem2,playerItem1,"Игрок 2 (0) - Победитель!", "Игрок 1 (X) - проиграл");
+				}
+				else {
+					if(currentPlayer=="X")
+					printCurrentPlayer(playerItem1,playerItem2, "Игрок 1 (X) сделал ход", "Текущий ход - Игрок 2 (0)");
+					else
+					printCurrentPlayer(playerItem2,playerItem1, "Игрок 2 (0) сделал ход", "Текущий ход - Игрок 1 (X)");
+				}
+			}
+			function printCurrentPlayer(lastPlayer, currentPlayer,lastInnerText, currentInnerText){
+				lastPlayer.innerText = lastInnerText;
+				lastPlayer.style.color = "#00FF00";
+				currentPlayer.innerText = currentInnerText;
+				currentPlayer.style.color = "#000000";
+			}
+			function printWinner(winner,luzer, winnerInnerText, luzerInnerText){
+				winner.innerText = winnerInnerText;
+				winner.style.color = "#FF0000";
+				luzer.innerText = luzerInnerText;
+				luzer.style.color = "#000000";
+				document.getElementById(winIdFirst).style.color = "#FF0000";
+				document.getElementById(winIdSecond).style.color = "#FF0000";
+				document.getElementById(winIdThird).style.color = "#FF0000";
+			}
+			function checkGameBoard() {
+				checkWinner("0_0","1_0","2_0");
+				if(won)
+				return;
+				checkWinner("0_1","1_1","2_1");
+				if(won)
+				return;
+				checkWinner("0_2","1_2","2_2");
+				if(won)
+				return;
+				checkWinner("0_0","0_1","0_2");
+				if(won)
+				return;
+				checkWinner("1_0","1_1","1_2");
+				if(won)
+				return;
+				checkWinner("2_0","2_1","2_2");
+				if(won)
+				return;
+				checkWinner("0_0","1_1","2_2");
+				if(won)
+				return;
+				checkWinner("0_2","1_1","2_0");
+			}
+			function checkWinner(firstId,secondId,thirdId){
+				var firstText = document.getElementById(firstId).innerText;
+				var secondText = document.getElementById(secondId).innerText;
+				var thirdText = document.getElementById(thirdId).innerText;
+				if(firstText != "" && firstText == secondText && firstText == thirdText){
+					won = true;
+					winIdFirst = firstId;
+					winIdSecond = secondId;
+					winIdThird = thirdId;
+				}
+			}
+		</script>
+		<div class="names">
+			<div id="player_1">Игрок 1</div>
+			<div id="player_2">Игрок 2</div>
+		</div>
+		<div>
+			<div class="row">
+				<div id="0_0" onclick="place(this)"></div>
+				<div id="0_1" onclick="place(this)"></div>
+				<div id="0_2" onclick="place(this)"></div>
+			</div>
+			<div class="row">
+				<div id="1_0" onclick="place(this)"></div>
+				<div id="1_1" onclick="place(this)"></div>
+				<div id="1_2" onclick="place(this)"></div>
+			</div>
+			<div class="row">
+				<div id="2_0" onclick="place(this)"></div>
+				<div id="2_1" onclick="place(this)"></div>
+				<div id="2_2" onclick="place(this)"></div>
+			</div>
+		</div>
+	</body>
+</html>

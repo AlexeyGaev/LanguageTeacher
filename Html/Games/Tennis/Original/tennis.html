@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+	<body>
+		<canvas id="canvas" width="640" height="480"></canvas>
+		<script>
+			let canvas=document.getElementById("canvas");
+			let ctx=canvas.getContext("2d");
+			let heldDown={};
+			window.addEventListener("keydown", 
+				function(keyInfo) {
+					heldDown[event.keyCode]=true;
+				}, false);
+			window.addEventListener("keyup", 	
+				function(keyInfo) {
+					delete heldDown[event.keyCode];
+				}, false);
+			let player=new paddle(5, 200, 25, 100);
+			let ai=new paddle(610, 200, 25, 100);
+			let ball={
+					x:320, y: 240, radius:8, xSpeed:5,ySpeed:0,
+					reverseX: function() {
+						this.xSpeed *= -1;
+					},
+					reverseY: function() {
+						this.ySpeed *= -1;
+					},
+					reset: function() {
+						this.x = 320;
+						this.y = 240;
+						this.xSpeed = 5;
+						this.ySpeed = 0;
+					},
+					isBouncing: function(){
+						return ball.ySpeed != 0;
+					},
+					modifyXSpeedBy: function(modification){
+						let nextModification = this.xSpeed < 0 ? -modification : modification;
+						let nextValue = this.xSpeed + nextModification;
+						if (nextValue > 9)
+							nextValue = 9;
+						if (nextValue < -9)
+							nextValue = -9;
+						this.xSpeed = nextValue;
+					},
+					modifyYSpeedBy: function(modification){
+						let nextValue=this.ySpeed < 0 ? -modification : modification;
+						this.ySpeed += nextValue;
+					}
+			};
+			function paddle(x, y, width, height) {
+				this.x=x;
+				this.y=y;
+				this.width=width;
+				this.height=height;
+				this.speedModifier=0;
+				this.hasCollidedWith = function(ball) {
+					let paddleLeftWall = this.x;
+					let paddleRightWall = this.x + this.width;
+					let paddleTopWall = this.y;
+					let paddleBottomWall = this.y + this.height;
+					if (ball.x > paddleLeftWall &&
+						ball.x < paddleRightWall &&
+						ball.y > paddleTopWall &&
+						ball.y < paddleBottomWall)
+						return true;;
+					return false;
+				};
+				this.move = function(keyCode) {
+					let nextY = this.y;
+					if (keyCode == 40) {
+						nextY += 5;
+						this.speedModifier = 1.5;
+					}
+					else if (keyCode == 38) {
+						nextY += -5;
+						this.speedModifier = 1.5;	
+					}
+					else {
+						this.speedModifier = 0;
+					}
+					nextY = nextY < 0 ? 0 : nextY;
+					nextY = nextY + this.height > 480 ? 480 - this.height : nextY;
+					this.y = nextY;
+				};
+			}
+			function tick() {
+			    updateGame();
+				draw();
+				window.setTimeout("tick()", 1000/60);
+			}
+			function updateGame() {
+				ball.x += ball.xSpeed;
+				ball.y += ball.ySpeed;
+				if(ball.x < 0 || ball.x > 640){
+					ball.reset();
+				}
+				if(ball.y <= 0 || ball.y >=480){
+					ball.reverseY();
+				}
+				let collidedWithPlayer = player.hasCollidedWith(ball);
+				if(collidedWithPlayer){
+					ball.reverseX();
+					ball.modifyXSpeedBy(0.25);
+					ball.modifyYSpeedBy(player.speedModifier);
+				}
+				let collidedWithAi = ai.hasCollidedWith(ball);
+				if(collidedWithAi){
+					ball.reverseX();
+					ball.modifyXSpeedBy(0.25);
+					ball.modifyYSpeedBy(ai.speedModifier);
+				}
+				for(let keyCode in heldDown)
+					player.move(keyCode);
+				let aiMiddle = ai.y + (ai.height / 2);
+				if(aiMiddle < ball.y)
+					ai.move(40);
+				if(aiMiddle > ball.y)
+					ai.move(38);
+			}
+			function renderBall(ball) {
+				ctx.beginPath();
+				ctx.arc(ball.x,ball.y,ball.radius,0,2*Math.PI,false);
+				ctx.fillStyle="white";
+				ctx.fill();
+			}
+			function renderPaddle(paddle) {
+				ctx.fillStyle="white";
+				ctx.fillRect(paddle.x,paddle.y,paddle.width,paddle.height);
+			}
+			function draw() {
+				ctx.fillStyle="black";
+				ctx.fillRect(0,0,640,480);
+				renderPaddle(player);
+				renderPaddle(ai);
+				renderBall(ball);
+			}
+			function skateboard(style, owner) {
+				this.style=style;
+				this.owner=owner;
+				this.alertOwner=function() {
+					alert(this.owner);
+				};
+			}
+			let skateboard1=new skateboard("red","Markus");
+			let skateboard2=new skateboard("green","Ruby");
+			skateboard1.alertOwner();
+			skateboard2.alertOwner();
+			 
+				
+			tick();
+		</script>
+	</body>
+</html>
